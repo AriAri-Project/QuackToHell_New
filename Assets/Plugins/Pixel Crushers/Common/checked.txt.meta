@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 75a82e333dc93704da83bc6a04f1b1c1
+TextScriptImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 146693
+  packageName: Save System for Opsive Character Controllers
+  packageVersion: 2.0.9
+  assetPath: Assets/Plugins/Pixel Crushers/Common/checked.txt
+  uploadId: 762351
