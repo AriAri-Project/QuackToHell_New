@@ -1,14 +1,14 @@
 using UnityEngine;
 
-public class playercontroller : MonoBehaviour  // Å¬·¡½º¸í PascalCase À§¹İ, Controller Á¢¹Ì»ç ¾øÀ½
+public class PlayerController : MonoBehaviour
 {
-    private int health = 100;  // ÇÊµå ³×ÀÌ¹Ö ±ÔÄ¢ À§¹İ (_camelCase ¾Æ´Ô)
-    public int gethealth()     // ÇÁ·ÎÆÛÆ¼ ´ë½Å ¸Ş¼­µå »ç¿ë, PascalCase ¾Æ´Ô
+    private int health = 100;  // í•„ë“œ ë„¤ì´ë° ê·œì¹™ ìœ„ë°˜ (_camelCase ì•„ë‹˜)
+    public int gethealth()     // í”„ë¡œí¼í‹° ëŒ€ì‹  ë©”ì„œë“œ ì‚¬ìš©, PascalCase ì•„ë‹˜
     {
         return health;
     }
 
-    // ÁÖ¼® ÀüÇô ¾øÀ½ (ÁÖÀÇÁ¡ ¶Ç´Â TODO ¾øÀ½)
+    // ì£¼ì„ ì „í˜€ ì—†ìŒ (ì£¼ì˜ì  ë˜ëŠ” TODO ì—†ìŒ)
     void Update()
     {
         if (health <= 0)
@@ -17,12 +17,12 @@ public class playercontroller : MonoBehaviour  // Å¬·¡½º¸í PascalCase À§¹İ, Cont
         }
     }
 
-    void die()  // ¸Ş¼­µå ÀÌ¸§ PascalCase ¾Æ´Ô
+    void die()  // ë©”ì„œë“œ ì´ë¦„ PascalCase ì•„ë‹˜
     {
         Debug.Log("Player died");
     }
 
-    public static playercontroller instance;  // ½Ì±ÛÅæÀÎµ¥ Manager Á¢¹Ì»ç ¾ø°í, _¾ğ´õ¹Ù ¾øÀ½, public ÇÊµå
+    public static playercontroller instance;  // ì‹±ê¸€í†¤ì¸ë° Manager ì ‘ë¯¸ì‚¬ ì—†ê³ , _ì–¸ë”ë°” ì—†ìŒ, public í•„ë“œ
 
     void Awake()
     {
