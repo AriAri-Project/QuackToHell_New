@@ -1,17 +1,33 @@
 using UnityEngine;
 using Unity.Netcode;
+using static PlayerView;
+using System;
+using System.Diagnostics;
 
-public class PlayerPresenter : MonoBehaviour
+public class PlayerPresenter : NetworkBehaviour
 {
     private PlayerModel playerModel;
     private PlayerView playerView;
-    public void Initialize(PlayerModel playerModel, PlayerView playerView)
+
+    // Start에서 세팅
+    private void Start()
     {
-        if(!NetworkManager.Singleton.IsServer)
-        {
-            return;
-        }
+        // PlayerModel, PlayerView를 컴포넌트에서 가져옴
+        playerModel = GetComponent<PlayerModel>();
+        playerView = GetComponent<PlayerView>();
+
+        playerView.OnMovementInput += PlayerView_OnMovementInput;
     }
 
 
+
+    private void PlayerView_OnMovementInput(object sender, EventArgs e)
+    {
+        //이벤트 인자 캐스팅
+        OnMovementInputEventArgs onMovementInputEventArgs = (OnMovementInputEventArgs)e;
+
+        //model에게 방향 이벤트 전달
+        UnityEngine.Debug.Log($"PlayerPresenter: Moving player with X: {onMovementInputEventArgs.XDirection}, Y: {onMovementInputEventArgs.YDirection}");
+        playerModel.MovePlayerServerRpc(onMovementInputEventArgs.XDirection, onMovementInputEventArgs.YDirection);
+    }
 }

@@ -1,9 +1,15 @@
 using System;
+using Unity.Netcode;
 using UnityEngine;
 
 /// <summary>  
 /// 플레이어 데이터 구조  
 /// </summary>  
+public enum PlayerState
+{
+    Idle,
+    Dead
+}
 
 public enum PlayerJob
 {
@@ -11,7 +17,7 @@ public enum PlayerJob
 }
 
 [System.Serializable]
-public struct PlayerStatusData
+public struct PlayerStatusData :INetworkSerializable
 {
     public const int MaxCredibility = 100;
     public const int MaxSpellpower = 100;
@@ -22,4 +28,14 @@ public struct PlayerStatusData
     public int Spellpower;
     public int Gold;
     public float MoveSpeed;
+
+    public void NetworkSerialize<T>(BufferSerializer<T> serializer) where T : IReaderWriter
+    {
+        serializer.SerializeValue(ref Nickname);
+        serializer.SerializeValue(ref Job);
+        serializer.SerializeValue(ref Credibility);
+        serializer.SerializeValue(ref Spellpower);
+        serializer.SerializeValue(ref Gold);
+        serializer.SerializeValue(ref MoveSpeed);
+    }
 }

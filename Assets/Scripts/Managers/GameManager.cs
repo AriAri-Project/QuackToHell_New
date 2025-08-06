@@ -4,12 +4,7 @@ using UnityEngine.Rendering;
 
 public class GameManager : MonoBehaviour
 {
-    //현재 플레이어 수
-    private NetworkVariable<int> playerCount = new NetworkVariable<int>(0);
-    public int GetNextPlayerNumber()
-    {
-        return playerCount.Value++;
-    }
+
 
     //싱글톤 코드
     private static GameManager _instance;
@@ -45,15 +40,11 @@ public class GameManager : MonoBehaviour
 
     public void PlayerSpawnTestButton_OnPlayerSpawn()
     {
-        if (!NetworkManager.Singleton.IsServer)
-        {
-            return;
-        }
 
         PlayerFactory playerFactory = FindObjectOfType<PlayerFactory>();
         if (playerFactory != null)
         {
-            playerFactory.SpawnPlayerServerRpc();
+                playerFactory.SpawnPlayerServerRpc();
         }
         else
         {
