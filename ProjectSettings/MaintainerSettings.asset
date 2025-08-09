@@ -2,7 +2,7 @@
 %TAG !u! tag:unity3d.com,2011:
 --- !u!114 &1
 MonoBehaviour:
-  m_ObjectHideFlags: 0
+  m_ObjectHideFlags: 61
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
@@ -24,9 +24,9 @@ MonoBehaviour:
     pathIncludesFilters: []
     componentIgnoresFilters: []
     lookInScenes: 1
-    lookInAssets: 1
-    lookInProjectSettings: 1
-    scenesSelection: 0
+    lookInAssets: 0
+    lookInProjectSettings: 0
+    scenesSelection: 2
     scanGameObjects: 1
     touchInactiveGameObjects: 1
     touchDisabledComponents: 1
