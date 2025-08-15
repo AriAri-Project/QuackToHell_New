@@ -23,6 +23,7 @@ public sealed class CardCatalogRepository
     private async Task InitializeImplAsync(ICardCatalogSource source, CancellationToken ct)
     {
         var rows = await source.LoadAsync(ct); // 메인 스레드에서 UnityWebRequest 진행
+        Debug.Log($"[CardCatalogRepository] 소스에서 {rows.Count}개 행을 로드했습니다.");
         _byId.Clear();
         foreach (var d in rows) _byId[d.CardID] = d;
     }
