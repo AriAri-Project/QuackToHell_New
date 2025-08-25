@@ -38,4 +38,27 @@ public sealed class CardShopView : MonoBehaviour
     {
         if (rerollButton) rerollButton.interactable = interactable;
     }
+
+
+    #region x버튼 바인딩 함수
+
+    private GameObject cardShopInstance;
+    private void Start()
+    {
+        cardShopInstance = GameObject.FindWithTag("CardShop");
+        cardShopInstance.SetActive(false);
+    }
+
+    /// <summary>
+    /// X버튼 바인딩 함수
+    /// </summary>
+    public void XButton_OnClick()
+    {
+        Debug.Log("[CardShopView] XButton_OnClick");
+        cardShopInstance.GetComponent<Animator>().SetBool("Active", false);
+    }    
+
+    #endregion
+
+
 }

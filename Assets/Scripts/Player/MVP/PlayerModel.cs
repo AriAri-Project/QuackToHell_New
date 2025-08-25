@@ -74,6 +74,8 @@ public class PlayerModel : NetworkBehaviour
 
     #region 플레이어 데이터
     //플레이어 데이터
+    [SerializeField]
+    [Header("*플레이어 상태 데이터 = 서버만 write 가능*")]
     private NetworkVariable<PlayerStatusData> _playerStatusData = new NetworkVariable<PlayerStatusData>(
         writePerm: NetworkVariableWritePermission.Server
     );

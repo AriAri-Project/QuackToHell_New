@@ -145,9 +145,9 @@ public class DeckManager : NetworkBehaviour
                 break;
             }
         }
-        
+
         int nextCardItemId;
-        
+
         if (currentIndex == -1)
         {
             // 새로운 CardId인 경우 초기화
@@ -163,7 +163,7 @@ public class DeckManager : NetworkBehaviour
         }
 
         Debug.Log($"[DeckManager] CardId {cardId}에 대해 CardItemId {nextCardItemId} 할당 완료");
-        
+
         // 모든 클라이언트에게 결과 전달
         GetNextCardItemIdResultClientRpc(cardId, nextCardItemId, requestId);
     }
@@ -190,7 +190,7 @@ public class DeckManager : NetworkBehaviour
     public void InitializeCardItemIdsServerRpc()
     {
         if (!IsHost) return;
-        
+
         _cardItemId.Clear();
         Debug.Log("[DeckManager] CardItemId 목록 초기화 완료");
     }
@@ -220,7 +220,7 @@ public class DeckManager : NetworkBehaviour
                 cardTotalCount = card.Value.AmountOfCardItem
             };
             _totalCardsOnGame.Add(cardData);
-            
+
             // 각 CardId에 대해 초기 CardItemId 설정 (CardId + 0)
             _cardItemId.Add(new CardItemIdData { CardId = card.Key, NextCardItemId = card.Key });
         }
@@ -230,7 +230,7 @@ public class DeckManager : NetworkBehaviour
         {
             Debug.Log($"[DeckManager] CardID: {card.cardId}, Amount: {card.cardTotalCount}");
         }
-        
+
         Debug.Log($"[DeckManager] {_cardItemId.Count}개 CardItemId 초기화 완료");
         foreach (var cardItemId in _cardItemId)
         {
@@ -286,6 +286,9 @@ public class DeckManager : NetworkBehaviour
             Debug.Log($"[DeckManager] CardID {card.CardID}의 물량이 없습니다. 구매 실패");
             //구매 성공 여부를 CardShop에게 전달. (ClientRPC, bool값 보내기)
             cardShopPresenter.PurchaseCardResultClientRpc(false, clientRpcParams);
+            //구매 실패 여부를 클라이언트에게 전달. (ClientRPC, InventoryCard값 보내기)
+            PurchaseCardResultClientRpc(false, card, clientId, clientRpcParams);
+
             return;
         }
 
@@ -295,6 +298,8 @@ public class DeckManager : NetworkBehaviour
         {
             //구매 성공 여부를 CardShop에게 전달. (ClientRPC, bool값 보내기)
             cardShopPresenter.PurchaseCardResultClientRpc(false, clientRpcParams);
+            //구매 실패 여부를 클라이언트에게 전달. (ClientRPC, InventoryCard값 보내기)
+            PurchaseCardResultClientRpc(false, card, clientId, clientRpcParams);
             return;
         }
 
@@ -314,7 +319,21 @@ public class DeckManager : NetworkBehaviour
 
         //구매 성공 여부를 CardShop에게 전달. (ClientRPC, bool값 보내기)
         cardShopPresenter.PurchaseCardResultClientRpc(true, clientRpcParams);
+        //구매 성공 여부를 클라이언트에게 전달. (ClientRPC, InventoryCard값 보내기)
+        PurchaseCardResultClientRpc(true, card, clientId, clientRpcParams);
 
+
+    }
+
+    [ClientRpc]
+    private void PurchaseCardResultClientRpc(bool success, InventoryCard card, ulong clientId, ClientRpcParams sendParams = default)
+    {
+        if (!success)
+        {
+            Debug.Log("[DeckManager] 카드 구매 실패");
+            return;
+        }
+        
         // 카드 상태 주입 (Sold) - 기존 cardItemId 그대로 사용
         var updatedCard = card;
         updatedCard.Status.State = CardItemState.Sold;
@@ -340,7 +359,6 @@ public class DeckManager : NetworkBehaviour
                 cardItemModel.CardItemStatusData = newStatusData;
             }
         }
-
     }
 
 

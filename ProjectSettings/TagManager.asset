@@ -6,6 +6,7 @@ TagManager:
   tags:
   - CardForSale
   - CardInventory
+  - CardShop
   layers:
   - Default
   - TransparentFX

@@ -8,6 +8,18 @@ public class CardInventoryView : MonoBehaviour
     [SerializeField]
     private GameObject content;
 
+    [Header("CardShop 프리팹을 넣어주세요.")]
+    [SerializeField]
+    private GameObject cardShop;
+
+    private GameObject cardShopInstance;
+
+    private void Start()
+    {
+        var cardShopCanvasInstance = Instantiate(cardShop);
+        cardShopInstance = GameObject.FindWithTag("CardShop");
+        
+    }
     public void UpdateInventoryView(List<InventoryCard> ownedCards)
     {
         //TODO 인벤토리 모습 업데이트
@@ -20,7 +32,7 @@ public class CardInventoryView : MonoBehaviour
         foreach (var card in ownedCards)
         {
             CardItemFactory.Instance.CreateCardForInventory(card);
-        }        
+        }
     }
     #endregion
 
@@ -31,7 +43,9 @@ public class CardInventoryView : MonoBehaviour
     }
     public void PlusButton_OnClick()
     {
-        //TODO 카드샵 띄우기 = 애니메이션 줘서.
+        
+        cardShopInstance.SetActive(true);
+        cardShopInstance.GetComponent<Animator>().SetBool("Active", true);
     }
     #endregion
 }

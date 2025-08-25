@@ -111,6 +111,6 @@ public sealed class CardShopPresenter : NetworkBehaviour
     /// /////////////////////////////////////////////////
     private void Start()
     {
-        _model.DisplayCardsForSale();
+        //_model.DisplayCardsForSale();
     }
 }
