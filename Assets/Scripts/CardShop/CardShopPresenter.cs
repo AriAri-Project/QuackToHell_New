@@ -55,7 +55,7 @@ public sealed class CardShopPresenter : NetworkBehaviour
             s_serverByClient.Remove(OwnerClientId);
     }
 
-    public void TryPurchaseCard(InventoryCard card, ulong inputClientId)
+    public void TryPurchaseCard(CardItemData card, ulong inputClientId)
     {
         Debug.Log("[CardShopPresenter] TryPurchaseCard 실행됨");
         var clientId = inputClientId == 0UL ? OwnerClientId : inputClientId;

@@ -47,12 +47,8 @@ public class CardItemFactory : NetworkBehaviour
     #endregion
 
 
-    #region 초기화
-    //카드 데이터
-
-    #endregion
-
     #region 카드 아이템 생성
+    [Header ("Card 프리팹을 넣어주세요.")]
     public GameObject cardItemPrefab;
 
     public GameObject CreateCardForInventory(CardItemData cardItemData)
@@ -62,7 +58,7 @@ public class CardItemFactory : NetworkBehaviour
         int requestedCardIdKey = cardItemData.CardIdKey;
         if (DeckManager.Instance.IsValidCardIdKey(requestedCardIdKey))
         {
-            Debug.LogError($"[CardItemFactory] 유효하지 않은 카드 아이디 요청입니다. CardID: {inventoryCard.CardIdKey}");
+            Debug.LogError($"[CardItemFactory] 유효하지 않은 카드 아이디 요청입니다. CardID: {cardItemData.CardIdKey}");
             return null;
         }
         #endregion
@@ -78,18 +74,6 @@ public class CardItemFactory : NetworkBehaviour
         RectTransform cardItemForSaleRectTransform = cardItemForInventory.GetComponent<RectTransform>();
         Vector2 newSize = new Vector2(200, 300);
         cardItemForSaleRectTransform.sizeDelta = newSize;
-
-        //데이터 주입
-        var cardItemModel = cardItemForInventory.GetComponent<CardItemModel>();
-        CardItemData updatedCardItemData = new CardItemData
-        {
-            CardIdKey = cardItemData.CardIdKey,
-            CardDef = cardItemData.CardDef,
-            CardItemStatusData = cardItemData.CardItemStatusData,
-            AcquiredTicks = DateTime.UtcNow.Ticks // 획득 시간 현재 시간으로 설정
-        };
-
-        cardItemModel.CardItemData = updatedCardItemData;
 
         //Transform 설정
         cardItemForInventory.transform.localScale = Vector3.one;
@@ -109,14 +93,28 @@ public class CardItemFactory : NetworkBehaviour
             Debug.LogError($"[CardItemFactory] 구매 가능한 카드 데이터를 찾을 수 없습니다. CardID: {cardId}");
             return null;
         }
+
         
         //데이터 뽑음
         CardDef cardDef = cardItemData.Value.CardDef;
-        CardStatusData cardStatusData = cardItemData.Value.cardItemStatusData;
+        CardStatusData cardStatusData = cardItemData.Value.CardItemStatusData;
 
         //프리팹 생성
         GameObject cardItemForSale = Instantiate(cardItemPrefab, inputPosition, Quaternion.identity);
         
+        //데이터 주입
+        CardItemModel cardItemModel = cardItemForSale.GetComponent<CardItemModel>();
+        cardStatusData.State = CardItemState.Solding; // 판매중 카드로 상태 변경
+        CardItemData updatedCardItemData = new CardItemData
+        {
+            CardIdKey = cardId,
+            CardDef = cardDef,
+            CardItemStatusData = cardStatusData,
+            AcquiredTicks = 0 // 판매용 카드는 획득 시간이 없음
+        };
+
+        cardItemModel.CardItemData.Value = updatedCardItemData;
+
         //태그 부여
         cardItemForSale.tag = QETag.CardForSale.ToString();
         
@@ -126,20 +124,9 @@ public class CardItemFactory : NetworkBehaviour
         cardItemForSaleRectTransform.sizeDelta = newSize;
 
         // CardForSale 오브젝트의 이름을 CardItemId와 함께 설정
-        cardItemForSale.name = $"CardForSale_{CardStatusData.CardItemID}";
+        cardItemForSale.name = $"CardForSale_{cardStatusData.CardItemID}";
 
-        //데이터 주입
-        CardItemModel cardItemModel = cardItemForSale.GetComponent<CardItemModel>();
-        cardStatusData.State = CardItemState.Sold; // 판매용 카드로 상태 변경
-        CardItemData updatedCardItemData = new CardItemData
-        {
-            CardIdKey = cardId,
-            CardDef = cardDef,
-            cardItemStatusData = cardStatusData
-        };
-        cardItemModel.CardItemData = updatedCardItemData;
-
-        Debug.Log($"[CardItemFactory] 카드 아이템 생성 완료. CardID: {cardId}, CardName: {cardDef.CardNameKey}, Price: {cardItemStatusData.Price}, Cost: {cardItemStatusData.Cost}, CardItemID: {cardItemStatusData.CardItemID}");
+        
         #endregion
 
         return cardItemForSale;

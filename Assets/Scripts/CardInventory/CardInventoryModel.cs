@@ -13,8 +13,8 @@ public class CardInventoryModel : NetworkBehaviour
 {
     #region 데이터
     // 로컬 클라이언트의 인벤토리가 소유하는 카드 정보
-    private NetworkVariable<List<InventoryCard>> ownedCards = new NetworkVariable<List<InventoryCard>>(new List<InventoryCard>());
-    public NetworkVariable<List<InventoryCard>> OwnedCards => ownedCards;
+    private NetworkList<CardItemData> ownedCards = new NetworkList<CardItemData>();
+    public NetworkList<CardItemData> OwnedCards => ownedCards;
     const int maxCardCount = 20;
     private ulong myClientId;
     private InventorySotringOption _sortingOption = InventorySotringOption.RecentlyAcquired;
@@ -34,49 +34,68 @@ public class CardInventoryModel : NetworkBehaviour
 
     #region InventoryCard 데이터 추가, 삭제 메서드
     [ServerRpc]
-    public void AddOwnedCardServerRpc(InventoryCard card)
+    public void AddOwnedCardServerRpc(CardItemData card)
     {   
-        if (ownedCards.Value.Count >= maxCardCount)
+        if (ownedCards.Count >= maxCardCount)
         {
             Debug.Log("카드 추가 실패: 인벤토리 가득 참");
             return;
         }
-        List<InventoryCard> newList = new List<InventoryCard>(ownedCards.Value);
-        newList.Add(card);
-        ownedCards.Value = newList;
-        Debug.Log($"[CardInventoryModel] 카드 추가 성공: {card.CardID}");
+        ownedCards.Add(card);
+        Debug.Log($"[CardInventoryModel] 카드 추가 성공: {card.CardIdKey}");
+
+        // 덱매니저에게, 보유중인 카드들의 정보대로 덱 정보 업데이트 요청
+        foreach (var c in ownedCards)
+        {
+            Debug.Log($"[CardInventoryModel] 보유 카드: {c.CardItemStatusData.CardItemID}");
+            DeckManager.Instance.RequestUpdateAllCardsOnGameDataServerRpc(c);
+        }
+        
     }
 
     [ServerRpc]
-    public void RemoveOwnedCardServerRpc(int cardItemId)
+    public void RemoveOwnedCardServerRpc(CardItemData card)
     {
-        for (int i = 0; i < ownedCards.Value.Count; i++)
+        for (int i = 0; i < ownedCards.Count; i++)
         {
-            if (ownedCards.Value[i].Status.CardItemID == cardItemId)
+            if (ownedCards[i].CardItemStatusData.CardItemID == card.CardItemStatusData.CardItemID)
             {
-                List<InventoryCard> newList = new List<InventoryCard>(ownedCards.Value);
-                newList.RemoveAt(i);
-                ownedCards.Value = newList;
+                ownedCards.RemoveAt(i);
                 break;
             }
         }
-        Debug.Log($"[CardInventoryModel] 카드 삭제 성공: {cardItemId}");
+        Debug.Log($"[CardInventoryModel] 카드 삭제 성공: {card.CardItemStatusData.CardItemID}");
+        // 덱매니저에게, 보유중인 카드들의 정보대로 덱 정보 업데이트 요청
+        foreach (var c in ownedCards)
+        {
+            Debug.Log($"[CardInventoryModel] 보유 카드: {c.CardItemStatusData.CardItemID}");
+            DeckManager.Instance.RequestUpdateAllCardsOnGameDataServerRpc(c);
+        }
     }
     #endregion
 
     #region 정렬
-    public void SortCardsByAcquiredTicks()
+    //TODO: 정렬 버튼 생길 시 옵션에 따른 정렬 메서드 추가
+    
+    /*public void SortCardsByAcquiredTicks()
     {
-        // 간단한 정렬: 최근 획득 순
-        var sortedList = new List<InventoryCard>(ownedCards.Value);
+
+        // NetworkList는 직접 정렬할 수 없으므로, 임시 리스트로 정렬 후 다시 추가
+        var sortedList = new List<CardItemData>();
+        foreach (var card in ownedCards)
+        {
+            sortedList.Add(card);
+        }
+        
         sortedList.Sort((a, b) => b.AcquiredTicks.CompareTo(a.AcquiredTicks));
         
         // NetworkList 업데이트
-        ownedCards.Value.Clear();
-        foreach (var card in sortedList)
+        ownedCards.Clear();
+        foreach (var c in sortedList)
         {
-            ownedCards.Value.Add(card);
+            ownedCards.Add(c);
         }
-    }
+    }*/
+    
     #endregion
 }

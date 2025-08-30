@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic;
 using UnityEngine.UI;
+using Unity.Netcode;
 
 public class CardInventoryView : MonoBehaviour
 {
@@ -17,7 +18,7 @@ public class CardInventoryView : MonoBehaviour
         cardShopPanelAnimator = cardShopPanel.GetComponent<Animator>();
     }
     
-    public void UpdateInventoryView(List<InventoryCard> ownedCards)
+    public void UpdateInventoryView(NetworkList<CardItemData> ownedCards)
     {
         //TODO 인벤토리 모습 업데이트
         //1. content 산하 오브젝트 삭제

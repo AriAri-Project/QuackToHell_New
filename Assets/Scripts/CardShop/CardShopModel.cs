@@ -3,10 +3,11 @@ using UnityEngine;
 using static UnityEngine.Rendering.DebugUI.Table;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEditor;
 
 public interface ICardShopModel
 {
-    void RequestPurchase(InventoryCard card, ulong clientId);
+    void RequestPurchase(CardItemData card, ulong clientId);
 
     bool IsLocked { get; set; }
     bool TryReRoll();
@@ -29,24 +30,18 @@ public sealed class CardShopModel
         cardForSaleParent = CardForSaleParent;
         rowObjectTransform = rowObjectTrs;
 
-        // 물량만큼 전체 카드 생성
+        // 판매할 카드 만들어두기
         // 전체 물량 조회
         var TatalCardsOnGameList = DeckManager.Instance.AllCardsOnGameData;
         
-        foreach (CardItemData TatalCardsOnGame in TatalCardsOnGameList)
+        foreach (CardItemData TotalCardsOnGame in TatalCardsOnGameList)
         {
-             
-            GameObject CreatedCardForSale = CardItemFactory.Instance.CreateCardForSale(-);
-            //CardForSale_Parent에 부착하기
-            CreatedCardForSale.transform.SetParent(CardForSaleParent.transform, false);
-            //비활성화
-            CreatedCardForSale.SetActive(false);
-            
+            int cardIdKey = TotalCardsOnGame.CardIdKey;
+            CardItemFactory.Instance.CreateCardForSale(cardIdKey, Vector3.zero);        
         }
-        
     }
 
-    public void RequestPurchase(InventoryCard card, ulong clientId)
+    public void RequestPurchase(CardItemData card, ulong clientId)
     {
         if (DeckManager.Instance == null)
         {
@@ -78,7 +73,7 @@ public sealed class CardShopModel
         return false; 
     }
 
-    private bool IsDuplicateRestrictedAndOwned(InventoryCard card, ulong clientId, out string msg)
+    private bool IsDuplicateRestrictedAndOwned(CardItemData card, ulong clientId, out string msg)
     {
         // TODO: 카드 메타데이터에 중복 제한 플래그가 있다면 확인
         msg = string.Empty;

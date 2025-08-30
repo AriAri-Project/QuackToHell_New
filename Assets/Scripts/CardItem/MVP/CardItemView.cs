@@ -84,15 +84,11 @@ public class CardItemView : NetworkBehaviour, IPointerClickHandler
     public void OnPointerClick(PointerEventData eventData)
     {
         //만약 오브젝트가 Card for Sale이라면 구매 클릭 이벤트 전달
-        Transform parentTransform = transform.parent;
 
-        if (parentTransform != null)
-        { 
-            if (parentTransform.CompareTag("CardForSale"))
-            {
-                Debug.Log("[CardItemView] Card for Sale 클릭");
-                OnPurchaseClicked?.Invoke(NetworkManager.Singleton.LocalClientId);
-            }
+        if (gameObject.CompareTag(QETag.CardForSale.ToString()))
+        {
+            Debug.Log("[CardItemView] Card for Sale 클릭");
+            OnPurchaseClicked?.Invoke(NetworkManager.Singleton.LocalClientId);
         }
     }
 

@@ -1,46 +1,60 @@
 using UnityEngine;
 using Unity.Netcode;
+using System;
 
 public class CardItemModel : NetworkBehaviour
 {
- /*   private void Start()
+    /*   private void Start()
+       {
+           //carditemdefdata값 바뀌면 OnCardDefDataChanged 실행
+           OnCardDefDataChanged += (newValue) =>
+           {
+               CardDefData = newValue;
+           };
+
+           //carditemstate값 바뀌면 SetStateByCardItemStateEnum() 실행
+           OnCardItemStatusDataChanged += (newValue) =>
+           {
+               SetStateByCardItemStateEnum(newValue.State);
+               ApplyStateChange();
+           };
+           //초기화 실행
+           SetStateByCardItemStateEnum(CardItemStatusData.State);
+           ApplyStateChange();
+
+
+       }
+       private void Update()
+       {
+           if (curState != null)
+           {
+               curState.OnStateUpdate();
+           }
+       }*/
+
+    private GameObject CardForSaleParent;
+
+    public override void OnNetworkSpawn()
     {
-        //carditemdefdata값 바뀌면 OnCardDefDataChanged 실행
-        OnCardDefDataChanged += (newValue) =>
-        {
-            CardDefData = newValue;
-        };
-
-        //carditemstate값 바뀌면 SetStateByCardItemStateEnum() 실행
-        OnCardItemStatusDataChanged += (newValue) =>
-        {
-            SetStateByCardItemStateEnum(newValue.State);
-            ApplyStateChange();
-        };
-        //초기화 실행
-        SetStateByCardItemStateEnum(CardItemStatusData.State);
-        ApplyStateChange();
-
-        
+        base.OnNetworkSpawn();
+        //찾기
+        CardForSaleParent = GameObject.Find("CardForSaleParent");
+        //CardForSale_Parent에 부착하기
+        gameObject.transform.SetParent(CardForSaleParent.transform, false);
+        //비활성화
+        gameObject.SetActive(false); 
     }
-    private void Update()
-    {
-        if (curState != null)
-        {
-            curState.OnStateUpdate();
-        }
-    }*/
 
     #region 데이터
     //데이터
-    private CardItemData cardItemData;
-    public CardItemData CardItemData
+    private NetworkVariable<CardItemData> cardItemData = new NetworkVariable<CardItemData>();
+    public NetworkVariable<CardItemData> CardItemData
     {
         get => cardItemData;
         set
         {
-            if (cardItemData.Equals(value)) return;
-            cardItemData = value;
+            cardItemData.Value = value.Value;
+            DeckManager.Instance.RequestUpdateAllCardsOnGameDataServerRpc(cardItemData.Value);
         }
     }
 

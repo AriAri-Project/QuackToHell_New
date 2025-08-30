@@ -171,6 +171,7 @@ public struct CardDef : INetworkSerializable, IEquatable<CardDef>
 public enum CardItemState
 {
     None,
+    Solding,
     Sold,
 }
 
