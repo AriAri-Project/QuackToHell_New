@@ -4,7 +4,7 @@ using Unity.Netcode;
 using TMPro;
 using UnityEngine.EventSystems;
 
-public class CardItemView : NetworkBehaviour, IPointerClickHandler
+public class CardItemView : MonoBehaviour, IPointerClickHandler
 {
     
     #region 외향

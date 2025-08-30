@@ -32,7 +32,6 @@ public sealed class CardShopModel
 
         // 판매할 카드 만들어두기
         CardItemFactory.Instance.CreateTotalCardForSale();        
-        
     }
 
     public void RequestPurchase(CardItemData card, ulong clientId)

@@ -2,7 +2,7 @@ using UnityEngine;
 using Unity.Netcode;
 using System;
 
-public class CardItemModel : NetworkBehaviour
+public class CardItemModel : MonoBehaviour
 {
     /*   private void Start()
        {
@@ -34,13 +34,13 @@ public class CardItemModel : NetworkBehaviour
 
     private GameObject CardForSaleParent;
 
-    public override void OnNetworkSpawn()
+    private void Start()
     {
-        base.OnNetworkSpawn();
         //찾기
         CardForSaleParent = GameObject.Find("CardForSaleParent");
-        //CardForSale_Parent에 부착하기
-        gameObject.transform.SetParent(CardForSaleParent.transform, false);
+
+        gameObject.transform.SetParent(CardForSaleParent.transform);
+
         //비활성화
         gameObject.SetActive(false); 
     }
