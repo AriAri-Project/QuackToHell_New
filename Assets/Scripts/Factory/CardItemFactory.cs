@@ -83,61 +83,51 @@ public class CardItemFactory : NetworkBehaviour
         return cardItemForInventory;
     }
 
-    public GameObject CreateCardForSale(int cardId, Vector3 inputPosition)
+    public void CreateTotalCardForSale()
     {
         #region 카드생성
-        //팔 수 있는 카드 정보 가져옴
-        CardItemData? cardItemData = DeckManager.Instance.GetPurchaseableCardItemDataByCardIdKey(cardId);
-        if (cardItemData == null)
+        for(int i=0;i < DeckManager.Instance.AllCardsOnGameData.Count; i++)
         {
-            Debug.LogError($"[CardItemFactory] 구매 가능한 카드 데이터를 찾을 수 없습니다. CardID: {cardId}");
-            return null;
+            //데이터 뽑음
+            CardItemData cardItemData = DeckManager.Instance.AllCardsOnGameData[i];
+            int cardId = cardItemData.CardIdKey;
+            CardDef cardDef = cardItemData.CardDef;
+            CardStatusData cardStatusData = cardItemData.CardItemStatusData;
+
+            //프리팹 생성
+            GameObject cardItemForSale = Instantiate(cardItemPrefab, Vector3.zero, Quaternion.identity);
+
+            //데이터 주입
+            CardItemModel cardItemModel = cardItemForSale.GetComponent<CardItemModel>();
+            cardStatusData.State = CardItemState.Solding; // 판매중 카드로 상태 변경
+            CardItemData updatedCardItemData = new CardItemData
+            {
+                CardIdKey = cardId,
+                CardDef = cardDef,
+                CardItemStatusData = cardStatusData,
+                AcquiredTicks = 0 // 판매용 카드는 획득 시간이 없음
+            };
+
+            cardItemModel.CardItemData.Value = updatedCardItemData;
+
+            //태그 부여
+            cardItemForSale.tag = QETag.CardForSale.ToString();
+
+            //크기 조정
+            RectTransform cardItemForSaleRectTransform = cardItemForSale.GetComponent<RectTransform>();
+            Vector2 newSize = new Vector2(200, 350);
+            cardItemForSaleRectTransform.sizeDelta = newSize;
+
+            // CardForSale 오브젝트의 이름을 CardItemId와 함께 설정
+            cardItemForSale.name = $"CardForSale_{cardStatusData.CardItemID}";
+
+
+            #endregion
+
         }
-
         
-        //데이터 뽑음
-        CardDef cardDef = cardItemData.Value.CardDef;
-        CardStatusData cardStatusData = cardItemData.Value.CardItemStatusData;
-
-        //프리팹 생성
-        GameObject cardItemForSale = Instantiate(cardItemPrefab, inputPosition, Quaternion.identity);
-        
-        //데이터 주입
-        CardItemModel cardItemModel = cardItemForSale.GetComponent<CardItemModel>();
-        cardStatusData.State = CardItemState.Solding; // 판매중 카드로 상태 변경
-        CardItemData updatedCardItemData = new CardItemData
-        {
-            CardIdKey = cardId,
-            CardDef = cardDef,
-            CardItemStatusData = cardStatusData,
-            AcquiredTicks = 0 // 판매용 카드는 획득 시간이 없음
-        };
-
-        cardItemModel.CardItemData.Value = updatedCardItemData;
-
-        //태그 부여
-        cardItemForSale.tag = QETag.CardForSale.ToString();
-        
-        //크기 조정
-        RectTransform cardItemForSaleRectTransform = cardItemForSale.GetComponent<RectTransform>();
-        Vector2 newSize = new Vector2(200, 350);
-        cardItemForSaleRectTransform.sizeDelta = newSize;
-
-        // CardForSale 오브젝트의 이름을 CardItemId와 함께 설정
-        cardItemForSale.name = $"CardForSale_{cardStatusData.CardItemID}";
-
-        
-        #endregion
-
-        return cardItemForSale;
     }
     #endregion
 
-    #region 테스트용 코드
-    [Obsolete("카드 생성되는지 테스트하는 버튼")]
-    public void OnTestCreateCardForSaleButton()
-    {
-        CardItemFactory.Instance.CreateCardForSale(20000, Vector3.zero);
-    }
-    #endregion
+   
 }

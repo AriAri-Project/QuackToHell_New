@@ -31,14 +31,8 @@ public sealed class CardShopModel
         rowObjectTransform = rowObjectTrs;
 
         // 판매할 카드 만들어두기
-        // 전체 물량 조회
-        var TatalCardsOnGameList = DeckManager.Instance.AllCardsOnGameData;
+        CardItemFactory.Instance.CreateTotalCardForSale();        
         
-        foreach (CardItemData TotalCardsOnGame in TatalCardsOnGameList)
-        {
-            int cardIdKey = TotalCardsOnGame.CardIdKey;
-            CardItemFactory.Instance.CreateCardForSale(cardIdKey, Vector3.zero);        
-        }
     }
 
     public void RequestPurchase(CardItemData card, ulong clientId)
