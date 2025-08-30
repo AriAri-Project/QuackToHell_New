@@ -15,6 +15,8 @@ public class CardItemView : NetworkBehaviour, IPointerClickHandler
     private TextMeshProUGUI descriptionTxt;
     [SerializeField]
     private TextMeshProUGUI costTxt;
+    [SerializeField]
+    private TextMeshProUGUI cardItemIdTxt;
 
     [Header("Card For Sale용 Price 텍스트")]
     [SerializeField]
@@ -57,6 +59,15 @@ public class CardItemView : NetworkBehaviour, IPointerClickHandler
         if (priceTxtForSale)
         {
             priceTxtForSale.text = price.ToString();
+        }
+    }
+
+    public void SetCardItemIdAppearence(int cardItemId)
+    {
+        if (cardItemIdTxt)
+        {
+            //카드 아이템 ID 텍스트 출력
+            cardItemIdTxt.text = "card item id: \n"+cardItemId.ToString();
         }
     }
 

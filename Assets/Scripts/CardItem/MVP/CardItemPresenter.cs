@@ -15,8 +15,11 @@ public class CardItemPresenter : MonoBehaviour
         //외향 초기화
         CardDefData_OnValueChanged(cardItemModel.CardDefData);
         CardItemStatusData_OnValueChanged(cardItemModel.CardItemStatusData);
+
         //카드 판매 가격 초기화
         cardItemView.SetCardForSaleAppearence(cardItemModel.CardItemStatusData.Price);
+        //카드 아이템 id 초기화
+        cardItemView.SetCardItemIdAppearence(cardItemModel.CardItemStatusData.CardItemID);
     }
 
     #region 모델, 뷰 참조
@@ -30,7 +33,7 @@ public class CardItemPresenter : MonoBehaviour
     #endregion
 
     #region 외향
-    
+
 
     private void CardDefData_OnValueChanged(CardDef cardDefData)
     {
@@ -44,6 +47,7 @@ public class CardItemPresenter : MonoBehaviour
     {
         cardItemView.SetCardCharacteristicAppearence(cardItemStatusData.Cost, cardItemModel.CardDefData.Type, cardItemModel.CardDefData.Map_Restriction);
         cardItemView.SetCardForSaleAppearence(cardItemStatusData.Price);
+        cardItemView.SetCardItemIdAppearence(cardItemStatusData.CardItemID);
     }
     #endregion
 
