@@ -6,6 +6,7 @@ using UnityEngine.EventSystems;
 
 public class CardItemView : NetworkBehaviour, IPointerClickHandler
 {
+    
     #region 외향
     [SerializeField]
     private TextMeshProUGUI cardItemNameTxt;
@@ -49,7 +50,10 @@ public class CardItemView : NetworkBehaviour, IPointerClickHandler
     {
         //발언력 표시-발언력 수치는 재판장 공격 카드 or 재판장 방어 카드일 경우에만 {카드 아이템 테이블 -Cost}로 표시
         //TODO: 조건에 따라 코스트 출력할지 안할지 결정
-        costTxt.text = cost.ToString();
+        if(gameObject.tag == QETag.CardForSale.ToString())
+        {
+            costTxt.text = cost.ToString();
+        }
         //TODO: 카드 특성 아이콘-재판장 공격 카드 or 재판장 방어 카드가 아닌 경우, 카드 타입 및 사용 가능한 장소에 따른 아이콘 표시
         //TODO: 카드 특성 BG-직업 분류 별로 다른 카드 배경 sprite 적용(마피아, 시민, 중립, 공용)
     }

@@ -77,8 +77,7 @@ public class CardItemFactory : NetworkBehaviour
     #endregion
 
     #region 카드 아이템 생성
-    public GameObject cardItemForSalePrefab;
-    public GameObject cardItemForInventoryPrefab;
+    public GameObject cardItemPrefab;
 
     // CardItemId 요청을 관리하는 딕셔너리
     private readonly Dictionary<int, System.Action<int>> _pendingCardItemIdRequests = new();
@@ -90,7 +89,7 @@ public class CardItemFactory : NetworkBehaviour
 
   
 
-    public void CreateCardForInventory(InventoryCard inventoryCard)
+    public GameObject CreateCardForInventory(InventoryCard inventoryCard)
     {
         #region 유효한 요청인지 확인
         //카드 ID가 존재하는지 확인
@@ -110,19 +109,25 @@ public class CardItemFactory : NetworkBehaviour
         if (!cardFound)
         {
             Debug.LogError($"[CardItemFactory] 카드 아이디에 맞는 카드 데이터가 없습니다. CardID: {inventoryCard.CardID}");
-            return;
+            return null;
         }
         #endregion
 
         #region 카드 생성
 
         // inventoryCard에 이미 있는 cardItemId를 그대로 사용
-        //캔버스 부착: 인벤토리 오브젝트의 산하의 Content오브젝트 아래에 카드 부착
-        var cardInventory = GameObject.FindWithTag("CardInventory");
-        var content = cardInventory.GetComponentInChildren<GridLayoutGroup>().gameObject;
+        
 
-        //프리팹 생성 (부모를 미리 설정하여 NetworkObject reparenting 오류 방지)
-        GameObject cardItemForInventory = Instantiate(cardItemForInventoryPrefab, Vector3.zero, Quaternion.identity, content.transform);
+        //프리팹 생성 
+        GameObject cardItemForInventory = Instantiate(cardItemPrefab, Vector3.zero, Quaternion.identity);
+
+        //태그 부여
+        cardItemForInventory.tag = QETag.CardForInventory.ToString();
+        
+        //크기 조정
+        RectTransform cardItemForSaleRectTransform = cardItemForInventory.GetComponent<RectTransform>();
+        Vector2 newSize = new Vector2(200, 300);
+        cardItemForSaleRectTransform.sizeDelta = newSize;
 
         //주입할 데이터 생성
         CardItemStatusData cardItemStatusData = new CardItemStatusData
@@ -144,6 +149,8 @@ public class CardItemFactory : NetworkBehaviour
         cardItemForInventory.transform.localScale = Vector3.one;
         cardItemForInventory.transform.localPosition = Vector3.zero;
         #endregion
+
+        return cardItemForInventory;
     }
 
     public bool CreateCardForSale(int cardId, Vector3 inputPosition)
@@ -187,7 +194,14 @@ public class CardItemFactory : NetworkBehaviour
         #endregion
         #region 카드생성
         //프리팹 생성
-        GameObject cardItemForSale = Instantiate(cardItemForSalePrefab, inputPosition, Quaternion.identity);
+        GameObject cardItemForSale = Instantiate(cardItemPrefab, inputPosition, Quaternion.identity);
+        
+        //태그 부여
+        cardItemForSale.tag = QETag.CardForSale.ToString();
+        //크기 조정
+        RectTransform cardItemForSaleRectTransform = cardItemForSale.GetComponent<RectTransform>();
+        Vector2 newSize = new Vector2(200, 350);
+        cardItemForSaleRectTransform.sizeDelta = newSize;
 
         //물량 감소
         DeckManager.Instance.DecreaseCardTotalCount(cardId);
