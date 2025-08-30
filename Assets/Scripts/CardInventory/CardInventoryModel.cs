@@ -7,7 +7,7 @@ public struct InventoryCard : INetworkSerializable
 {
     public int CardID; // CardDef를 찾아올 고유 ID
     public int CardItemId; // 카드 아이템 아이디
-    public CardItemStatusData Status; // 카드의 현재 상태
+    public CardStatusData Status; // 카드의 현재 상태
     public long AcquiredTicks; // 획득 시간 (DateTime.Ticks)
 
     public void NetworkSerialize<T>(BufferSerializer<T> serializer) where T : IReaderWriter

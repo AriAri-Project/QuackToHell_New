@@ -50,7 +50,7 @@ public class CardItemFactory : NetworkBehaviour
     private readonly Dictionary<int, CardDef> _cards = new();
     public IReadOnlyDictionary<int, CardDef> Cards => _cards;
 
-    public async Task SetCardData(CardKeyValuePair[] cardKeyValuePairs)
+    public async Task SetCardData(Dictionary_CardIdCardDef[] cardKeyValuePairs)
     {
         if (cardKeyValuePairs == null)
         {
@@ -130,7 +130,7 @@ public class CardItemFactory : NetworkBehaviour
         cardItemForSaleRectTransform.sizeDelta = newSize;
 
         //주입할 데이터 생성
-        CardItemStatusData cardItemStatusData = new CardItemStatusData
+        CardStatusData cardItemStatusData = new CardStatusData
         {
             CardItemID = inventoryCard.CardItemId,
             CardID = inventoryCard.CardID,
@@ -213,7 +213,7 @@ public class CardItemFactory : NetworkBehaviour
         cardItemForSale.name = $"CardForSale_{cardItemId}";
 
         //주입할 데이터 생성
-        CardItemStatusData cardItemStatusData = new CardItemStatusData
+        CardStatusData cardItemStatusData = new CardStatusData
         {
             CardItemID = cardItemId,
             CardID = cardId,

@@ -43,7 +43,7 @@ public class CardItemPresenter : MonoBehaviour
         cardItemView.SetCardDefinitionAppearence(cardDefData.DescriptionKey.ToString());
         cardItemView.SetCardCharacteristicAppearence(cardItemModel.CardItemStatusData.Cost, cardDefData.Type, cardDefData.Map_Restriction);
     }
-    private void CardItemStatusData_OnValueChanged(CardItemStatusData cardItemStatusData)
+    private void CardItemStatusData_OnValueChanged(CardStatusData cardItemStatusData)
     {
         cardItemView.SetCardCharacteristicAppearence(cardItemStatusData.Cost, cardItemModel.CardDefData.Type, cardItemModel.CardDefData.Map_Restriction);
         cardItemView.SetCardForSaleAppearence(cardItemStatusData.Price);

@@ -47,9 +47,9 @@ public class CardItemModel : NetworkBehaviour
             }
         }
     }
-    private CardItemStatusData _cardItemStatusData = new();
-    public event System.Action<CardItemStatusData> OnCardItemStatusDataChanged;
-    public CardItemStatusData CardItemStatusData
+    private CardStatusData _cardItemStatusData = new();
+    public event System.Action<CardStatusData> OnCardItemStatusDataChanged;
+    public CardStatusData CardItemStatusData
     {
         get { return _cardItemStatusData; }
         set
