@@ -9,6 +9,8 @@ public sealed class CardShopPresenter : NetworkBehaviour
     [SerializeField] private float rerollCooldown = 0.2f;
     [Header ("Village Scene의 CardForSaleParent 오브젝트를 넣어주세요")]
     [SerializeField] private GameObject CardForSaleParent;
+    [Header("Village Scene의 CardShop의 하위 오브젝트인 Row 오브젝트를 넣어주세요")]
+    [SerializeField] private Transform CardShopRow;
 
     private CardShopView _view;
     private CardShopModel _model;
@@ -24,7 +26,8 @@ public sealed class CardShopPresenter : NetworkBehaviour
     public override void OnNetworkSpawn()
     {
         base.OnNetworkSpawn();
-        _model.Initiate(CardForSaleParent);
+
+        _model.Initiate(CardForSaleParent, CardShopRow);
         _model.DisplayCardForSale();
 
         if (_view != null)

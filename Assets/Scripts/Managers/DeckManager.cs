@@ -70,12 +70,42 @@ public class DeckManager : NetworkBehaviour
                         State = CardItemState.None
                     }
                 };
-            }
 
-            allCardsOnGameData.Add(cardItemData);
+                allCardsOnGameData.Add(cardItemData);
+            }
         }
         await Task.CompletedTask;
     }
+    public CardItemData? GetPurchaseableCardItemDataByCardIdKey(int cardIdKey)
+    {
+        if (allCardsOnGameData.Count == 0)
+        {
+            Debug.LogError("[DeckManager] GetCardItemDataByCardIdKey: 게임 내 카드 데이터가 없습니다.");
+            return null;
+        }
 
+        // 카드가 sold 상태가 아니면서, cardIdKey와 같은 카드를 찾아서 반환
+        foreach (var card in allCardsOnGameData)
+        {
+            if (card.cardItemStatusData.State != CardItemState.Sold && card.CardIdKey == cardIdKey)
+            {
+                return card;
+            }
+        }
+
+        // 반환할 카드가 없을 경우 null 반환
+        return null;
+    }
+    public bool IsValidCardIdKey(int cardIdKey)
+    {
+        foreach (var card in allCardsOnGameData)
+        {
+            if (card.CardIdKey == cardIdKey)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
     #endregion
 }

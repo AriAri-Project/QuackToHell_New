@@ -43,17 +43,23 @@ public struct CardItemData : INetworkSerializable, IEquatable<CardItemData>, IEq
 {
     public int CardIdKey;
     public CardDef CardDef;
-    public CardStatusData cardItemStatusData;
+    public CardStatusData CardItemStatusData;
+    public long AcquiredTicks; // 카드 획득 시점 
 
     public void NetworkSerialize<T>(BufferSerializer<T> serializer) where T : IReaderWriter
     {
+        serializer.SerializeValue(ref CardIdKey);
         serializer.SerializeValue(ref CardDef);
-        serializer.SerializeValue(ref cardItemStatusData);
+        serializer.SerializeValue(ref CardItemStatusData);
+        serializer.SerializeValue(ref AcquiredTicks);
     }
 
     public bool Equals(CardItemData other)
     {
-        return CardDef.Equals(other.CardDef) && cardItemStatusData.Equals(other.cardItemStatusData);
+        return CardIdKey == other.CardIdKey && 
+               CardDef.Equals(other.CardDef) && 
+               CardItemStatusData.Equals(other.CardItemStatusData) && 
+               AcquiredTicks == other.AcquiredTicks;
     }
 
     public bool Equals(CardDef other)
@@ -63,7 +69,7 @@ public struct CardItemData : INetworkSerializable, IEquatable<CardItemData>, IEq
 
     public bool Equals(CardStatusData other)
     {
-        return cardItemStatusData.Equals(other);
+        return CardItemStatusData.Equals(other);
     }
 
     public override bool Equals(object obj)
@@ -79,7 +85,7 @@ public struct CardItemData : INetworkSerializable, IEquatable<CardItemData>, IEq
 
     public override int GetHashCode()
     {
-        return HashCode.Combine(CardDef, cardItemStatusData);
+        return HashCode.Combine(CardIdKey, CardDef, CardItemStatusData, AcquiredTicks);
     }
 }
 

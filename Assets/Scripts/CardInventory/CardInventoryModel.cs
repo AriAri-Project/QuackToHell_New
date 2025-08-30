@@ -3,21 +3,6 @@ using Unity.Netcode;
 using System;
 using System.Collections.Generic;
 
-public struct InventoryCard : INetworkSerializable
-{
-    public int CardID; // CardDef를 찾아올 고유 ID
-    public int CardItemId; // 카드 아이템 아이디
-    public CardStatusData Status; // 카드의 현재 상태
-    public long AcquiredTicks; // 획득 시간 (DateTime.Ticks)
-
-    public void NetworkSerialize<T>(BufferSerializer<T> serializer) where T : IReaderWriter
-    {
-        serializer.SerializeValue(ref CardID);
-        serializer.SerializeValue(ref CardItemId);
-        serializer.SerializeValue(ref Status);
-        serializer.SerializeValue(ref AcquiredTicks);
-    }
-}
 
 public enum InventorySotringOption
 {

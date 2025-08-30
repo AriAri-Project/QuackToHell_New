@@ -3,7 +3,7 @@ using Unity.Netcode;
 
 public class CardItemModel : NetworkBehaviour
 {
-    private void Start()
+ /*   private void Start()
     {
         //carditemdefdata값 바뀌면 OnCardDefDataChanged 실행
         OnCardDefDataChanged += (newValue) =>
@@ -29,40 +29,23 @@ public class CardItemModel : NetworkBehaviour
         {
             curState.OnStateUpdate();
         }
-    }
+    }*/
 
     #region 데이터
     //데이터
-    private CardDef _cardDefData = new();
-    public event System.Action<CardDef> OnCardDefDataChanged;
-    public CardDef CardDefData
+    private CardItemData cardItemData;
+    public CardItemData CardItemData
     {
-        get { return _cardDefData; }
+        get => cardItemData;
         set
         {
-            if (!_cardDefData.Equals(value))
-            {
-                _cardDefData = value;
-                OnCardDefDataChanged?.Invoke(_cardDefData);
-            }
+            if (cardItemData.Equals(value)) return;
+            cardItemData = value;
         }
     }
-    private CardStatusData _cardItemStatusData = new();
-    public event System.Action<CardStatusData> OnCardItemStatusDataChanged;
-    public CardStatusData CardItemStatusData
-    {
-        get { return _cardItemStatusData; }
-        set
-        {
-            if (!_cardItemStatusData.Equals(value))
-            {
-                _cardItemStatusData = value;
-                OnCardItemStatusDataChanged?.Invoke(_cardItemStatusData);
-            }
-        }
-    }
+
     #endregion
-    #region 카드 상태
+/*    #region 카드 상태
 
     private State preState;
     private State tempState;
@@ -113,5 +96,5 @@ public class CardItemModel : NetworkBehaviour
         curState.OnStateEnter();
     }
     #endregion
-
+*/
 }

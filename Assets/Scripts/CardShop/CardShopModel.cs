@@ -31,22 +31,17 @@ public sealed class CardShopModel
 
         // 물량만큼 전체 카드 생성
         // 전체 물량 조회
-        var TatalCardsOnGameList = DeckManager.Instance.TotalCardsOnGame;
+        var TatalCardsOnGameList = DeckManager.Instance.AllCardsOnGameData;
         
-        foreach (TotalCardsOnGameData TatalCardsOnGame in TatalCardsOnGameList)
+        foreach (CardItemData TatalCardsOnGame in TatalCardsOnGameList)
         {
-            //물량개수추가
-            totalCardCountOnMap += TatalCardsOnGame.cardTotalCount;
-
-            //물량 개수만큼, 해당 카드를 생성
-            for (int i=0;i< TatalCardsOnGame.cardTotalCount; i++)
-            {    
-                GameObject CreatedCardForSale = CardItemFactory.Instance.CreateCardForSale(TatalCardsOnGame.cardId, Vector2.zero);
-                //CardForSale_Parent에 부착하기
-                CreatedCardForSale.transform.SetParent(CardForSaleParent.transform, false);
-                //비활성화
-                CreatedCardForSale.SetActive(false);
-            }
+             
+            GameObject CreatedCardForSale = CardItemFactory.Instance.CreateCardForSale(-);
+            //CardForSale_Parent에 부착하기
+            CreatedCardForSale.transform.SetParent(CardForSaleParent.transform, false);
+            //비활성화
+            CreatedCardForSale.SetActive(false);
+            
         }
         
     }
