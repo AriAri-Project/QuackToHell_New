@@ -2,6 +2,7 @@ using Unity.Netcode;
 using UnityEngine;
 using static UnityEngine.Rendering.DebugUI.Table;
 using System.Collections.Generic;
+using System.Linq;
 
 public interface ICardShopModel
 {
@@ -159,6 +160,20 @@ public sealed class CardShopModel
         // 기존 카드 다 지우기
         for (int i = row.childCount - 1; i >= 0; i--)
         {
+            GameObject cardForSale = row.GetChild(i).gameObject;
+            CardItemModel cardModel = cardForSale.transform.GetComponentInChildren<CardItemModel>();
+      
+            if (cardModel == null)
+            {
+                //팔린애에 대해서는 처리x
+                continue;
+            }
+
+            //물량 재공급
+            int cardId = cardModel.CardItemStatusData.CardID;
+            DeckManager.Instance.IncreaseCardTotalCount(cardId);
+
+            //파괴
             Object.Destroy(row.GetChild(i).gameObject);
         }
 
@@ -179,6 +194,17 @@ public sealed class CardShopModel
             int pick = pool[rng.Next(pool.Length)];
             var pos = new Vector3(center.x + startX + i * (cardWidth + spacing), center.y, center.z);
             Debug.Log($"[CardShopModel] 카드 생성 id={pick}");
+            // 물량 체크 및 대체 카드 선택
+            if (DeckManager.Instance.GetCardTotalCount(pick) <= 0)
+            {
+                var availableCards = pool.Where(id => DeckManager.Instance.GetCardTotalCount(id) > 0).ToArray();
+                if (availableCards.Length == 0)
+                {
+                    Debug.Log("[CardShopModel] 모든 카드 물량이 없습니다.");
+                    continue;
+                }
+                pick = availableCards[rng.Next(availableCards.Length)];
+            }
             CardItemFactory.Instance.CreateCardForSale(pick, Vector3.zero);
         }
 

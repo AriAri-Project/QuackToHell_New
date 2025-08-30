@@ -121,6 +121,67 @@ public class DeckManager : NetworkBehaviour
         }
 
     }
+    public void IncreaseCardTotalCount(int cardId)
+    {
+        if (!IsHost)
+        {
+            return;
+        }
+
+        int index = 0;
+        foreach (var cardData in _totalCardsOnGame)
+        {
+            if (cardData.cardId == cardId)
+            {
+                break;
+            }
+            index++;
+        }
+
+        if (index >= _totalCardsOnGame.Count)
+        {
+            Debug.LogError($"[DeckManager] CardID {cardId}가 TotalCardsOnGame에 존재하지 않습니다.");
+            return;
+        }
+
+        var cardDataToUpdate = _totalCardsOnGame[index];
+        cardDataToUpdate.cardTotalCount += 1;
+        _totalCardsOnGame[index] = cardDataToUpdate;
+
+    }
+    public void DecreaseCardTotalCount(int cardId)
+    {
+        if (!IsHost)
+        {
+            return;
+        }
+
+        int index = 0;
+        foreach (var cardData in _totalCardsOnGame)
+        {
+            if (cardData.cardId == cardId)
+            {
+                break;
+            }
+            index++;
+        }
+
+        if (index >= _totalCardsOnGame.Count)
+        {
+            Debug.LogError($"[DeckManager] CardID {cardId}가 TotalCardsOnGame에 존재하지 않습니다.");
+            return;
+        }
+
+        var cardDataToUpdate = _totalCardsOnGame[index];
+        if (cardDataToUpdate.cardTotalCount <= 0)
+        {
+            Debug.Log($"[DeckManager] CardID {cardId}의 물량이 이미 0입니다. 감소 불가.");
+            return;
+        }
+
+        cardDataToUpdate.cardTotalCount -= 1;
+        _totalCardsOnGame[index] = cardDataToUpdate;
+    }
 
     public int GetCardTotalCount(int cardId)
     {
