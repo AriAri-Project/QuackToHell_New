@@ -116,7 +116,7 @@ public sealed class CardShopModel
         if (IsLocked) return false;
 
         // 새로 뿌리기
-        CreateCardsForSale();
+        DisplayCardForSale();
 
         return true;
     }
@@ -144,7 +144,7 @@ public sealed class CardShopModel
         }
         return _row;
     }
-    public void CreateCardsForSale()
+    public void DisplayCardForSale()
     {
         Debug.Log($"[CardShopModel] 카드 진열함수 들어옴");
         if (IsLocked)
@@ -181,7 +181,8 @@ public sealed class CardShopModel
             Debug.Log($"[CardShopModel] 카드 생성 id={pick}");
             CardItemFactory.Instance.CreateCardForSale(pick, Vector3.zero);
         }
-        
+
+        MoveCardsForSaleToRowObject();
     }
     /// <summary>
     /// 카드들을 Row 오브젝트 밑으로 이동시킵니다.

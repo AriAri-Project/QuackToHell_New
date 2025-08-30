@@ -32,35 +32,6 @@ public struct TotalCardsOnGameData : INetworkSerializable, IEquatable<TotalCards
     }
 }
 
-/// <summary>
-/// CardId와 해당 CardId의 다음 CardItemId를 저장하는 구조체
-/// </summary>
-public struct CardItemIdData : INetworkSerializable, IEquatable<CardItemIdData>
-{
-    public int CardId;
-    public int NextCardItemId;
-    
-    public void NetworkSerialize<T>(BufferSerializer<T> serializer) where T : IReaderWriter
-    {
-        serializer.SerializeValue(ref CardId);
-        serializer.SerializeValue(ref NextCardItemId);
-    }
-
-    public bool Equals(CardItemIdData other)
-    {
-        return CardId == other.CardId && NextCardItemId == other.NextCardItemId;
-    }
-    
-    public override bool Equals(object obj)
-    {
-        return obj is CardItemIdData other && Equals(other);
-    }
-    
-    public override int GetHashCode()
-    {
-        return HashCode.Combine(CardId, NextCardItemId);
-    }
-}
 
 
 /// <summary>
@@ -115,85 +86,6 @@ public class DeckManager : NetworkBehaviour
     private NetworkList<TotalCardsOnGameData> _totalCardsOnGame = new NetworkList<TotalCardsOnGameData>();
     public NetworkList<TotalCardsOnGameData> TotalCardsOnGame => _totalCardsOnGame;
 
-    /// <summary>
-    /// 첫번째 값: cardId, 두번째 값: 해당 cardId의 다음 cardItemId
-    /// </summary>
-    private readonly NetworkList<CardItemIdData> _cardItemId = new NetworkList<CardItemIdData>();
-    public NetworkList<CardItemIdData> CardItemId
-    {
-        get
-        {
-            return _cardItemId;
-        }
-    }
-
-    /// <summary>
-    /// 특정 CardId에 대해 다음 CardItemId를 가져오고 증가시킵니다.
-    /// </summary>
-    /// <param name="cardId">카드 ID</param>
-    /// <param name="requestId">요청 ID (클라이언트에서 응답을 구분하기 위함)</param>
-    [ServerRpc(RequireOwnership = false)]
-    public void GetNextCardItemIdServerRpc(int cardId, int requestId)
-    {
-        //CardId찾기
-        int currentIndex = -1;
-        for (int i = 0; i < _cardItemId.Count; i++)
-        {
-            if (_cardItemId[i].CardId == cardId)
-            {
-                currentIndex = i;
-                break;
-            }
-        }
-
-        int nextCardItemId;
-
-        if (currentIndex == -1)
-        {
-            // 새로운 CardId인 경우 초기화
-            nextCardItemId = cardId;
-            _cardItemId.Add(new CardItemIdData { CardId = cardId, NextCardItemId = nextCardItemId + 1 });
-        }
-        else
-        {
-            // 기존 CardId인 경우 현재 값 사용 후 증가
-            nextCardItemId = _cardItemId[currentIndex].NextCardItemId;
-            var updatedEntry = new CardItemIdData { CardId = cardId, NextCardItemId = nextCardItemId + 1 };
-            _cardItemId[currentIndex] = updatedEntry;
-        }
-
-        Debug.Log($"[DeckManager] CardId {cardId}에 대해 CardItemId {nextCardItemId} 할당 완료");
-
-        // 모든 클라이언트에게 결과 전달
-        GetNextCardItemIdResultClientRpc(cardId, nextCardItemId, requestId);
-    }
-
-    /// <summary>
-    /// CardItemId 할당 결과를 클라이언트에게 전달합니다.
-    /// </summary>
-    [ClientRpc]
-    private void GetNextCardItemIdResultClientRpc(int cardId, int cardItemId, int requestId)
-    {
-        // CardItemFactory에서 결과를 받아 처리할 수 있도록 이벤트 발생
-        OnCardItemIdAssigned?.Invoke(cardId, cardItemId, requestId);
-    }
-
-    /// <summary>
-    /// CardItemId가 할당되었을 때 발생하는 이벤트
-    /// </summary>
-    public static event System.Action<int, int, int> OnCardItemIdAssigned;
-
-    /// <summary>
-    /// CardItemId 목록을 초기화합니다.
-    /// </summary>
-    [ServerRpc(RequireOwnership = false)]
-    public void InitializeCardItemIdsServerRpc()
-    {
-        if (!IsHost) return;
-
-        _cardItemId.Clear();
-        Debug.Log("[DeckManager] CardItemId 목록 초기화 완료");
-    }
 
 
     public async Task SetTotalCardsOnGame(CardKeyValuePair[] cardKeyValuePairs)
@@ -210,7 +102,6 @@ public class DeckManager : NetworkBehaviour
         }
 
         _totalCardsOnGame.Clear();
-        _cardItemId.Clear(); // CardItemId도 초기화
 
         foreach (var card in cardKeyValuePairs)
         {
@@ -221,8 +112,6 @@ public class DeckManager : NetworkBehaviour
             };
             _totalCardsOnGame.Add(cardData);
 
-            // 각 CardId에 대해 초기 CardItemId 설정 (CardId + 0)
-            _cardItemId.Add(new CardItemIdData { CardId = card.Key, NextCardItemId = card.Key });
         }
 
         Debug.Log($"[DeckManager] {_totalCardsOnGame.Count}개 카드 데이터 설정 완료");
@@ -231,11 +120,19 @@ public class DeckManager : NetworkBehaviour
             Debug.Log($"[DeckManager] CardID: {card.cardId}, Amount: {card.cardTotalCount}");
         }
 
-        Debug.Log($"[DeckManager] {_cardItemId.Count}개 CardItemId 초기화 완료");
-        foreach (var cardItemId in _cardItemId)
+    }
+
+    public int GetCardTotalCount(int cardId)
+    {
+        foreach (var cardData in _totalCardsOnGame)
         {
-            Debug.Log($"[DeckManager] CardID: {cardItemId.CardId}, NextCardItemID: {cardItemId.NextCardItemId}");
+            if (cardData.cardId == cardId)
+            {
+                return cardData.cardTotalCount;
+            }
         }
+        Debug.LogError($"[DeckManager] CardID {cardId}가 TotalCardsOnGame에 존재하지 않습니다.");
+        return -1;
     }
 
     #endregion
@@ -337,7 +234,6 @@ public class DeckManager : NetworkBehaviour
         // 카드 상태 주입 (Sold) - 기존 cardItemId 그대로 사용
         var updatedCard = card;
         updatedCard.Status.State = CardItemState.Sold;
-        updatedCard.Status.CardItemID = card.CardItemId;
 
         //카드 획득 시간 주입
         updatedCard.AcquiredTicks = DateTime.Now.Ticks;

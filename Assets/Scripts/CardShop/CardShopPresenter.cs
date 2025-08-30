@@ -22,9 +22,7 @@ public sealed class CardShopPresenter : NetworkBehaviour
     public override void OnNetworkSpawn()
     {
         base.OnNetworkSpawn();
-                
-        CardItemFactory.Instance.OnCardForSaleCreated+=CardItemFactory_OnCardForSaleCreated;
-        _model.CreateCardsForSale();
+        _model.DisplayCardForSale();
 
         if (_view != null)
         {
@@ -99,11 +97,6 @@ public sealed class CardShopPresenter : NetworkBehaviour
         }
     }
 
-    #region 카드생성 콜백
-    public void CardItemFactory_OnCardForSaleCreated()
-    {
-        _model.MoveCardsForSaleToRowObject();
-    }
-    #endregion
+ 
 
 }
