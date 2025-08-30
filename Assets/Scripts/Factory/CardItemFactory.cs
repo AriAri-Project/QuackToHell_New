@@ -153,7 +153,7 @@ public class CardItemFactory : NetworkBehaviour
         return cardItemForInventory;
     }
 
-    public bool CreateCardForSale(int cardId, Vector3 inputPosition)
+    public GameObject CreateCardForSale(int cardId, Vector3 inputPosition)
     {
         #region 유효한 요청인지 확인
         //카드 ID가 존재하는지 확인
@@ -173,7 +173,7 @@ public class CardItemFactory : NetworkBehaviour
         if (!cardFound)
         {
             Debug.LogError($"[CardItemFactory] 카드 아이디에 맞는 카드 데이터가 없습니다. CardID: {cardId}");
-            return false;
+            return null;
         }
 
         //물량 있는지 확인
@@ -185,7 +185,7 @@ public class CardItemFactory : NetworkBehaviour
                 if (cardStock.cardTotalCount <= 0)
                 {
                     Debug.LogError($"[CardItemFactory] 해당 카드의 남은 물량이 없습니다. CardID: {cardId}");
-                    return false;
+                    return null;
                 }
                 break;
             }
@@ -228,7 +228,7 @@ public class CardItemFactory : NetworkBehaviour
         cardItemModel.CardItemStatusData = cardItemStatusData;
         Debug.Log($"[CardItemFactory] 카드 아이템 생성 완료. CardID: {cardId}, CardName: {cardDef.CardNameKey}, Price: {cardItemStatusData.Price}, Cost: {cardItemStatusData.Cost}, CardItemID: {cardItemStatusData.CardItemID}");
         #endregion
-        return true;
+        return cardItemForSale;
     }
     #endregion
 
