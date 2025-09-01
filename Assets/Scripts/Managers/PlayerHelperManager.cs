@@ -1,4 +1,5 @@
 using Unity.Netcode;
+using UnityEditor.PackageManager;
 using UnityEngine;
 
 /// <summary>
@@ -75,10 +76,10 @@ public class PlayerHelperManager : MonoBehaviour
     /// </summary>
     /// <param name="clientId">찾을 플레이어의 클라이언트 ID</param>
     /// <returns>플레이어의 PlayerModel, 찾지 못하면 null</returns>
-    public PlayerModel GetPlayerByClientId(ulong clientId)
+    public PlayerModel GetPlayerModelByClientId(ulong clientId)
     {
-        PlayerModel[] allPlayers = FindObjectsOfType<PlayerModel>();
-        
+        PlayerModel[] allPlayers = FindObjectsByType<PlayerModel>(FindObjectsSortMode.None);
+
         foreach (PlayerModel player in allPlayers)
         {
             if (player.NetworkObject != null && player.NetworkObject.OwnerClientId == clientId)
@@ -98,7 +99,7 @@ public class PlayerHelperManager : MonoBehaviour
     /// <returns>플레이어의 PlayerModel, 찾지 못하면 null</returns>
     public GameObject GetPlayerGameObjectByClientId(ulong clientId)
     {
-        PlayerModel[] allPlayers = FindObjectsOfType<PlayerModel>();
+        PlayerModel[] allPlayers = FindObjectsByType<PlayerModel>(FindObjectsSortMode.None);
         
         foreach (PlayerModel player in allPlayers)
         {
@@ -118,6 +119,6 @@ public class PlayerHelperManager : MonoBehaviour
     /// <returns>플레이어 수</returns>
     public int GetPlayerCount()
     {
-        return FindObjectsOfType<PlayerModel>().Length;
+        return NetworkManager.Singleton.ConnectedClients.Count;
     }
 }

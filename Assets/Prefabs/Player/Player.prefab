@@ -406,6 +406,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ShowTopMostFoldoutHeaderGroup: 1
+  _playerStatusData:
+    m_InternalValue:
+      Nickname: Puppy
+      Job: 0
+      Credibility: 100
+      Spellpower: 100
+      Gold: 25
+      MoveSpeed: 10
 --- !u!114 &6604892522499941508
 MonoBehaviour:
   m_ObjectHideFlags: 0

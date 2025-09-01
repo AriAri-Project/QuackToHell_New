@@ -65,7 +65,7 @@ public class GameManager : NetworkBehaviour
     public void DeductPlayerGoldServerRpc(ulong clientId, int amount)
     {
         //플레이어 골드차감
-        var player = PlayerHelperManager.Instance.GetPlayerByClientId(clientId);
+        var player = PlayerHelperManager.Instance.GetPlayerModelByClientId(clientId);
         var currentStatus = player.PlayerStatusData.Value;
         currentStatus.Gold -= amount;
         player.PlayerStatusData.Value = currentStatus;

@@ -21,25 +21,26 @@ public class PlayerFactory : NetworkBehaviour
 
 
     [ServerRpc(RequireOwnership = false)]
-    public void SpawnPlayerServerRpc(string inputNickName = "Player_", PlayerJob inputPlayerJob = PlayerJob.None, ServerRpcParams rpcParams = default)
+    public void SpawnPlayerServerRpc(ServerRpcParams rpcParams = default)
     {
         // 스폰 (리플리케이트)
         var player = Instantiate(playerPrefab, playerSpawnPoint);
-        player.name = $"{inputNickName}{rpcParams.Receive.SenderClientId}";
         player.GetComponent<NetworkObject>().SpawnWithOwnership(rpcParams.Receive.SenderClientId);
 
         // 서버에서만 값 세팅
         // 속성: NetworkVariable로 관리 (리플리케이트)
-        PlayerStatusData playerStatusData = new PlayerStatusData
-        {
-            Nickname = inputNickName + rpcParams.Receive.SenderClientId,
-            Job = inputPlayerJob,
-            Credibility = PlayerStatusData.MaxCredibility,
-            Spellpower = PlayerStatusData.MaxSpellpower,
-            Gold = 25,
-            MoveSpeed = 10f
-        };
-        player.GetComponent<PlayerModel>().PlayerStatusData.Value = playerStatusData;
+        // 인스펙터에서 설정한대로 초기화됨
+        ulong myClientId =  NetworkManager.Singleton.LocalClientId;
+        GameObject myPlayerObj = PlayerHelperManager.Instance.GetPlayerGameObjectByClientId(myClientId);
+        PlayerModel myPlayerModel =  myPlayerObj.GetComponent<PlayerModel>();
+        PlayerStatusData myPlayerStateData = myPlayerModel.PlayerStatusData.Value;
+        // 닉네임에 클라이언트 아이디 붙여서 구분
+        myPlayerStateData.Nickname = myPlayerStateData.Nickname + myClientId.ToString();
+        // 게임오브젝트의 이름을 닉네임으로 변경
+        player.name = $"{myPlayerStateData.Nickname}{rpcParams.Receive.SenderClientId}";
+        // state 데이터 주입
+        player.GetComponent<PlayerModel>().PlayerStatusData.Value = myPlayerStateData;
+
 
         // 상태 주입 (모두에게 명령)
         player.GetComponent<PlayerModel>().PlayerStateData.Value = new PlayerStateData

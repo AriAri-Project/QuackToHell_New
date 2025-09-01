@@ -3,6 +3,7 @@ using UnityEngine.SceneManagement;
 using Unity.Netcode;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+using System.Collections;
 
 public class LobbyController : NetworkBehaviour
 {
@@ -86,6 +87,13 @@ public class LobbyController : NetworkBehaviour
         }
        
         //본인 데이터가 모두 초기화되면, 씬 이동.
+         StartCoroutine(DelayedSceneLoad());
+    }
+
+    private IEnumerator DelayedSceneLoad()
+    {
+        // PlayerObject 생성 시간을 확보하기 위해 잠시 대기
+        yield return new WaitForSeconds(2f);
         LoadVillageSceneServerRpc();
     }
 
