@@ -124,9 +124,6 @@ public sealed class VentController : InteractionControllerBase
         _isOccupied = true;
         _currentPlayer = player;
 
-        // 카메라를 현재 벤트로
-        CameraFollowService.Instance?.SetFollow(_tr);
-
         // 플레이어 고정 & 가시성 조정
         CapturePlayerCaches(player);
         SetPlayerInsideVisual(true);
@@ -140,9 +137,6 @@ public sealed class VentController : InteractionControllerBase
     private void ExitVent(GameObject player)
     {
         if (!_isOccupied || _currentPlayer != player) return;
-
-        // 카메라를 플레이어로 복귀
-        CameraFollowService.Instance?.SetFollow(player.transform);
 
         // 플레이어를 벤트 출구 위치로 이동
         player.transform.position = _tr.position + (Vector3)exitOffset;
@@ -167,9 +161,6 @@ public sealed class VentController : InteractionControllerBase
     {
         if (!_isOccupied || _currentPlayer == null) return;
         if (!target) return;
-
-        // 카메라 전환
-        CameraFollowService.Instance?.SetFollow(target.transform);
 
         // A의 화살표 제거
         DespawnArrows();
