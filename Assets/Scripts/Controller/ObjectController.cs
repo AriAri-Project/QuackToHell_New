@@ -23,22 +23,22 @@ public enum InteractionType
 [DefaultExecutionOrder(40)]
 public sealed class ObjectController : MonoBehaviour
 {
-    [Header("Resource (테이블 키 → 스프라이트)")]
+    [Header("Resource")]
     [SerializeField] private ResourceTable resourceTable;
-    [SerializeField] private string resourceKey;
+    [SerializeField] private string resourcePathKey;
 
     [Header("Collision")]
-    [SerializeField] private bool passThrough = true; // 통과 가능 여부(O면 Trigger)
+    [SerializeField] private bool passThrough = true;
 
     [Header("Rendering")]
     [SerializeField] private RenderRule renderRule = RenderRule.AlwaysBehindPlayer;
     [SerializeField, Range(-50, 50)] private int orderOffset = 0;
 
-    [Header("Interaction (옵션)")]
+    [Header("Interaction")]
     [SerializeField] private bool isInteractable = false;
     [SerializeField] private InteractionType interactionType = InteractionType.None;
 
-    [Header("Refs (자동으로 찾아봄)")]
+    [Header("Refs (자동)")]
     [SerializeField] private SpriteRenderer spriteRenderer;
     [SerializeField] private Collider2D collider2D;
     [SerializeField] private SortingGroup sortingGroup;
@@ -92,9 +92,9 @@ public sealed class ObjectController : MonoBehaviour
     private void ApplySprite()
     {
         if (spriteRenderer == null) return;
-        if (string.IsNullOrWhiteSpace(resourceKey)) return;
+        if (string.IsNullOrWhiteSpace(resourcePathKey)) return;
 
-        var s = ResourceRegistry.GetSprite(resourceKey);
+        var s = ResourceRegistry.GetSprite(resourcePathKey);
         if (s != null) spriteRenderer.sprite = s;
     }
 
@@ -124,11 +124,33 @@ public sealed class ObjectController : MonoBehaviour
         SetSortingOrder(baseOrder + orderOffset);
     }
 
+    private SortingGroup _playerSG;
+    private SpriteRenderer _playerSR;
+
+    private int GetPlayerSortingOrder()
+    {
+        if (player == null) return 0;
+
+        if (_playerSG == null) _playerSG = player.GetComponent<SortingGroup>();
+        if (_playerSR == null) _playerSR = player.GetComponentInChildren<SpriteRenderer>();
+
+        if (_playerSG != null) return _playerSG.sortingOrder;
+        if (_playerSR != null) return _playerSR.sortingOrder;
+
+        return 0; // 플레이어에 정렬 정보 없으면 0 기준
+    }
+
     private void ApplySortingDynamic()
     {
         if (player == null) return;
-        int dyn = (player.position.y > transform.position.y) ? 50 : -50;
-        SetSortingOrder(dyn + orderOffset);
+
+        int playerOrder = GetPlayerSortingOrder();
+
+        // 상대 오프셋: ±10 정도 권장
+        int relative = (player.position.y > transform.position.y) ? +10 : -10;
+
+        int desired = playerOrder + relative + orderOffset;
+        SetSortingOrder(desired);
     }
 
     private void SetSortingOrder(int order)
@@ -147,6 +169,8 @@ public sealed class ObjectController : MonoBehaviour
         {
 #if UNITY_EDITOR
             RemoveIfExists<VentController>();
+            RemoveIfExists<TrialSummonController>();
+            RemoveIfExists<EntranceController>();
             // 다른 상호작용이 추가되면 여기에 추가
 #endif
             return;
@@ -158,7 +182,13 @@ public sealed class ObjectController : MonoBehaviour
             case InteractionType.Vent:
                 AddIfMissing<VentController>();
                 break;
-                // case InteractionType.Minigame: AddIfMissing<MinigameLauncherController>(); break;
+            case InteractionType.TrialSummon:
+                AddIfMissing<TrialSummonController>();
+                break;
+            case InteractionType.Entrance:
+                AddIfMissing<EntranceController>();
+                break;
+                // 다른 상호작용이 추가되면 여기에 추가
         }
     }
     #endregion
@@ -192,7 +222,7 @@ public sealed class ObjectController : MonoBehaviour
 #endif
 
     // 인스펙터에서 바꾸기 쉬운 공개 Setter
-    public void SetResourceKey(string key) { resourceKey = key; ApplySprite(); }
+    public void SetResourceKey(string key) { resourcePathKey = key; ApplySprite(); }
     public void SetPassThrough(bool v) { passThrough = v; ApplyCollision(); }
     public void SetRenderRule(RenderRule r) { renderRule = r; ApplySortingInitial(); }
     public void SetInteractable(bool v) { isInteractable = v; EnsureInteractionController(); }
