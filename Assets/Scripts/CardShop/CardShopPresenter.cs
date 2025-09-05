@@ -7,6 +7,10 @@ public sealed class CardShopPresenter : NetworkBehaviour
 {
     [SerializeField] private CardShopView viewBehaviour;
     [SerializeField] private float rerollCooldown = 0.2f;
+    [Header ("Village Scene의 CardForSaleParent 오브젝트를 넣어주세요")]
+    [SerializeField] private GameObject CardForSaleParent;
+    [Header("Village Scene의 CardShop의 하위 오브젝트인 Row 오브젝트를 넣어주세요")]
+    [SerializeField] private Transform CardShopRow;
 
     private CardShopView _view;
     private CardShopModel _model;
@@ -22,9 +26,9 @@ public sealed class CardShopPresenter : NetworkBehaviour
     public override void OnNetworkSpawn()
     {
         base.OnNetworkSpawn();
-                
-        CardItemFactory.Instance.OnCardForSaleCreated+=CardItemFactory_OnCardForSaleCreated;
-        _model.CreateCardsForSale();
+
+        _model.Initiate(CardForSaleParent, CardShopRow);
+        _model.DisplayCardForSale();
 
         if (_view != null)
         {
@@ -51,7 +55,7 @@ public sealed class CardShopPresenter : NetworkBehaviour
             s_serverByClient.Remove(OwnerClientId);
     }
 
-    public void TryPurchaseCard(InventoryCard card, ulong inputClientId)
+    public void TryPurchaseCard(CardItemData card, ulong inputClientId)
     {
         Debug.Log("[CardShopPresenter] TryPurchaseCard 실행됨");
         var clientId = inputClientId == 0UL ? OwnerClientId : inputClientId;
@@ -99,11 +103,6 @@ public sealed class CardShopPresenter : NetworkBehaviour
         }
     }
 
-    #region 카드생성 콜백
-    public void CardItemFactory_OnCardForSaleCreated()
-    {
-        _model.MoveCardsForSaleToRowObject();
-    }
-    #endregion
+ 
 
 }

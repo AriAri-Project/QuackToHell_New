@@ -4,8 +4,9 @@ using Unity.Netcode;
 using TMPro;
 using UnityEngine.EventSystems;
 
-public class CardItemView : NetworkBehaviour, IPointerClickHandler
+public class CardItemView : MonoBehaviour, IPointerClickHandler
 {
+    
     #region 외향
     [SerializeField]
     private TextMeshProUGUI cardItemNameTxt;
@@ -15,6 +16,8 @@ public class CardItemView : NetworkBehaviour, IPointerClickHandler
     private TextMeshProUGUI descriptionTxt;
     [SerializeField]
     private TextMeshProUGUI costTxt;
+    [SerializeField]
+    private TextMeshProUGUI cardItemIdTxt;
 
     [Header("Card For Sale용 Price 텍스트")]
     [SerializeField]
@@ -47,7 +50,10 @@ public class CardItemView : NetworkBehaviour, IPointerClickHandler
     {
         //발언력 표시-발언력 수치는 재판장 공격 카드 or 재판장 방어 카드일 경우에만 {카드 아이템 테이블 -Cost}로 표시
         //TODO: 조건에 따라 코스트 출력할지 안할지 결정
-        costTxt.text = cost.ToString();
+        if(gameObject.tag == QETag.CardForSale.ToString())
+        {
+            costTxt.text = cost.ToString();
+        }
         //TODO: 카드 특성 아이콘-재판장 공격 카드 or 재판장 방어 카드가 아닌 경우, 카드 타입 및 사용 가능한 장소에 따른 아이콘 표시
         //TODO: 카드 특성 BG-직업 분류 별로 다른 카드 배경 sprite 적용(마피아, 시민, 중립, 공용)
     }
@@ -60,6 +66,15 @@ public class CardItemView : NetworkBehaviour, IPointerClickHandler
         }
     }
 
+    public void SetCardItemIdAppearence(int cardItemId)
+    {
+        if (cardItemIdTxt)
+        {
+            //카드 아이템 ID 텍스트 출력
+            cardItemIdTxt.text = "card item id: \n"+cardItemId.ToString();
+        }
+    }
+
     #endregion
 
     #region 구매 클릭 입력 이벤트
@@ -69,15 +84,11 @@ public class CardItemView : NetworkBehaviour, IPointerClickHandler
     public void OnPointerClick(PointerEventData eventData)
     {
         //만약 오브젝트가 Card for Sale이라면 구매 클릭 이벤트 전달
-        Transform parentTransform = transform.parent;
 
-        if (parentTransform != null)
-        { 
-            if (parentTransform.CompareTag("CardForSale"))
-            {
-                Debug.Log("[CardItemView] Card for Sale 클릭");
-                OnPurchaseClicked?.Invoke(NetworkManager.Singleton.LocalClientId);
-            }
+        if (gameObject.CompareTag(QETag.CardForSale.ToString()))
+        {
+            Debug.Log("[CardItemView] Card for Sale 클릭");
+            OnPurchaseClicked?.Invoke(NetworkManager.Singleton.LocalClientId);
         }
     }
 

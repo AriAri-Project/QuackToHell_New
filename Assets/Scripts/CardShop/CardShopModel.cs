@@ -2,10 +2,12 @@ using Unity.Netcode;
 using UnityEngine;
 using static UnityEngine.Rendering.DebugUI.Table;
 using System.Collections.Generic;
+using System.Linq;
+using UnityEditor;
 
 public interface ICardShopModel
 {
-    void RequestPurchase(InventoryCard card, ulong clientId);
+    void RequestPurchase(CardItemData card, ulong clientId);
 
     bool IsLocked { get; set; }
     bool TryReRoll();
@@ -18,7 +20,21 @@ public sealed class CardShopModel
 
     private enum Rarity { Common, Rare }
 
-    public void RequestPurchase(InventoryCard card, ulong clientId)
+    private GameObject cardForSaleParent;
+    private Transform rowObjectTransform;
+    const int maximumDisplayCount = 5;
+    private int totalCardCountOnMap = 0;
+
+    public void Initiate(GameObject CardForSaleParent, Transform rowObjectTrs)
+    {
+        cardForSaleParent = CardForSaleParent;
+        rowObjectTransform = rowObjectTrs;
+
+        // 판매할 카드 만들어두기
+        CardItemFactory.Instance.CreateTotalCardForSale();        
+    }
+
+    public void RequestPurchase(CardItemData card, ulong clientId)
     {
         if (DeckManager.Instance == null)
         {
@@ -50,7 +66,7 @@ public sealed class CardShopModel
         return false; 
     }
 
-    private bool IsDuplicateRestrictedAndOwned(InventoryCard card, ulong clientId, out string msg)
+    private bool IsDuplicateRestrictedAndOwned(CardItemData card, ulong clientId, out string msg)
     {
         // TODO: 카드 메타데이터에 중복 제한 플래그가 있다면 확인
         msg = string.Empty;
@@ -116,88 +132,29 @@ public sealed class CardShopModel
         if (IsLocked) return false;
 
         // 새로 뿌리기
-        CreateCardsForSale();
+        DisplayCardForSale();
 
         return true;
     }
 
-    private Transform _row;
-    private Transform GetRow()
+    
+    public void DisplayCardForSale()
     {
-        Debug.Log($"[CardShopModel] GetRow 실행됨");
-        if (_row == null)
-        {
-            GameObject rowParent = GameObject.FindWithTag("CardShop");
-            if (rowParent != null)
-            {
-                // 모든 자손에서 CardShopRow 찾기 (비활성화된 것도 포함)
-                Transform[] allChildren = rowParent.GetComponentsInChildren<Transform>(true);
-                foreach (Transform child in allChildren)
-                {
-                    if (child.name == "CardShopRow")
-                    {
-                        _row = child;
-                        break;
-                    }
-                }
-            }
-        }
-        return _row;
-    }
-    public void CreateCardsForSale()
-    {
-        Debug.Log($"[CardShopModel] 카드 진열함수 들어옴");
-        if (IsLocked)
-        {
-            Debug.Log("[CardShopModel] Locked: skip DisplayCardsForSale");
-            return;
-        }
+        //cardForSaleParent의 자식 오브젝트 중에서, 5개의 랜덤한 오브젝트를 찾아서 
+        
+        //[TODO] sold가 아닌 애들을 후보군으로
+        //[TODO] 모두 sold 상태면, 물량 없다고 에러찍고 진열 포기
 
-        var row = GetRow();
-        if (row == null) return;
-
-        // 기존 카드 다 지우기
-        for (int i = row.childCount - 1; i >= 0; i--)
-        {
-            Object.Destroy(row.GetChild(i).gameObject);
-        }
-
-        Vector3 center = row.position;
-        if (row is RectTransform rt) center = rt.TransformPoint(rt.rect.center);
-
-        const int count = 5;
-        float cardWidth = 200f;   // UI에 맞게 조정
-        float spacing = 50f;
-        float startX = -(count - 1) * (cardWidth + spacing) * 0.5f;
-
-        // 5개 생성
-        int[] pool = { 10000, 20000, 30000, 10100, 20200, 30200 };
-        var rng = new System.Random();
-
-        for (int i = 0; i < count; i++)
-        {
-            int pick = pool[rng.Next(pool.Length)];
-            var pos = new Vector3(center.x + startX + i * (cardWidth + spacing), center.y, center.z);
-            Debug.Log($"[CardShopModel] 카드 생성 id={pick}");
-            CardItemFactory.Instance.CreateCardForSale(pick, Vector3.zero);
+        for (int i = 0; i < totalCardCountOnMap; i++) {
+            //TODO: 후보군중에서 randomIndex뽑기
+            //임시로 전체에서 뽑음
+            int randomIndex = Random.Range(0, totalCardCountOnMap);
+            //해당 인덱스의 오브젝트를 Row밑으로 옮기고 활성화
+            Transform pickedCard = cardForSaleParent.transform.GetChild(randomIndex);
+            pickedCard.SetParent(rowObjectTransform, false);
+            pickedCard.gameObject.SetActive(true);
         }
         
-    }
-    /// <summary>
-    /// 카드들을 Row 오브젝트 밑으로 이동시킵니다.
-    /// </summary>
-    public void MoveCardsForSaleToRowObject()
-    {
-        var row = GetRow();
-        if (row == null) return;
-
-        // 스폰된 카드들을 전부 Row 밑으로 이동
-        var spawned = GameObject.FindGameObjectsWithTag("CardForSale");
-        foreach (var go in spawned)
-        {
-            Debug.Log($"[CardShopModel] 카드 진열함수: 카드의 부모오브젝트 세팅");
-            go.transform.SetParent(row, false);
-        }
     }
     #endregion
 }

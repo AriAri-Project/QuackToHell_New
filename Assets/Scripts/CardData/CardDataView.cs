@@ -17,16 +17,15 @@ public sealed class CardDataView : NetworkBehaviour
     public override async void OnNetworkSpawn()
     {
         base.OnNetworkSpawn();
+        //호스트만 데이터 로드
         if (!IsHost)
         {
             return;
         }
-        
-#if UNITY_2023_1_OR_NEWER
+
+        //CardDataView가 중복 생성되는 것을 방지
         var exists = Object.FindObjectsByType<CardDataView>(FindObjectsSortMode.None);
-#else
-        var exists = Object.FindObjectsOfType<CardDataView>();
-#endif
+
         if (exists.Length > 1)
         {
             Destroy(gameObject);
@@ -34,6 +33,7 @@ public sealed class CardDataView : NetworkBehaviour
         }
 
         DontDestroyOnLoad(gameObject);
+
         _cts = new CancellationTokenSource();
 
         Presenter ??= new CardDataPresenter();
@@ -43,12 +43,12 @@ public sealed class CardDataView : NetworkBehaviour
             await Presenter.PreloadAsync(cardCsvUrl, stringCsvUrl, resourceCsvUrl, _cts.Token);
             Debug.Log($"[CardData] Ready. Cards={Presenter.CardCount}");
         }
+
         catch (System.Exception ex)
         {
             Debug.LogError($"[CardData] init failed: {ex.Message}");
         }
     }
  
-
     void OnDestroy() { _cts?.Cancel(); _cts?.Dispose(); }
 }
