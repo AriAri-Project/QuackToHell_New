@@ -154,7 +154,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   resourceTable: {fileID: 11400000, guid: ed8359e26b7bd8c4885dfc94a8d800ef, type: 2}
-  resourceKey: vent_default
+  resourcePathKey: 
   passThrough: 1
   renderRule: 0
   orderOffset: 0
@@ -177,15 +177,22 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ventId: 
-  enterAnimKey: 
-  exitAnimKey: 
-  arrowSpriteKey: 
+  enterAnimation: {fileID: 0}
+  exitAnimation: {fileID: 0}
+  animator: {fileID: 0}
   interactionRadius: 1
   cooldownSec: 0.5
   interactKey: 101
   alsoSpace: 1
   exitOffset: {x: 0, y: 0.5}
   linkedVents: []
+  arrowDistanceFromSource: 1.1
+  keepAwayFromTarget: 0.4
+  arrowNormalOffset: 0
+  disableWhileInside: []
+  hideByDisableRenderer: 1
+  insideAlpha: 0.153
+  freezeRigidbody2D: 1
   arrowPrefab: {fileID: 2116766531400907591, guid: de685615eaba1cd418d490fb3a047a46, type: 3}
 --- !u!114 &3377290141252231197
 MonoBehaviour:
@@ -229,7 +236,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1.05, y: 1.05, z: 1}
+  m_LocalScale: {x: 2.3, y: 2.3, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 4070802317202258681}
@@ -277,7 +284,7 @@ SpriteRenderer:
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 2
+  m_SortingOrder: -2
   m_Sprite: {fileID: 8900450184890682882, guid: d26dacb16be137a4fa66e0331d740159, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 0.60784316}
   m_FlipX: 0
