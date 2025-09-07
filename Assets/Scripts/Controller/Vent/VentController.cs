@@ -7,10 +7,10 @@ public sealed class VentController : InteractionControllerBase
     [Header("Identification")]
     [SerializeField] private string ventId;
 
-    [Header("Resources (keys in ResourceTable)")]
-    [SerializeField] private string enterAnimKey;
-    [SerializeField] private string exitAnimKey;
-    [SerializeField] private string arrowSpriteKey;
+    [Header("Vent Animations")]
+    [SerializeField] private AnimationClip enterAnimation;
+    [SerializeField] private AnimationClip exitAnimation;
+    [SerializeField] private Animator animator;
 
     [Header("Interaction")]
     [SerializeField, Range(0.5f, 5f)] private float interactionRadius = 1f;
@@ -21,6 +21,11 @@ public sealed class VentController : InteractionControllerBase
 
     [Header("Links (Max 4)")]
     public List<VentController> linkedVents = new();
+
+    [Header("Arrow Placement")]
+    [SerializeField, Min(0.1f)] private float arrowDistanceFromSource = 1.1f; // A에서 떨어질 절대 거리
+    [SerializeField, Min(0.1f)] private float keepAwayFromTarget = 0.4f;      // B로부터 최소 이격
+    [SerializeField, Range(-0.5f, 0.5f)] private float arrowNormalOffset = 0.0f;
 
     [Header("Player Handling While Inside")]
     [Tooltip("벤트 탑승 중 비활성화할 플레이어 컴포넌트(이동/입력 스크립트 등)를 여기에 드래그하세요.")]
@@ -50,6 +55,19 @@ public sealed class VentController : InteractionControllerBase
 
     // 링크 변경 감지(탑승 중 편집 반영)
     private int _linksHash;
+
+    // 벤트 탑승 및 탈출 애니메이션
+    private void PlayEnterAnimation()
+    {
+        if (animator && enterAnimation)
+            animator.Play(enterAnimation.name);
+    }
+
+    private void PlayExitAnimation()
+    {
+        if (animator && exitAnimation)
+            animator.Play(exitAnimation.name);
+    }
 
     protected override void Awake()
     {
@@ -124,6 +142,9 @@ public sealed class VentController : InteractionControllerBase
         _isOccupied = true;
         _currentPlayer = player;
 
+        //탑승 애니메이션
+        PlayEnterAnimation();
+
         // 플레이어 고정 & 가시성 조정
         CapturePlayerCaches(player);
         SetPlayerInsideVisual(true);
@@ -137,6 +158,9 @@ public sealed class VentController : InteractionControllerBase
     private void ExitVent(GameObject player)
     {
         if (!_isOccupied || _currentPlayer != player) return;
+
+        // 탈출 애니메이션
+        PlayExitAnimation();
 
         // 플레이어를 벤트 출구 위치로 이동
         player.transform.position = _tr.position + (Vector3)exitOffset;
@@ -203,19 +227,23 @@ public sealed class VentController : InteractionControllerBase
 
             Vector3 a = _tr.position;
             Vector3 b = target.transform.position;
-            Vector3 pos = Vector3.Lerp(a, b, 0.6f);
+            Vector3 ab = b - a;
+            float d = ab.magnitude;
+            if (d < 0.001f) continue;
+
+            Vector3 dir = ab / d;
+            Vector3 perp = new(-dir.y, dir.x, 0f);
+
+            // A에서 떨어진 거리, B와의 최소 이격 보정
+            float place = Mathf.Clamp(arrowDistanceFromSource, 0.05f, Mathf.Max(0.05f, d - keepAwayFromTarget));
+
+            // 위치 계산
+            Vector3 pos = a + dir * place + perp * arrowNormalOffset;
             go.transform.position = pos;
 
-            Vector2 dir = (b - a).normalized;
+            // 회전 (B 쪽을 향하게)
             float angle = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg;
             go.transform.rotation = Quaternion.AngleAxis(angle, Vector3.forward);
-
-            var sr = go.GetComponentInChildren<SpriteRenderer>();
-            if (sr && !string.IsNullOrEmpty(arrowSpriteKey))
-            {
-                var sp = ResourceRegistry.GetSprite(arrowSpriteKey);
-                if (sp) sr.sprite = sp;
-            }
 
             arrow.Setup(this, target);
             _spawnedArrows.Add(go);
