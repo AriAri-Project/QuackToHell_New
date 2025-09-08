@@ -1,68 +1,65 @@
 using UnityEngine;
 using Unity.Netcode;
+using System;
 
-public class CardItemModel : NetworkBehaviour
+public class CardItemModel : MonoBehaviour
 {
+    /*   private void Start()
+       {
+           //carditemdefdata값 바뀌면 OnCardDefDataChanged 실행
+           OnCardDefDataChanged += (newValue) =>
+           {
+               CardDefData = newValue;
+           };
+
+           //carditemstate값 바뀌면 SetStateByCardItemStateEnum() 실행
+           OnCardItemStatusDataChanged += (newValue) =>
+           {
+               SetStateByCardItemStateEnum(newValue.State);
+               ApplyStateChange();
+           };
+           //초기화 실행
+           SetStateByCardItemStateEnum(CardItemStatusData.State);
+           ApplyStateChange();
+
+
+       }
+       private void Update()
+       {
+           if (curState != null)
+           {
+               curState.OnStateUpdate();
+           }
+       }*/
+
+    private GameObject CardForSaleParent;
+
     private void Start()
     {
-        //carditemdefdata값 바뀌면 OnCardDefDataChanged 실행
-        OnCardDefDataChanged += (newValue) =>
-        {
-            CardDefData = newValue;
-        };
+        //찾기
+        CardForSaleParent = GameObject.Find("CardForSaleParent");
 
-        //carditemstate값 바뀌면 SetStateByCardItemStateEnum() 실행
-        OnCardItemStatusDataChanged += (newValue) =>
-        {
-            SetStateByCardItemStateEnum(newValue.State);
-            ApplyStateChange();
-        };
-        //초기화 실행
-        SetStateByCardItemStateEnum(CardItemStatusData.State);
-        ApplyStateChange();
+        gameObject.transform.SetParent(CardForSaleParent.transform);
 
-        
-    }
-    private void Update()
-    {
-        if (curState != null)
-        {
-            curState.OnStateUpdate();
-        }
+        //비활성화
+        gameObject.SetActive(false); 
     }
 
     #region 데이터
     //데이터
-    private CardDef _cardDefData = new();
-    public event System.Action<CardDef> OnCardDefDataChanged;
-    public CardDef CardDefData
+    private NetworkVariable<CardItemData> cardItemData = new NetworkVariable<CardItemData>();
+    public NetworkVariable<CardItemData> CardItemData
     {
-        get { return _cardDefData; }
+        get => cardItemData;
         set
         {
-            if (!_cardDefData.Equals(value))
-            {
-                _cardDefData = value;
-                OnCardDefDataChanged?.Invoke(_cardDefData);
-            }
+            cardItemData.Value = value.Value;
+            DeckManager.Instance.RequestUpdateAllCardsOnGameDataServerRpc(cardItemData.Value);
         }
     }
-    private CardItemStatusData _cardItemStatusData = new();
-    public event System.Action<CardItemStatusData> OnCardItemStatusDataChanged;
-    public CardItemStatusData CardItemStatusData
-    {
-        get { return _cardItemStatusData; }
-        set
-        {
-            if (!_cardItemStatusData.Equals(value))
-            {
-                _cardItemStatusData = value;
-                OnCardItemStatusDataChanged?.Invoke(_cardItemStatusData);
-            }
-        }
-    }
+
     #endregion
-    #region 카드 상태
+/*    #region 카드 상태
 
     private StateBase preState;
     private StateBase tempState;
@@ -113,5 +110,5 @@ public class CardItemModel : NetworkBehaviour
         curState.OnStateEnter();
     }
     #endregion
-
+*/
 }

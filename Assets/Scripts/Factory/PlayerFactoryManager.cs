@@ -46,6 +46,7 @@ public class PlayerFactoryManager : NetworkBehaviour
             ColorIndex = 0 // 기본 색상 (Red)
         };
 
+
         // 상태 주입 (모두에게 명령)
         playerModel.PlayerStateData.Value = new PlayerStateData
         {

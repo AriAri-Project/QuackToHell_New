@@ -10,7 +10,7 @@ public enum TierEnum { None = 0, Common = 1, Rare = 2, Special = 3 }
 public enum TypeEnum { None = 0, Attack = 1, Defense = 2, Special = 3 }
 
 // 딕셔너리의 Key와 Value 한 쌍을 담을 컨테이너 struct
-public struct CardKeyValuePair : INetworkSerializable, IEquatable<CardKeyValuePair>
+public struct Dictionary_CardIdCardDef : INetworkSerializable, IEquatable<Dictionary_CardIdCardDef>
 {
     public int Key;
     public CardDef Value;
@@ -21,19 +21,71 @@ public struct CardKeyValuePair : INetworkSerializable, IEquatable<CardKeyValuePa
         serializer.SerializeValue(ref Value);
     }
 
-    public bool Equals(CardKeyValuePair other)
+    public bool Equals(Dictionary_CardIdCardDef other)
     {
         return Key == other.Key && Value.Equals(other.Value);
     }
 
     public override bool Equals(object obj)
     {
-        return obj is CardKeyValuePair pair && Equals(pair);
+        return obj is Dictionary_CardIdCardDef pair && Equals(pair);
     }
 
     public override int GetHashCode()
     {
         return HashCode.Combine(Key, Value);
+    }
+}
+/// <summary>
+/// 카드 아이템 데이터 (CardDef + CardItemStatusData)
+/// </summary>
+public struct CardItemData : INetworkSerializable, IEquatable<CardItemData>, IEquatable<CardDef>, IEquatable<CardStatusData>
+{
+    public int CardIdKey;
+    public CardDef CardDef;
+    public CardStatusData CardItemStatusData;
+    public long AcquiredTicks; // 카드 획득 시점 
+
+    public void NetworkSerialize<T>(BufferSerializer<T> serializer) where T : IReaderWriter
+    {
+        serializer.SerializeValue(ref CardIdKey);
+        serializer.SerializeValue(ref CardDef);
+        serializer.SerializeValue(ref CardItemStatusData);
+        serializer.SerializeValue(ref AcquiredTicks);
+    }
+
+    public bool Equals(CardItemData other)
+    {
+        return CardIdKey == other.CardIdKey && 
+               CardDef.Equals(other.CardDef) && 
+               CardItemStatusData.Equals(other.CardItemStatusData) && 
+               AcquiredTicks == other.AcquiredTicks;
+    }
+
+    public bool Equals(CardDef other)
+    {
+        return CardDef.Equals(other);
+    }
+
+    public bool Equals(CardStatusData other)
+    {
+        return CardItemStatusData.Equals(other);
+    }
+
+    public override bool Equals(object obj)
+    {
+        if (obj is CardItemData cardItemData)
+            return Equals(cardItemData);
+        if (obj is CardDef cardDef)
+            return Equals(cardDef);
+        if (obj is CardStatusData statusData)
+            return Equals(statusData);
+        return false;
+    }
+
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(CardIdKey, CardDef, CardItemStatusData, AcquiredTicks);
     }
 }
 
@@ -116,15 +168,15 @@ public struct CardDef : INetworkSerializable, IEquatable<CardDef>
     }
 }
 
-
 public enum CardItemState
 {
     None,
+    Solding,
     Sold,
 }
 
 
-public struct CardItemStatusData : INetworkSerializable, IEquatable<CardItemStatusData>
+public struct CardStatusData : INetworkSerializable, IEquatable<CardStatusData>
 {
     public int CardItemID;
     public int CardID;
@@ -140,14 +192,14 @@ public struct CardItemStatusData : INetworkSerializable, IEquatable<CardItemStat
         serializer.SerializeValue(ref Cost);
     }
 
-    public bool Equals(CardItemStatusData other)
+    public bool Equals(CardStatusData other)
     {
         return CardItemID == other.CardItemID && CardID == other.CardID && Price == other.Price && Cost == other.Cost && State == other.State;
     }
 
     public override bool Equals(object obj)
     {
-        return obj is CardItemStatusData data && Equals(data);
+        return obj is CardStatusData data && Equals(data);
     }
 
     public override int GetHashCode()
