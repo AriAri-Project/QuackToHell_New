@@ -10,12 +10,14 @@ using System;
 public class AnimalStrategy : IRoleStrategy
 {
     private PlayerPresenter _playerPresenter;
+    private PlayerModel _playerModel;
     private PlayerInput _playerInput;
     private InputActionMap _commonActionMap;
     
-    public AnimalStrategy(PlayerPresenter playerPresenter, PlayerInput playerInput)
+    public AnimalStrategy(PlayerModel playerModel, PlayerPresenter playerPresenter, PlayerInput playerInput)
     {
         _playerPresenter = playerPresenter;
+        _playerModel = playerModel;
         _playerInput = playerInput;
     }
     
@@ -24,9 +26,7 @@ public class AnimalStrategy : IRoleStrategy
         // 공통 Action Map만 활성화
         _commonActionMap = _playerInput.actions.FindActionMap(GameInputs.ActionMaps.Player);
         if (_commonActionMap != null) _commonActionMap.Enable();
-        
-        // 동물 전용 UI 활성화
-        _playerPresenter.ShowAnimalUI();
+    
     }
     
     public void HandleInput(InputAction.CallbackContext context)
@@ -158,7 +158,7 @@ public class AnimalStrategy : IRoleStrategy
     public bool CanReportCorpse()
     {
         // 유령이 아닌 경우에만 시체 리포트 가능
-        return _playerPresenter.GetPlayerAliveState() == PlayerLivingState.Alive;
+        return _playerModel.GetPlayerAliveState() == PlayerLivingState.Alive;
     }
 
     public void TryVent() { /* 아무것도 하지 않음 */ }

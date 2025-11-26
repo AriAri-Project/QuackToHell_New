@@ -55,19 +55,15 @@ public class PlayerHelperManager : MonoBehaviour
     /// <returns>플레이어의 PlayerModel, 찾지 못하면 null</returns>
     public PlayerModel GetPlayerModelByClientId(ulong clientId)
     {
-        UpdatePlayerCache();
-        
-        foreach (PlayerModel player in _cachedPlayers)
+        // note cba0898: Assert 는 배포 빌드에서 해당 상황이 없어야 한다는 가정입니다. 조건문의 일부로 포함하지 말아주세요.
+        PlayerModel[] allPlayers = GetAllPlayers<PlayerModel>();
+        foreach (PlayerModel player in allPlayers)
         {
-            // note cba0898: Assert 는 배포 빌드에서 해당 상황이 없어야 한다는 가정입니다. 조건문의 일부로 포함하지 말아주세요.
-            if (DebugUtils.AssertNotNull(player.NetworkObject, "Player NetworkObject", this) && 
-                player.NetworkObject.OwnerClientId == clientId)
+            if (player.NetworkObject.OwnerClientId == clientId)
             {
                 return player;
             }
         }
-        
-        Debug.LogWarning($"Player with ClientId {clientId} not found in scene");
         return null;
     }
 
@@ -123,17 +119,22 @@ public class PlayerHelperManager : MonoBehaviour
         {
             DebugUtils.AssertNotNull(player, "PlayerView", this);
             player.IgnoreMoveInput = true;
+            Rigidbody2D rb = player.GetComponent<Rigidbody2D>();
+            if (rb != null)
+            {
+                rb.linearVelocity = Vector2.zero;
+            }
         }
     }
     /// <summary>
     /// 모든 플레이어를 가져오는 함수
     /// </summary>
-    public PlayerPresenter[] GetAllPlayers(){
-        return FindObjectsByType<PlayerPresenter>(FindObjectsSortMode.None);
+    public T[] GetAllPlayers<T> ()where T : Component{
+        return FindObjectsByType<T>(FindObjectsSortMode.None);
     }
 
     public PlayerPresenter GetPlayerPresenterByClientId(ulong clientId){
-        PlayerPresenter[] allPlayers = GetAllPlayers();
+        PlayerPresenter[] allPlayers = GetAllPlayers<PlayerPresenter>();
         foreach (PlayerPresenter player in allPlayers)
         {
             if (player.NetworkObject.OwnerClientId == clientId)

@@ -10,10 +10,11 @@ public class PlayerIdleState : NetworkStateBase
     [Header("References")]
     [SerializeField] private Animator animator;
 
-    
+    [SerializeField] private GameObject head;
     public override void OnStateEnter()
     {
         TriggerIdleAnimation();
+        head.SetActive(false);
     }
     
     // 트리거 방식으로 애니메이션 제어

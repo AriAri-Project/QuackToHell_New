@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Unity.Collections;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -41,7 +42,7 @@ public abstract class UIBase : MonoBehaviour
     public static void BindEvent(GameObject go, Action<PointerEventData> action, string type = GameEvents.UIEvent.Click)
     {
         UIEventHandler evt = GameObjectUtils.GetOrAddComponent<UIEventHandler>(go);
-
+        
         switch (type)
         {
             case GameEvents.UIEvent.Click:
@@ -51,6 +52,18 @@ public abstract class UIBase : MonoBehaviour
             case GameEvents.UIEvent.Drag:
                 evt.OnDragHandler -= action;
                 evt.OnDragHandler += action;
+                break;
+            case GameEvents.UIEvent.BeginDrag:
+                evt.OnBeginDragHandler -= action;
+                evt.OnBeginDragHandler += action;
+                break;
+            case GameEvents.UIEvent.EndDrag:
+                evt.OnEndDragHandler -= action;
+                evt.OnEndDragHandler += action;
+                break;
+            case GameEvents.UIEvent.Drop:
+                evt.OnDropHandler -= action;
+                evt.OnDropHandler += action;
                 break;
         }
     }

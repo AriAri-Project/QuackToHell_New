@@ -2,6 +2,7 @@ using UnityEngine;
 
 public class CardItemSoldState : StateBase
 {
+   
     public override void OnStateEnter()
     {
         

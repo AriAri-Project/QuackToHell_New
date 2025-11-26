@@ -89,5 +89,10 @@ public class CardShopModel : MonoBehaviour
         }
         return null;
     }
+
+    public bool HasDisplayedCards()
+    {
+        return rowObjectTransform != null && rowObjectTransform.childCount > 0;
+    }
     #endregion
 }

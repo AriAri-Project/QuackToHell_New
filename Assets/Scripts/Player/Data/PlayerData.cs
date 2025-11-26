@@ -13,7 +13,8 @@ public enum PlayerLivingState
 public enum PlayerAnimationState
 {
     Idle,
-    Walk
+    Walk,
+    VentEnter
 }
 
 public enum PlayerJob
@@ -26,6 +27,7 @@ public enum PlayerJob
 
 public enum EPlayerColorIndex
 {
+    Default,
     Red,
     Orange,
     Yellow,

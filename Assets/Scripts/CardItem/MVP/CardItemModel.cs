@@ -5,33 +5,7 @@ namespace CardItem.MVP
 {
     public class CardItemModel : MonoBehaviour
     {
-        /*   private void Start()
-       {
-           OnCardDefDataChanged += (newValue) =>
-           {
-               CardDefData = newValue;
-           };
-
-           OnCardItemStatusDataChanged += (newValue) =>
-           {
-               SetStateByCardItemStateEnum(newValue.State);
-               ApplyStateChange();
-           };
-           SetStateByCardItemStateEnum(CardItemStatusData.State);
-           ApplyStateChange();
-
-
-       }
-       private void Update()
-       {
-           if (curState != null)
-           {
-               curState.OnStateUpdate();
-           }
-       }*/
-
-    
-
+       
 
         #region 데이터
         private CardItemData _cardItemData;
@@ -164,5 +138,26 @@ namespace CardItem.MVP
         }
 
         #endregion
+        #region 외부 인터페이스 (메시지 기반)
+        
+        
+        /// <summary>
+        /// 카드 가격 조회
+        /// </summary>
+        public int GetCardPrice()
+        {
+            return _cardItemData.cardItemStatusData.price;
+        }
+        
+        /// <summary>
+        /// 카드 구매 가능 여부 조회
+        /// </summary>
+        public bool IsPurchasable()
+        {
+            return _cardItemData.cardItemStatusData.state == CardItemState.None;
+        }
+        
+        #endregion
     }
+    
 }

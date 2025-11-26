@@ -11,18 +11,17 @@ public class HUDController : MonoBehaviour
     #region 버튼 바인딩
     public void InventoryButton_OnClick()
     {
-        //CardInventoryCanvas찾아서 저장
-        inventoryCanvas = GameObject.Find("CardInventoryCanvas");
         if (inventoryCanvas == null)
         {
-            Instantiate(inventoryPrefab, Vector3.zero, Quaternion.identity);    
+            inventoryCanvas = GameObject.Find("CardInventoryCanvas");     
+        }
+        if(inventoryCanvas==null){
+            inventoryCanvas = Instantiate(inventoryPrefab, Vector3.zero, Quaternion.identity);    
         }
         else
         {
             inventoryCanvas.transform.GetChild(0).gameObject.SetActive(true);
         }
-        
-        
     }
     #endregion
 }

@@ -71,5 +71,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ShowTopMostFoldoutHeaderGroup: 1
-  assignRoleCanvas: {fileID: 3519142538284461929, guid: 69653b4f5f98779499faa858e544dc47, type: 3}
+  skipLobby: 0
+  hostTag: 0
   playerUIPrefab: {fileID: 3904200660345883418, guid: 8ad601674dfaf7f458eef5420e291666, type: 3}

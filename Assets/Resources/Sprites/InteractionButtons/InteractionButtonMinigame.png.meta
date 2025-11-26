@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: daa7aa01db6c4f64f9fb9c9df4ed193e
+guid: 73f3e665b6f32ee4a8d93903b2252c3c
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 7327382753203092920
-    second: InteractionButtonMinigame_0
+      213: 4636631199408157601
+    second: "\u1107\u1166\u11AB\u1110\u1173_0"
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -37,7 +37,7 @@ TextureImporter:
   maxTextureSize: 2048
   textureSettings:
     serializedVersion: 2
-    filterMode: 1
+    filterMode: 0
     aniso: 1
     mipBias: 0
     wrapU: 1
@@ -46,7 +46,7 @@ TextureImporter:
   nPOTScale: 0
   lightmap: 0
   compressionQuality: 50
-  spriteMode: 2
+  spriteMode: 1
   spriteExtrude: 1
   spriteMeshType: 1
   alignment: 0
@@ -75,7 +75,7 @@ TextureImporter:
     maxTextureSize: 2048
     resizeAlgorithm: 0
     textureFormat: -1
-    textureCompression: 1
+    textureCompression: 0
     compressionQuality: 50
     crunchedCompression: 0
     allowsAlphaSplitting: 0
@@ -100,13 +100,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: InteractionButtonMinigame_0
+      name: "\u1107\u1166\u11AB\u1110\u1173_0"
       rect:
         serializedVersion: 2
-        x: 0
-        y: 0
-        width: 256
-        height: 256
+        x: 24
+        y: 13
+        width: 348
+        height: 372
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -115,8 +115,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 8bd7ef9bac710b560800000000000000
-      internalID: 7327382753203092920
+      spriteID: 1a3773b828f985040800000000000000
+      internalID: 4636631199408157601
       vertices: []
       indices: 
       edges: []
@@ -125,7 +125,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: 
+    spriteID: 5e97eb03825dee720800000000000000
     internalID: 0
     vertices: []
     indices: 
@@ -135,7 +135,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      InteractionButtonMinigame_0: 7327382753203092920
+      "\u1107\u1166\u11AB\u1110\u1173_0": 4636631199408157601
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

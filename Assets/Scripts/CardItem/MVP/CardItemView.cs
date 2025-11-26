@@ -7,6 +7,8 @@ namespace CardItem.MVP
 {
     public class CardItemView : MonoBehaviour, IPointerClickHandler
     {
+        [Header("For CardForSale SFX")]
+        public AudioSource mouseEnterSFX;
     
         #region 외향
         [SerializeField]
@@ -82,10 +84,17 @@ namespace CardItem.MVP
         public void OnPointerClick(PointerEventData eventData)
         {
             //만약 오브젝트가 Card for Sale이라면 구매 클릭 이벤트 전달
-
             if (gameObject.CompareTag(GameTags.CardForSale))
             {
                 OnPurchaseClicked?.Invoke(NetworkManager.Singleton.LocalClientId);
+            }
+        }
+
+        public void OnPointerEnter(PointerEventData eventData)
+        {
+            if (gameObject.CompareTag(GameTags.CardForSale))
+            {
+                SoundManager.Instance.SFXPlay(mouseEnterSFX.name, mouseEnterSFX.clip);
             }
         }
 

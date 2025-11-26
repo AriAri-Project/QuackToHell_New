@@ -93,15 +93,63 @@ public class CardShopPresenter : NetworkBehaviour
         _model.IsLocked = !_model.IsLocked;
         _view.SetRefreshInteractable(!_model.IsLocked);
     }
-    
+
     private void OnClickReRoll()
     {
-        
-        if (_model.IsLocked) return;
         if (_cooldown) return;
 
+        // 골드 차감 시도
+        ulong senderId = NetworkManager.Singleton.LocalClientId;
+        TryConsumeGoldForRerollServerRpc(senderId);
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    private void TryConsumeGoldForRerollServerRpc(ulong senderId, ServerRpcParams rpcParams = default)
+    {
+        var model = PlayerHelperManager.Instance.GetPlayerModelByClientId(senderId);
+        if (model == null)
+        {
+            Debug.LogWarning($"[CardShopPresenter] Player model not found for client {senderId}");
+            return;
+        }
+
+        int currentGold = PlayerHelperManager.Instance.GetPlayerGoldByClientId(senderId);
+
+        if (currentGold >= 2)
+        {
+            int newGold = currentGold - 2;
+            model.SetGoldServerRpc(newGold);
+
+            // 골드 차감 성공
+            var target = new ClientRpcParams
+            {
+                Send = new ClientRpcSendParams { TargetClientIds = new ulong[] { senderId } }
+            };
+            TryConsumeGoldForRerollClientRpc(true, target);
+        }
+        else
+        {
+            // 골드 부족
+            var target = new ClientRpcParams
+            {
+                Send = new ClientRpcSendParams { TargetClientIds = new ulong[] { senderId } }
+            };
+            TryConsumeGoldForRerollClientRpc(false, target);
+        }
+    }
+
+    // 클라이언트 쪽 처리
+    [ClientRpc]
+    private void TryConsumeGoldForRerollClientRpc(bool success, ClientRpcParams target = default)
+    {
+        if (!success)
+        {
+            Debug.Log("[CardShopPresenter] 골드가 부족합니다! 리롤 불가.");
+            return;
+        }
+
+        // 리롤 실행
         StartCoroutine(RerollCooldown());
-        
         _model.TryReRoll(NetworkManager.Singleton.LocalClientId);
     }
 
@@ -127,20 +175,11 @@ public class CardShopPresenter : NetworkBehaviour
         _cooldown = false;
     }
 
-    public static void ServerSendResultTo(ulong clientId, bool success)
-    {
-        if (!NetworkManager.Singleton || !NetworkManager.Singleton.IsServer) return;
-        if (s_serverByClient.TryGetValue(clientId, out CardShopPresenter presenter))
-        {
-            ClientRpcParams clientRpcParams = new ClientRpcParams { Send = new ClientRpcSendParams { TargetClientIds = new[] { clientId } } };
-            presenter.OnPurchaseResult(success);
-        }
-    }
 
     #region 외부 인터페이스 (메시지 기반)
     
     /// <summary>
-    /// 카드샵 잠금 요청
+    /// 카드샵 잠금 요청 (에디터에서 마우스이벤트 연결)
     /// </summary>
     public void RequestLockShop()
     {
@@ -148,30 +187,11 @@ public class CardShopPresenter : NetworkBehaviour
     }
     
     /// <summary>
-    /// 카드샵 상태 조회
-    /// </summary>
-    public bool IsShopLocked()
-    {
-        return _model?.IsLocked ?? false;
-    }
-    
-    /// <summary>
-    /// 카드 표시 요청 (외부에서 호출)
-    /// </summary>
-    public void RequestDisplayCards(ulong clientId)
-    {
-        if (_model?.IsLocked == false)  
-        {
-            DeckManager.Instance.RequestDisplayCardsServerRpc(clientId);
-        }
-    }
-    
-    /// <summary>
-    /// 리롤 요청 (외부에서 호출)
+    /// 리롤 요청 (에디터에서 마우스이벤트 연결)
     /// </summary>
     public void RequestReroll()
     {
-        if (!_cooldown && _model != null && !_model.IsLocked)
+        if (!_cooldown)
         {
             OnClickReRoll();
         }
@@ -182,8 +202,10 @@ public class CardShopPresenter : NetworkBehaviour
     public void RequestShowCardShop()
     {
         _view.ToggleCardShopUI(true);
-        
-        RequestDisplayCards(NetworkManager.Singleton.LocalClientId);
+        if(_model!=null && !_model.HasDisplayedCards()){
+            // 리롤 버튼과 동일한 검증 로직 사용하되, 쿨다운은 적용하지 않음
+            _model.TryReRoll(NetworkManager.Singleton.LocalClientId);
+        }
     }
 
     public void RequestCloseCardShop()

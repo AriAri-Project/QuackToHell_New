@@ -12,12 +12,11 @@ public class CardInventoryView : MonoBehaviour
     [Header("인벤토리 UI의 하위 오브젝트: Content를 넣어주세요.")]
     [SerializeField]
     private GameObject content;
-    [Header("인벤토리 UI의 하위 오브젝트: Gold Text를 넣어주세요.")]
-    [SerializeField]
-    private TextMeshProUGUI goldText;
-    [Header("인벤토리 UI의 하위 오브젝트: Show Card Shop Button을 넣어주세요.")]
-    [SerializeField]
-    private Button showCardShopButton;
+    
+    // [Header("인벤토리 UI의 하위 오브젝트: Show Card Shop Button을 넣어주세요.")]
+    // [SerializeField]
+    // private Button showCardShopButton;
+
     [Header("인벤토리 UI의 하위 오브젝트: Close Inventory Button을 넣어주세요.")]
     [SerializeField] 
     private Button closeButton; 
@@ -32,9 +31,9 @@ public class CardInventoryView : MonoBehaviour
 
     private void Start()
     {
-        DebugUtils.AssertNotNull(showCardShopButton, "showCardShopButton", this);
+        // DebugUtils.AssertNotNull(showCardShopButton, "showCardShopButton", this);
         DebugUtils.AssertNotNull(closeButton, "closeButton", this);
-        showCardShopButton.onClick.AddListener(ShowCardShopButton_OnClick);
+        // showCardShopButton.onClick.AddListener(ShowCardShopButton_OnClick);
         closeButton.onClick.AddListener(CloseInventoryButton_OnClick);
         /*
         if (SceneManager.GetActiveScene().name == GameScenes.Village)
@@ -53,9 +52,9 @@ public class CardInventoryView : MonoBehaviour
 
     private void OnDestroy()
     {
-        if (showCardShopButton != null)
+        // if (showCardShopButton != null)
         {
-            showCardShopButton.onClick.RemoveListener(ShowCardShopButton_OnClick);
+            // showCardShopButton.onClick.RemoveListener(ShowCardShopButton_OnClick);
         }
         if (closeButton != null)
         {
@@ -81,10 +80,7 @@ public class CardInventoryView : MonoBehaviour
         }
     }
 
-    public void UpdatePlayerGold(int gold)
-    {
-        goldText.text = "gold: " + gold.ToString();
-    }
+ 
     
     #endregion
 
@@ -95,10 +91,10 @@ public class CardInventoryView : MonoBehaviour
 
     #region 버튼
 
-    private void ShowCardShopButton_OnClick()
-    {
-        OnShowCardShopClicked?.Invoke();
-    }
+    // private void ShowCardShopButton_OnClick()
+    // {
+        // OnShowCardShopClicked?.Invoke();
+    // }
 
     private void CloseInventoryButton_OnClick()
     {

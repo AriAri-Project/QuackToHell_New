@@ -13,13 +13,25 @@ using UnityEngine.SceneManagement;
 using UnityEngine.Serialization;
 using Random = UnityEngine.Random;
 
+
+
+
 #region Data Structs (기획서 타입 반영)
 public enum TierEnum { None = 0, Common = 1, Rare = 2, Special = 3 }
 public enum TypeEnum { None = 0, Attack = 1, Defense = 2, Special = 3 }
+public enum CardValue
+{
+    Unknown = -1,
+    V0, V1, V2, V3, V4, V5, V6, // 숫자 0~6
+    N,                          // 'N'
+    ADD, SUB, MULT, DIV         // 연산 기호
+}
 
 // 딕셔너리의 Key와 Value 한 쌍을 담을 컨테이너 struct
 public struct DictionaryCardIdCardDef : INetworkSerializable, IEquatable<DictionaryCardIdCardDef>
 {
+    
+    
     public int key;
     public CardDef value;
 
@@ -134,12 +146,13 @@ public struct CardDef : INetworkSerializable, IEquatable<CardDef>
     public TierEnum tier;      // enum
     public TypeEnum type;      // enum
     public int subType;        // 사용 안 하면 0
+    public CardValue Value;
     public bool isUniqueCard;
     public bool isSellableCard;
     public int usableClass;      // 3bit
     public int mapRestriction;  // 2bit
     public int basePrice;
-    public int baseCost;
+    // public int baseCost;
     public FixedString64Bytes descriptionKey;
     public FixedString64Bytes imagePathKey;
     public int amountOfCardItem;
@@ -151,12 +164,13 @@ public struct CardDef : INetworkSerializable, IEquatable<CardDef>
         serializer.SerializeValue(ref tier);
         serializer.SerializeValue(ref type);
         serializer.SerializeValue(ref subType);
+        serializer.SerializeValue(ref Value);
         serializer.SerializeValue(ref isUniqueCard);
         serializer.SerializeValue(ref isSellableCard);
         serializer.SerializeValue(ref usableClass);
         serializer.SerializeValue(ref mapRestriction);
         serializer.SerializeValue(ref basePrice);
-        serializer.SerializeValue(ref baseCost);
+        // serializer.SerializeValue(ref baseCost);
         serializer.SerializeValue(ref descriptionKey);
         serializer.SerializeValue(ref imagePathKey);
         serializer.SerializeValue(ref amountOfCardItem);
@@ -169,12 +183,13 @@ public struct CardDef : INetworkSerializable, IEquatable<CardDef>
                tier == other.tier && 
                type == other.type && 
                subType == other.subType && 
+               Value == other.Value &&
                isUniqueCard == other.isUniqueCard && 
                isSellableCard == other.isSellableCard && 
                usableClass == other.usableClass && 
                mapRestriction == other.mapRestriction && 
                basePrice == other.basePrice && 
-               baseCost == other.baseCost && 
+               // baseCost == other.baseCost && 
                descriptionKey.Equals(other.descriptionKey) && 
                imagePathKey.Equals(other.imagePathKey) && 
                amountOfCardItem == other.amountOfCardItem;
@@ -193,12 +208,13 @@ public struct CardDef : INetworkSerializable, IEquatable<CardDef>
         hash.Add(tier);
         hash.Add(type);
         hash.Add(subType);
+        hash.Add(Value);
         hash.Add(isUniqueCard);
         hash.Add(isSellableCard);
         hash.Add(usableClass);
         hash.Add(mapRestriction);
         hash.Add(basePrice);
-        hash.Add(baseCost);
+        // hash.Add(baseCost);
         hash.Add(descriptionKey);
         hash.Add(imagePathKey);
         hash.Add(amountOfCardItem);
@@ -262,7 +278,7 @@ public struct CardDisplay
     [FormerlySerializedAs("Tier")] public TierEnum tier;
     [FormerlySerializedAs("Type")] public TypeEnum type;
     [FormerlySerializedAs("BasePrice")] public int basePrice;
-    [FormerlySerializedAs("BaseCost")] public int baseCost;
+    // [FormerlySerializedAs("BaseCost")] public int baseCost;
 }
 #endregion
 
@@ -271,6 +287,16 @@ public struct CardDisplay
 /// </summary>
 public class DeckManager : NetworkBehaviour
 {
+    [Header("SFX")]
+    [SerializeField] private AudioSource soldFailSFX;
+    [SerializeField] private AudioSource solSucceedSFX;
+
+    public enum DeckSFX{
+        soldFailSFX,
+        soldSucceedSFX
+    }
+
+    
     #region 싱글톤
     public static DeckManager Instance => SingletonHelper<DeckManager>.Instance;
 
@@ -310,6 +336,40 @@ public class DeckManager : NetworkBehaviour
         {
             UpdateCardCounts();
         }
+    }
+
+    private static bool TryGetHeaderValue(List<string> headers, List<string> cols, string header, out string value)
+    {
+        value = null;
+        int idx = -1;
+        for (int i = 0; i < headers.Count; i++)
+        {
+            if (headers[i].Trim().Equals(header, StringComparison.OrdinalIgnoreCase))
+            {
+                idx = i;
+                break;
+            }
+        }
+
+        if (idx < 0 || idx >= cols.Count)
+            return false;
+
+        value = cols[idx]?.Trim() ?? "";
+        return true;
+    }
+
+    private static int TryGetHeaderInt(List<string> headers, List<string> cols, string header, int @default = 0)
+    {
+        return TryGetHeaderValue(headers, cols, header, out var s) && int.TryParse(s, out var v) ? v : @default;
+    }
+
+    private static bool TryGetHeaderBool(List<string> headers, List<string> cols, string header, bool @default = false)
+    {
+        if (!TryGetHeaderValue(headers, cols, header, out var s))
+            return @default;
+
+        s = (s ?? "").Trim().ToLowerInvariant();
+        return s is "1" or "true" or "y" or "yes";
     }
 
     #endregion
@@ -377,7 +437,7 @@ public class DeckManager : NetworkBehaviour
             tier = cardDefinition.tier,
             type = cardDefinition.type,
             basePrice = cardDefinition.basePrice,
-            baseCost = cardDefinition.baseCost
+            // baseCost = cardDefinition.baseCost
         };
         return true;
     }
@@ -552,7 +612,7 @@ public class DeckManager : NetworkBehaviour
                         cardID = card.key,
                         cardItemID = card.key + i,
                         price = card.value.basePrice,
-                        cost = card.value.baseCost,
+                        // cost = card.value.baseCost,
                         state = CardItemState.None
                     }
                 };
@@ -740,11 +800,18 @@ public class DeckManager : NetworkBehaviour
     public void TryPurchaseCardServerRpc(CardItemData card, ulong clientId, ServerRpcParams rpcParams = default)
     {
         ulong requesterClientId = rpcParams.Receive.SenderClientId;
-        
+        ClientRpcParams clientRpcParams = new ClientRpcParams
+        {
+            Send = new ClientRpcSendParams
+            {
+                TargetClientIds = new[] { clientId }
+            }
+        };
         // 서버에서 권위적 정보로 클라이언트 ID 검증
         if (clientId != requesterClientId)
         {
             Debug.LogError($"Server: Unauthorized card purchase attempt. Requested: {clientId}, Actual: {requesterClientId}");
+            PlaySFXClientRpc(DeckSFX.soldFailSFX, clientRpcParams);
             return;
         }
         
@@ -754,21 +821,16 @@ public class DeckManager : NetworkBehaviour
             return;
         */
         
-        ClientRpcParams clientRpcParams = new ClientRpcParams
-        {
-            Send = new ClientRpcSendParams
-            {
-                TargetClientIds = new[] { clientId }
-            }
-        };
+       
         
         //로컬클라이언트의 인벤토리를 조회해서, 인벤의 개수가 max인지 확인. max면 구매 못 함. 로그도 찍기.
-        CardInventoryPresenter myLocalInventoryPresenter = FindAnyObjectByType<CardInventoryPresenter>();
-        if (myLocalInventoryPresenter)
+        CardInventoryModel myLocalInventoryModel = FindAnyObjectByType<CardInventoryModel>();
+        if (myLocalInventoryModel)
         {
-            if (myLocalInventoryPresenter.IsInventoryMaximum())
+            if (myLocalInventoryModel.IsInventoryMaximum())
             {
                 Debug.Log($"인벤토리 한도를 초과해서 구매 못 합니다. 인벤토리 한도: {GameConstants.Card.maxCardCount}");
+                PlaySFXClientRpc(DeckSFX.soldFailSFX, clientRpcParams);
                 PurchaseResultToCardShopClientRpc(false, clientId);
                 PurchaseCardResultClientRpc(false, card, clientId, clientRpcParams);
                 return;
@@ -781,6 +843,7 @@ public class DeckManager : NetworkBehaviour
         if (!IsValidCardItemIdKey(cardItemIdKey))
         {
             Debug.Log($"카드가 존재하지 않습니다.");
+            PlaySFXClientRpc(DeckSFX.soldFailSFX, clientRpcParams);
             PurchaseResultToCardShopClientRpc(false, clientId);
             PurchaseCardResultClientRpc(false, card, clientId, clientRpcParams);
             return;
@@ -790,6 +853,7 @@ public class DeckManager : NetworkBehaviour
         if (!IsCardAvailableForPurchase(card.cardIdKey))
         {
             Debug.Log($"물량이 없습니다.");
+            PlaySFXClientRpc(DeckSFX.soldFailSFX, clientRpcParams);
             PurchaseResultToCardShopClientRpc(false, clientId);
             PurchaseCardResultClientRpc(false, card, clientId, clientRpcParams);
             return;
@@ -800,6 +864,7 @@ public class DeckManager : NetworkBehaviour
         if (playerGold < card.cardItemStatusData.price)
         {
             Debug.Log($"돈이 부족합니다.");
+            PlaySFXClientRpc(DeckSFX.soldFailSFX, clientRpcParams);
             //구매 성공 여부를 CardShop에게 전달. (ClientRPC, bool값 보내기)
             PurchaseResultToCardShopClientRpc(false, clientId);
             //구매 실패 여부를 클라이언트에게 전달. (ClientRPC, CardItemData값 보내기)
@@ -807,6 +872,7 @@ public class DeckManager : NetworkBehaviour
             return;
         }
 
+        PlaySFXClientRpc(DeckSFX.soldSucceedSFX, clientRpcParams);
 
         //구매 성공 여부를 CardShop에게 전달. (ClientRPC, bool값 보내기)
         PurchaseResultToCardShopClientRpc(true, clientId);
@@ -815,7 +881,20 @@ public class DeckManager : NetworkBehaviour
 
     }
 
-
+    [ClientRpc]
+    private void PlaySFXClientRpc(DeckSFX sfx, ClientRpcParams rpcParams = default )
+    {
+        switch (sfx)
+        {
+            case DeckSFX.soldFailSFX:
+                SoundManager.Instance.SFXPlay(soldFailSFX.name,soldFailSFX.clip);
+                break;
+            case DeckSFX.soldSucceedSFX:
+                SoundManager.Instance.SFXPlay(solSucceedSFX.name,solSucceedSFX.clip);
+                break;
+        }
+        
+    }
 
     [ClientRpc]
     private void PurchaseCardResultClientRpc(bool success, CardItemData card, ulong clientId, ClientRpcParams sendParams = default)
@@ -1040,36 +1119,52 @@ public class DeckManager : NetworkBehaviour
             iSub = (Idx("SubType") >= 0 ? Idx("SubType") : Idx("SubType (사용X)")),
             iUni = Idx("IsUniqueCard"), iSell = Idx("IsSellableCard"),
             iClass = Idx("UsableClass"), iMap = Idx("Map_Restriction"),
-            iPrice = Idx("BasePrice"), iCost = Idx("BaseCost"),
+            iPrice = Idx("BasePrice"), // iCost = Idx("BaseCost"),
             iDesc = Idx("DescriptionKey"), iImg = Idx("ImagePathKey"),
-            iAmount = Idx("AmountOfCardItem");
+            iAmount = Idx("AmountOfCardItem"),
+            iValue = Idx("Value");
+
+        string S(List<string> columns, int i) => (i >= 0 && i < columns.Count) ? (columns[i]?.Trim() ?? "") : "";
 
         for (int rowIndex = 1; rowIndex < rows.Count; rowIndex++)
         {
-            List<string> columns = SplitCols(rows[rowIndex]);
-            if (columns.Count == 0) continue;
-            if (!int.TryParse((iID >= 0 && iID < columns.Count ? columns[iID].Trim() : ""), out _)) continue;
-
-            list.Add(new CardDef
+            try
             {
-                cardID = ToInt(S(columns, iID)),
-                cardNameKey = S(columns, iName),
-                tier = ToTier(S(columns, iTier)),
-                type = ToType(S(columns, iType)),
-                subType = ToInt(S(columns, iSub)),
-                isUniqueCard = ToBool(S(columns, iUni)),
-                isSellableCard = ToBool(S(columns, iSell)),
-                usableClass = ToInt(S(columns, iClass)),
-                mapRestriction = ToInt(S(columns, iMap)),
-                basePrice = ToInt(S(columns, iPrice)),
-                baseCost = ToInt(S(columns, iCost)),
-                descriptionKey = S(columns, iDesc),
-                imagePathKey = S(columns, iImg),
-                amountOfCardItem = ToInt(S(columns, iAmount)),
-            });
+                List<string> columns = SplitCols(rows[rowIndex]);
+                if (columns.Count == 0) continue;
+                
+                string cardIdStr = (iID >= 0 && iID < columns.Count ? columns[iID].Trim() : "");
+                if (!int.TryParse(cardIdStr, out _)) continue;
+                
+                string valueRaw = TryGetHeaderValue(headers, columns, "Value", out var _v) ? _v : "";
+                CardValue value = ToCardValue(valueRaw);
+
+                list.Add(new CardDef
+                {
+                    cardID = ToInt(S(columns, iID)),
+                    cardNameKey = S(columns, iName),
+                    tier = ToTier(S(columns, iTier)),
+                    type = ToType(S(columns, iType)),
+                    subType = ToInt(S(columns, iSub)),
+                    Value = value,
+                    isUniqueCard = ToBool(S(columns, iUni)),
+                    isSellableCard = ToBool(S(columns, iSell)),
+                    usableClass = ToInt(S(columns, iClass)),
+                    mapRestriction = ToInt(S(columns, iMap)),
+                    basePrice = ToInt(S(columns, iPrice)),
+                    // baseCost = ToInt(S(columns, iCost)),
+                    descriptionKey = S(columns, iDesc),
+                    imagePathKey = S(columns, iImg),
+                    amountOfCardItem = ToInt(S(columns, iAmount)),
+                });
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"[DeckManager] Failed to parse card data at row {rowIndex + 1}: {ex.Message}\nRow data: {rows[rowIndex]}");
+                throw;
+            }
         }
         return list;
-        static string S(List<string> columns, int i) => (i >= 0 && i < columns.Count) ? (columns[i]?.Trim() ?? "") : "";
     }
 
     private static IEnumerable<StringRow> ParseStringTable(string csv)
@@ -1160,9 +1255,26 @@ public class DeckManager : NetworkBehaviour
     
     private static int ToInt(string s) 
     { 
-        s = (s ?? "").Trim(); 
-        if (s == "" || s == "-") return 0; 
-        return int.Parse(s, System.Globalization.CultureInfo.InvariantCulture); 
+        if (string.IsNullOrEmpty(s)) return 0;
+        
+        s = s.Trim(); 
+        if (s == "" || s == "-") return 0;
+        
+        // 소수점이나 특수문자가 포함된 경우 제거하고 숫자만 추출
+        if (s.Contains("."))
+        {
+            if (double.TryParse(s, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out double d))
+            {
+                return (int)d;
+            }
+        }
+        
+        // 천 단위 구분자 제거
+        s = s.Replace(",", "").Replace(" ", "");
+        
+        return int.TryParse(s, System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out int result) 
+            ? result 
+            : 0;
     }
     
     private static bool ToBool(string s) 
@@ -1170,19 +1282,70 @@ public class DeckManager : NetworkBehaviour
         s = (s ?? "").Trim().ToLowerInvariant(); 
         return s == "true" || s == "1" || s == "y"; 
     }
-    
+
     private static TierEnum ToTier(string s)
     {
-        if (int.TryParse(s, out var n)) return (TierEnum)n; 
+        if (int.TryParse(s, out var n)) return (TierEnum)n;
         s = (s ?? "").Trim().ToLowerInvariant();
-        return s switch { "common" => TierEnum.Common, "rare" => TierEnum.Rare, "special" => TierEnum.Special, _ => TierEnum.None };
+
+        return s switch
+        {
+            "common" => TierEnum.Common,
+            "rare" => TierEnum.Rare,
+            "special" => TierEnum.Special,
+
+            "none" => TierEnum.None,
+            "bronze" => TierEnum.Common,
+            "silver" => TierEnum.Rare,
+            "sIlver" => TierEnum.Rare,
+            "gold" => TierEnum.Special,
+
+            _ => TierEnum.None
+        };
     }
-    
+
     private static TypeEnum ToType(string s)
     {
-        if (int.TryParse(s, out var n)) return (TypeEnum)n; 
+        if (int.TryParse(s, out var n)) return (TypeEnum)n;
         s = (s ?? "").Trim().ToLowerInvariant();
-        return s switch { "attack" => TypeEnum.Attack, "defense" => TypeEnum.Defense, "special" => TypeEnum.Special, _ => TypeEnum.None };
+
+        return s switch
+        {
+            "attack" => TypeEnum.Attack,
+            "defense" => TypeEnum.Defense,
+            "special" => TypeEnum.Special,
+
+            "number" => TypeEnum.Attack,  
+            "operation" => TypeEnum.Special, 
+
+            _ => TypeEnum.None
+        };
     }
+
+    private static CardValue ToCardValue(string s)
+    {
+        s = (s ?? "").Trim().ToUpperInvariant();
+
+        // 숫자 0~6
+        if (s is "0") return CardValue.V0;
+        if (s is "1") return CardValue.V1;
+        if (s is "2") return CardValue.V2;
+        if (s is "3") return CardValue.V3;
+        if (s is "4") return CardValue.V4;
+        if (s is "5") return CardValue.V5;
+        if (s is "6") return CardValue.V6;
+
+        // 심볼/연산
+        return s switch
+        {
+            "N" => CardValue.N,
+            "ADD" => CardValue.ADD,
+            "SUB" => CardValue.SUB,
+            "MULT" => CardValue.MULT,
+            "DIV" => CardValue.DIV,
+            _ => CardValue.Unknown
+        };
+    }
+
     #endregion
 }

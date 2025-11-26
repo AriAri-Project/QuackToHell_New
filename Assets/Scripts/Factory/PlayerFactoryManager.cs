@@ -11,11 +11,11 @@ public class PlayerFactoryManager : NetworkBehaviour
     public GameObject playerPrefab;
     public Action onPlayerSpawned;
     
-    private Transform _playerSpawnPoint;
+    private Transform playerSpawnPoint;
     private void Start()
     {
         transform.position = new Vector3(0, 0, 0);
-        _playerSpawnPoint = transform;
+        playerSpawnPoint = transform;
     }
 
 
@@ -30,7 +30,7 @@ public class PlayerFactoryManager : NetworkBehaviour
         }
             
             
-        GameObject player = Instantiate(playerPrefab, _playerSpawnPoint);
+        GameObject player = Instantiate(playerPrefab, playerSpawnPoint);
         PlayerModel playerModel = player.GetComponent<PlayerModel>();
         // note cba0898: Assert 상황에서 코드 실행 사유 체크 필요. Assert가 아니라 일반적인 if문으로 변경하는게 맞아 보임.
         if (!DebugUtils.AssertNotNull(playerModel, "PlayerModel", this))
@@ -41,9 +41,18 @@ public class PlayerFactoryManager : NetworkBehaviour
 
         NetworkObject networkObject = player.GetComponent<NetworkObject>();
         // note cba0898: Assert 상황에서 코드 실행 사유 체크 필요. Assert가 아니라 일반적인 if문으로 변경하는게 맞아 보임.
-        if (!DebugUtils.AssertNotNull(networkObject, "NetworkObject", this))
+        // assert는 빌드할 때 빠지니까 조건이 비어버림
+        /*if (!DebugUtils.AssertNotNull(networkObject, "NetworkObject", this))
         {
             SpawnPlayerResultClientRpc(false);
+            return;
+        }*/
+
+        if (networkObject == null)
+        {
+            SpawnPlayerResultClientRpc(false);
+            //assert는 디버그로그처럼 쓰기
+            DebugUtils.AssertNotNull(false, "NetworkObject", this);
             return;
         }
 

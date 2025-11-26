@@ -10,6 +10,17 @@ using System.Collections.Generic;
 /// </summary>
 public class PlayerView : NetworkBehaviour
 {
+    public enum PlayerSFX
+    {
+        playerKillSFX,
+        
+    }
+
+    [SerializeField] private float killCooltimeMax = 20f;
+    [Header("SFX")]
+    [SerializeField] private AudioSource playerKillSFX;
+
+
     // PlayerView.cs에 추가
     [Header("Player Detection")]
     [SerializeField] private float playerDetectionRadius = 2f;
@@ -18,6 +29,9 @@ public class PlayerView : NetworkBehaviour
     public Action<GameObject> onPlayerDetected;
     public Action onPlayerExited;
     private Camera localCamera = null;
+    private float killCooltimer = 0f;
+    private bool canKill = true;
+    public bool CanKill => canKill;
 
     private NetworkVariable<bool> ignoreMoveInput = new NetworkVariable<bool>(false);
     public bool IgnoreMoveInput
@@ -38,6 +52,17 @@ public class PlayerView : NetworkBehaviour
 
     private InteractionHUDController interactionHUDController;
 
+    [ClientRpc]
+    public void PlaySFXClientRpc(PlayerSFX sfx, ClientRpcParams rpcParams = default )
+    {
+        switch (sfx)
+        {
+            case PlayerSFX.playerKillSFX:
+                SoundManager.Instance.SFXPlay(playerKillSFX.name,playerKillSFX.clip);
+                break;
+        }
+        
+    }
     protected void Awake()
     {
         if (playerInput == null)
@@ -53,7 +78,28 @@ public class PlayerView : NetworkBehaviour
         
         DetectNearbyPlayers();
         #endregion
+        killCooltimer+= Time.deltaTime;
+        if(killCooltimer >= killCooltimeMax)
+        {
+            killCooltimer = 0f;
+            canKill = true;
+        }
     }
+    
+    //note: 민수님
+    //view가 하는 게 아님. 
+    //view는 텍스트  / 이미지 / UI 갱신..
+    //view는 보여줄 것에 관련된것. 
+    //view에는 버튼/ 이미지, UI, .. 모델에서 변화 일어나면 프레젠터가 받아서 view가 갱신.
+    //view가 입력감지하면 presenter가 받아서 처리. 
+    //model은 데이터만 관련(로직 다 넣는 게 아님)
+    //모델에 로직 때려넣고싶으면, partial로 분리하기. (관리 용이 하니까)
+    //partial로 분리한다면, 
+    //>>별도의 컴포넌트 파는 거 추천<<하시나, partial로 분리한다면: detect, character, ...
+    //보통은 하나에 때려넣는거보다는 컴포넌트로 쪼개서 재활용하는게 좋음. 
+    //MVP는 UI쓸 떄 많이쓰는거임. 다른곳에도 우겨넣을필요x
+    //보통은 클래스를 쪼개서 재활용을 높이는 게 베스트.
+    //첨에 만들 땐 불편한데 유지보수가 편리(트레이드오프)
     private void DetectNearbyPlayers()
     {
         // 현재 감지된 플레이어들
@@ -139,6 +185,8 @@ public class PlayerView : NetworkBehaviour
     {
         // note cba0898: OnDestroy() 시점에는 다른 오브젝트가 삭제되었을 수 있으므로, AssertNotNull 말고 if문으로 처리하시는 것을 추천드립니다.
         // ex) if (playerInput != null && playerInput.actions != null) { ... }
+        // assert: 절대 일어나면 안 되는 상황 감지용.
+        // ondestroy에서 if쓰는 이유는, 있을수도없을수도있는데 있으면 일케 처리하겠다.
         if (DebugUtils.AssertNotNull(playerInput, "PlayerInput", this) && 
             DebugUtils.AssertNotNull(playerInput.actions, "PlayerInput.actions", this))
         {
@@ -322,9 +370,15 @@ public class PlayerView : NetworkBehaviour
     private void OnKillInput(InputAction.CallbackContext context)
     {
         if (!IsOwner) return;
-        
-       
+
+        if (!canKill)
+        {
+            Debug.Log($"쿨타임때문에 죽일 수 x. 남은 쿨타임: {killCooltimeMax-killCooltimer}");
+            return;
+        }
         OnKillTryInput?.Invoke();
+        canKill = false;
+        
     }
 
     
@@ -377,13 +431,14 @@ public class PlayerView : NetworkBehaviour
     public Action<Collider2D> OnObjectEntered;
     public Action<Collider2D> OnObjectExited;
 
+    //note: 민수님 /이것도 view가 가지면 어색함
     private void OnTriggerEnter2D(Collider2D collision)
     {
         if (!IsOwner) return;
     
         OnObjectEntered?.Invoke(collision); 
     }
-
+    //note: 민수님 /이것도 view가 가지면 어색함
     private void OnTriggerExit2D(Collider2D collision)
     {
         if (!IsOwner) return;

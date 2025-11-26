@@ -27,6 +27,11 @@ public static class GameConstants
             public const int System=100;
         }
     }
+
+    public static class Animation
+    {
+        public const string VentEnter = "Player_Vent";
+    }
     
     // 카드 관련 상수
     public static class Card

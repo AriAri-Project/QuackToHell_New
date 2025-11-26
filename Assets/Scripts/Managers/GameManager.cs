@@ -5,6 +5,9 @@ using TMPro;
 using System.Collections;
 using UnityEngine.UI;
 using System;
+using System.Threading.Tasks;
+using System.Linq;
+using Unity.Multiplayer.Playmode;
 
 /// <summary>
 /// 게임 전체를 관리하는 중앙 매니저
@@ -22,6 +25,14 @@ public class GameManager : NetworkBehaviour
 {
 
     #region 변수들
+
+    [Header("Put on your mouse to hosttag to view explaination")]
+    [SerializeField] private bool skipLobby = true;
+    public bool SkipLobby { get => skipLobby; }
+    [Tooltip("multiplay play mode에 들어가면 창마다 태그부여가 가능함. 태그부여 후, 호스트를 부여할 태그를 입력하기.(skipLobby체크했으면 레디여부 체크 안 합니다. 호스트에서 바로 startgame버튼 누르시면 됩니다.)")]
+
+    [SerializeField] private string hostTag = "0";
+    //-------------- ----
     [Header("AssignRole UI")]
     private GameObject assignRoleCanvas;
     private RoleAssignUIReferences roleAssignUIReferences;
@@ -49,7 +60,25 @@ public class GameManager : NetworkBehaviour
     private void Start()
     {
         //persistent씬에서 시작해서 바로 홈씬으로 전환
-        SceneManager.LoadScene(GameScenes.Home, LoadSceneMode.Single);
+        if (skipLobby)
+        {
+            SceneManager.LoadScene(GameScenes.Lobby, LoadSceneMode.Single);
+            string[] myTags = CurrentPlayer.ReadOnlyTags();
+            bool isHost = myTags.Contains(hostTag);
+            if (isHost)
+            {
+                LobbyManager.Instance.JoinAsHost();
+            }
+            else
+            {
+                LobbyManager.Instance.JoinAsClient();
+            }
+        }
+        else
+        {
+            SceneManager.LoadScene(GameScenes.Home, LoadSceneMode.Single);
+        }
+        
         //씬 로드 이벤트 구독
         SceneManager.sceneLoaded += OnSceneLoaded;
     }
@@ -58,6 +87,8 @@ public class GameManager : NetworkBehaviour
         SceneManager.sceneLoaded -= OnSceneLoaded;
         base.OnDestroy();
     }
+    
+   
 
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
@@ -72,6 +103,7 @@ public class GameManager : NetworkBehaviour
         }
         if(scene.name == GameScenes.Village)
         {
+            UIManager.Instance.ShowHUDUI<VillageUI>("VillageUI");
             //시체 청소하기
             CleanPlayerCorpse();
             //움직임 켜기
@@ -148,7 +180,7 @@ public class GameManager : NetworkBehaviour
         showRole.SetActive(true);
             //2-1. 역할공개 text 세팅하기
             //로컬플레이어 역할에 따라 텍스트 세팅
-            PlayerJob playerJob = PlayerHelperManager.Instance.GetPlayerPresenterByClientId(NetworkManager.Singleton.LocalClientId).GetPlayerJob();
+            PlayerJob playerJob = PlayerHelperManager.Instance.GetPlayerModelByClientId(NetworkManager.Singleton.LocalClientId).GetPlayerJob();
             TextMeshProUGUI showRoleText = this.showRoleText;
             switch(playerJob){
                 case PlayerJob.Farmer:
@@ -166,9 +198,9 @@ public class GameManager : NetworkBehaviour
             }
             //2-2. PlayerSlot에 PlayerUIPrefab 생성하기
             //플레이어 수만큼 플레이어 프리팹 생성
-            PlayerPresenter[] players = PlayerHelperManager.Instance.GetAllPlayers();
+            PlayerModel[] players = PlayerHelperManager.Instance.GetAllPlayers<PlayerModel>();
             int i = 0;
-            foreach(PlayerPresenter player in players){
+            foreach(PlayerModel player in players){
                 if (playerJob == PlayerJob.Farmer)
                 {
                     if (playerJob != player.GetPlayerJob())

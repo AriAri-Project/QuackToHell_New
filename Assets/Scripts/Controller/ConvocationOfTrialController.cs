@@ -70,10 +70,10 @@ public class ConvocationOfTrialController : InteractionControllerBase
         if (distance > detectionRadius) return false;
         
         // 살아있는 플레이어만 재판 소집 가능
-        PlayerPresenter playerPresenter = player.GetComponent<PlayerPresenter>();
-        if (playerPresenter != null)
+        PlayerModel playerModel = player.GetComponent<PlayerModel>();
+        if (playerModel != null)
         {
-            return playerPresenter.GetPlayerAliveState() == PlayerLivingState.Alive;
+            return playerModel.GetPlayerAliveState() == PlayerLivingState.Alive;
         }
         
         return true;

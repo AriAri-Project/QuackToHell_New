@@ -27,8 +27,8 @@ public class LobbyManager : NetworkBehaviour
     }
 
     #endregion
-    
-    
+
+
     //카드데이터로드
 
     [Header("Google Sheets CSV URLs")]
@@ -41,13 +41,24 @@ public class LobbyManager : NetworkBehaviour
     private bool isCardDataLoaded = false;
     private CancellationTokenSource _cancellationTokenSource;
 
+    //SFX
+    [Header("SFX")] 
+    [SerializeField] private AudioSource mafiaAssignSFX;
+    [SerializeField] private AudioSource citizenAssignSFX;
+
+    public enum LobbySFX{
+        mafiaAssignSFX,
+        citizenAssignSFX
+    }
     
     //로비
     private Lobby hostLobby;
     private Lobby joinedLobby;
     private float heartbeatTimer;
+    private const float HEART_BEAT_TIMER_MAX = 15f;
     private string _hostLobbyCode="";
 
+    
     public string HostLobbyCode
     {
         get
@@ -56,8 +67,6 @@ public class LobbyManager : NetworkBehaviour
         }
     }
     
-    //로비목록 업데이트 감지 이벤트
-    public event EventHandler<List<Lobby>> OnLobbyListChanged; 
     private async void Start()
     {
         try
@@ -78,9 +87,10 @@ public class LobbyManager : NetworkBehaviour
         }
         
     }
+
     
-    
-    
+
+
     public override async void OnNetworkSpawn()
     {
         base.OnNetworkSpawn();
@@ -107,6 +117,7 @@ public class LobbyManager : NetworkBehaviour
 
         try
         {
+            
             // DeckManager를 통해 직접 CSV 데이터 로드
             await DeckManager.Instance.LoadCardDataFromCsv(cardCsvUrl, stringCsvUrl, resourceCsvUrl, _cancellationTokenSource.Token);
             
@@ -114,6 +125,7 @@ public class LobbyManager : NetworkBehaviour
             await DeckManager.Instance.WhenDataReadyAsync();
             
             isCardDataLoaded = true;
+            
         }
         catch (System.Exception ex)
         {
@@ -124,8 +136,9 @@ public class LobbyManager : NetworkBehaviour
     private void Update()
     {
         HandleLobbyHeartbeat();
-        
     }
+
+
 
     public override void OnDestroy(){
         //로비 정리 작업
@@ -161,8 +174,8 @@ public class LobbyManager : NetworkBehaviour
             heartbeatTimer+=Time.deltaTime;
             if (heartbeatTimer < 0f)
             {
-                float heartbeatTimerMax = 15f;
-                heartbeatTimer = heartbeatTimerMax;
+                
+                heartbeatTimer = HEART_BEAT_TIMER_MAX;
                 //이 로비 아직 살아있습니다
                 await LobbyService.Instance.SendHeartbeatPingAsync(hostLobby.Id);
                 Debug.Log("Sending heartbeat ping to " + hostLobby.Id);
@@ -170,7 +183,16 @@ public class LobbyManager : NetworkBehaviour
         }
     }
 
+
     [Command]
+    //for quick command
+    public async void CreateLobbyCommand(string lobbyName, bool isPrivate, int maxPlayer)
+    {
+        await CreateLobby(lobbyName, isPrivate, maxPlayer);
+        NetworkManager.Singleton.StartHost();
+    }
+
+    
     public async Task CreateLobby(string lobbyName, bool isPrivate, int maxPlayer)
     {
         try
@@ -182,24 +204,37 @@ public class LobbyManager : NetworkBehaviour
             
             CreateLobbyOptions createLobbyOptions = new CreateLobbyOptions
             {
-                IsPrivate = isPrivate,
+                IsPrivate = false,
                 //호스트정보
                 Player = GetPlayer(),
-                //대기열에 보여줄 로비 정보
+                //대기열에 보여줄 커스텀 로비 정보 (기본 필드에 저장 되지 않는 것들 추가로 나열)
                 Data= new Dictionary<string, DataObject>
                 {
-                    //방 이름
-                    {"RoomName", new DataObject(DataObject.VisibilityOptions.Public, lobbyName)},
-                    //Max 플레이어 수
-                    {"MaxPlayerCount", new DataObject(DataObject.VisibilityOptions.Public, maxPlayer.ToString())},
+                    //방참가코드
+                    {"LobbyCode", new DataObject(DataObject.VisibilityOptions.Public, "")}, // 일단 빈 문자열로 초기화
                     //Relay참가코드(게임세션연결용)
-                    {"RelayJoinCode", new DataObject(DataObject.VisibilityOptions.Member, relayJoinCode)}
+                    {"RelayJoinCode", new DataObject(DataObject.VisibilityOptions.Member, relayJoinCode)},
+                    //Private
+                    {"IsPrivate", new DataObject(DataObject.VisibilityOptions.Public, isPrivate.ToString())}
                 }
             };
             
             //로비생성 요청(대기실)
             Lobby lobby = await LobbyService.Instance.CreateLobbyAsync(lobbyName, maxPlayer, createLobbyOptions);      
             
+            // LobbyCode가 생성되면 Data에도 저장
+            if (!string.IsNullOrEmpty(lobby.LobbyCode))
+            {
+                UpdateLobbyOptions updateOptions = new UpdateLobbyOptions
+                {
+                    Data = new Dictionary<string, DataObject>
+                    {
+                        {"LobbyCode", new DataObject(DataObject.VisibilityOptions.Public, lobby.LobbyCode)}
+                    }
+                };
+                lobby = await LobbyService.Instance.UpdateLobbyAsync(lobby.Id, updateOptions);
+            }
+
             //호스트용 릴레이 서버 설정
             NetworkManager.Singleton.GetComponent<UnityTransport>().SetRelayServerData(
                 allocation.RelayServer.IpV4,        // 1. 서버 IP 주소
@@ -225,24 +260,75 @@ public class LobbyManager : NetworkBehaviour
         }
     }
 
-    public async void ListLobbies()
+    [Command]
+    public async Task<List<Lobby>> ListLobbies()
     {
+        List<Lobby> lobbyList = null;
         try
         {
             //TODO: 검색 상세조건 기획 나올 시 QueryLobbiesAsync의 인자로 추가하기
             //QueryLobbiesOptions queryLobbiesOptions = new QueryLobbiesOptions
-            QueryResponse queryResponse = await LobbyService.Instance.QueryLobbiesAsync();
-            Debug.Log($"Lobbies found: {queryResponse.Results.Count}");
-            //로비목록 UI를 업데이트하기위해 이벤트 invoke
-            OnLobbyListChanged?.Invoke(this, queryResponse.Results);
+            var queryResponse =  await LobbyService.Instance.QueryLobbiesAsync();
+            lobbyList = queryResponse.Results;
         }
         catch (LobbyServiceException e)
         {
             Debug.Log(e);
         }
+        
+        return lobbyList;
     }
+
+    private Dictionary<string, string> CreateLobbySnapshot(List<Lobby> lobbies)
+    {
+        var snapshot = new Dictionary<string, string>();
+        foreach (var lobby in lobbies)
+        {
+            //로비id를 키로, 중요정보를 값으로 저장
+            string info = $"{lobby.Name}|{lobby.Players.Count}|{lobby.MaxPlayers}";
+            snapshot[lobby.Id]=info;
+        }
+
+        return snapshot;
+    }
+
+    private bool AreSnapshotsEqual(Dictionary<string, string> old, Dictionary<string, string> newSnap)
+    {
+        //로비개수가 다르면 변경된 것
+        if(old.Count!=newSnap.Count) return false;
+
+        foreach (var lobby in newSnap)
+        {
+            string lobbyId = lobby.Key;
+            string newInfo = lobby.Value;
+            
+            //이전에 없던 로비가 생겼는지 확인
+            bool existInOld = old.TryGetValue(lobbyId, out string oldInfo);
+            if (!existInOld)
+            {
+                return false;
+            }
+            
+            //같은 id의 로비 정보가 변경되었는지 확인
+            if(oldInfo!=newInfo) return false;
+        }
+
+        return true;
+    }
+
     
     [Command]
+    //for quick command
+    public async void JoinLobbyByCodeCommand(string lobbyCode)
+    {
+        bool joinSuccess = await JoinLobbyByCode(lobbyCode);
+        if (joinSuccess)
+        {
+            Debug.Log($"Joined Lobby with code: {lobbyCode}");
+            NetworkManager.Singleton.StartClient();
+        }
+    }
+    
     public async Task<bool> JoinLobbyByCode(string lobbyCode)
     {
         try
@@ -281,6 +367,7 @@ public class LobbyManager : NetworkBehaviour
             return false;
         }
     }
+    
     private Player GetPlayer()
     {
         string playerId = AuthenticationService.Instance.PlayerId;
@@ -348,9 +435,12 @@ public class LobbyManager : NetworkBehaviour
         }
         
         //전부 레디해야 시작함
-        if(!AreAllPlayersReady()){
-            Debug.LogError("Not all players are ready!");
-            return;
+        if (!GameManager.Instance.SkipLobby)
+        {
+            if(!AreAllPlayersReady()){
+                Debug.LogError("Not all players are ready!");
+                return;
+            }
         }
 
         //플레이어 역할 부여
@@ -359,8 +449,10 @@ public class LobbyManager : NetworkBehaviour
         //본인 데이터가 모두 초기화되면, 씬 이동 : 바인딩 콜백
         
     }
+
+
     private bool AreAllPlayersReady(){
-        PlayerPresenter[] allPlayers = PlayerHelperManager.Instance.GetAllPlayers();
+        PlayerModel[] allPlayers = PlayerHelperManager.Instance.GetAllPlayers<PlayerModel>();
         foreach(var player in allPlayers){
             if(player.IsOwner && IsHost) continue;
             if(!player.IsReady()){
@@ -373,10 +465,11 @@ public class LobbyManager : NetworkBehaviour
 
 
     [ServerRpc]
-    private void AssignPlayerRolesServerRpc()
+    private void AssignPlayerRolesServerRpc(ServerRpcParams rpcParams = default)
     {
+        
         //모든 플레이어 가져오기
-        PlayerPresenter[] allPlayers = PlayerHelperManager.Instance.GetAllPlayers();
+        PlayerModel[] allPlayers = PlayerHelperManager.Instance.GetAllPlayers<PlayerModel>();
         int totalPlayers = allPlayers.Length;
         //농장 수 결정
         int farmerCount = GetFarmerCountByPlayerCount(totalPlayers);
@@ -386,21 +479,46 @@ public class LobbyManager : NetworkBehaviour
 
         //역할 부여
         for(int i=0;i<allPlayers.Length;i++){
+            ClientRpcParams clientRpcParams = new ClientRpcParams
+            {
+                Send = new ClientRpcSendParams
+                {
+                    TargetClientIds = new[] { allPlayers[i].OwnerClientId }
+                }
+            };
             if(ToggleForcedAllFarmer)
             {
+                PlaySFXClientRpc(LobbySFX.mafiaAssignSFX, clientRpcParams);
                 allPlayers[i].ChangeRole(PlayerJob.Farmer);
                 continue;
             }
             if (i<farmerCount){
+                PlaySFXClientRpc(LobbySFX.mafiaAssignSFX, clientRpcParams);
                 allPlayers[i].ChangeRole(PlayerJob.Farmer);
             }
             else{
+                PlaySFXClientRpc(LobbySFX.citizenAssignSFX, clientRpcParams);
                 allPlayers[i].ChangeRole(PlayerJob.Animal);
             }
         }
 
         //연출 시퀀스 시작
         GameManager.Instance.StartRoleRevealSequenceClientRpc();
+    }
+    
+    [ClientRpc]
+    private void PlaySFXClientRpc(LobbySFX sfx, ClientRpcParams rpcParams = default )
+    {
+        switch (sfx)
+        {
+            case LobbySFX.mafiaAssignSFX:
+                SoundManager.Instance.SFXPlay(mafiaAssignSFX.name,mafiaAssignSFX.clip);
+                break;
+            case LobbySFX.citizenAssignSFX:
+                SoundManager.Instance.SFXPlay(citizenAssignSFX.name,citizenAssignSFX.clip);
+                break;
+        }
+        
     }
     
 
@@ -432,7 +550,7 @@ public class LobbyManager : NetworkBehaviour
 
     }
 
-    [ServerRpc]
+    [ServerRpc(RequireOwnership = false)]
     private void LoadVillageSceneServerRpc()
     {
         // 모든 클라이언트를 VillageScene으로 이동
@@ -441,12 +559,8 @@ public class LobbyManager : NetworkBehaviour
 
     private void PlayerSpawn()
     {
-        PlayerFactoryManager playerFactory = PlayerFactoryManager.Instance;
         // note cba0898: PlayerFactoryManager는 싱글톤이라 null체크 상황이 어색합니다.
         // 그리고 PlayerSpawn() 함수를 쓰기보단 PlayerFactoryManager.Instance.SpawnPlayerServerRpc() 처럼 싱글톤 인스턴스를 쓰는게 좋을 것 같아요.
-        if (DebugUtils.AssertNotNull(playerFactory, "PlayerFactoryManager", this))
-        {
-            playerFactory.SpawnPlayerServerRpc();
-        }
+        PlayerFactoryManager.Instance.SpawnPlayerServerRpc();
     }
 }

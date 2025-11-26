@@ -23,6 +23,9 @@ public class PlayerModel : NetworkBehaviour
     private PlayerWalkState walkStateComponent;
     private PlayerDeadState deadStateComponent;
     private PlayerAliveState aliveStateComponent;
+    private PlayerVentEnterState ventEnterStateComponent;
+    
+    private RoleController _roleController;
 
     private ulong clientId;
 
@@ -43,11 +46,15 @@ public class PlayerModel : NetworkBehaviour
 
     private void Start()
     {
+        
+       
         // 미리 부착된 컴포넌트들 참조
+        _roleController = GetComponent<RoleController>();
         idleStateComponent = GetComponent<PlayerIdleState>();
         walkStateComponent = GetComponent<PlayerWalkState>();
         aliveStateComponent = GetComponent<PlayerAliveState>();
         deadStateComponent = GetComponent<PlayerDeadState>();
+        ventEnterStateComponent = GetComponent<PlayerVentEnterState>();
 
         // 초기 상태 설정
         SetAnimationStateByEnum(PlayerStateData.Value.AnimationState);
@@ -115,6 +122,16 @@ public class PlayerModel : NetworkBehaviour
         {
             curAnimationState.OnStateUpdate();
         }
+    }
+    /// <summary>
+    /// 애니메이션 상태 변경 ServerRpc
+    /// </summary>
+    [ServerRpc]
+    public void SetAnimationStateServerRpc(PlayerAnimationState animState)
+    {
+        PlayerStateData newStateData = PlayerStateData.Value;
+        newStateData.animationState = animState;
+        PlayerStateData.Value = newStateData;
     }
 
     #region 플레이어 움직임
@@ -211,6 +228,9 @@ public class PlayerModel : NetworkBehaviour
                 break;
             case PlayerAnimationState.Walk:
                 SetAnimationState(walkStateComponent);
+                break;
+            case PlayerAnimationState.VentEnter:
+                SetAnimationState(ventEnterStateComponent);
                 break;
         }
     }
@@ -356,5 +376,80 @@ public class PlayerModel : NetworkBehaviour
             ApplyAnimationStateChange();
         }
     }
+    
+    //-----------public---------
+    [ServerRpc]
+    public void SetGoldServerRpc(int gold)
+    {
+        PlayerStatusData temp =  _playerStatusData.Value;
+        temp.gold = gold;
+        PlayerStatusData.Value = temp;
+    }
+    public int GetGold()
+    {
+        return PlayerStatusData.Value.gold;
+    }
+    
+    /// <summary>
+    /// 플레이어 생존 상태 조회
+    /// </summary>
+    public PlayerLivingState GetPlayerAliveState()
+    {
+        return PlayerStateData.Value.AliveState;
+    }
+    
+    /// <summary>
+    /// 플레이어 닉네임 조회
+    /// </summary>
+    public string GetPlayerNickname()
+    {
+        return PlayerStatusData.Value.Nickname;
+    }
 
+    public int GetPlayerColorIndex()
+    {
+        return  PlayerAppearanceData.Value.ColorIndex;
+    }
+    
+    /// <summary>
+    /// 플레이어 역할 조회
+    /// </summary>
+    public PlayerJob GetPlayerJob()
+    {
+        return PlayerStatusData.Value.job;
+    }
+    
+    public void ToggleReady(){
+        if(!IsOwner) return;
+       
+        ToggleReadyServerRpc();
+    }
+    
+    [ServerRpc]
+    private void ToggleReadyServerRpc()
+    {
+        PlayerStatusData statusDataCopy = GetPlayerStatusData();
+        statusDataCopy.IsReady = !statusDataCopy.IsReady;
+        PlayerStatusData.Value = statusDataCopy;
+    }
+    
+        
+
+
+    public bool IsReady(){
+        return PlayerStatusData.Value.IsReady;
+    }
+
+    public PlayerStatusData GetPlayerStatusData()
+    {
+        return PlayerStatusData.Value;
+    }
+
+    public void SubscribeToPlayerReadyStatusChanges(NetworkVariable<PlayerStatusData>.OnValueChangedDelegate handler){
+        PlayerStatusData.OnValueChanged += handler;
+        Debug.Log($"바인딩된 플레이어의 id는 {NetworkManager.Singleton.LocalClientId}");
+        Debug.Log($"바인딩된 함수는 {handler.Method.Name}, 타겟 = {handler.Target}");
+    }
+
+    
 }

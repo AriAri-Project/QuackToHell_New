@@ -11,6 +11,7 @@ public class RoleController : MonoBehaviour
     [SerializeField] private PlayerInput playerInput;
     
     private PlayerPresenter _playerPresenter;
+    private PlayerModel _playerModel;
     private IRoleStrategy _currentStrategy;
     private PlayerJob _currentRole = PlayerJob.None;
     
@@ -22,6 +23,7 @@ public class RoleController : MonoBehaviour
     private void Awake()
     {
         _playerPresenter = GetComponent<PlayerPresenter>();
+        _playerModel = GetComponent<PlayerModel>();
         if (playerInput == null)
             playerInput = GetComponent<PlayerInput>();
     }
@@ -31,7 +33,7 @@ public class RoleController : MonoBehaviour
         // 초기 역할 설정
         if (_playerPresenter != null)
         {
-            PlayerJob currentJob = _playerPresenter.GetPlayerJob();
+            PlayerJob currentJob = _playerModel.GetPlayerJob();
             ChangeRole(currentJob);
         }
         else
@@ -79,9 +81,9 @@ public class RoleController : MonoBehaviour
         switch (role)
         {
             case PlayerJob.Farmer:
-                return new FarmerStrategy(_playerPresenter, playerInput);
+                return new FarmerStrategy(_playerModel, _playerPresenter, playerInput);
             case PlayerJob.Animal:
-                return new AnimalStrategy(_playerPresenter, playerInput);
+                return new AnimalStrategy(_playerModel, _playerPresenter, playerInput);
             case PlayerJob.Ghost:
                 return new GhostStrategy(_playerPresenter, playerInput);
             default:

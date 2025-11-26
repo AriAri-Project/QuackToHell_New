@@ -8,6 +8,8 @@ using UnityEngine;
 
 public class LobbyUI : UIHUD
 {
+    public AudioSource buttonClickSFX;
+    
     private TMP_Dropdown colorDropdown;
     private TMP_Text codeText;
 
@@ -19,7 +21,8 @@ public class LobbyUI : UIHUD
     enum Texts
     {
         Text_Code,
-        Text_Button_StartGame
+        Text_Button_StartGame,
+
     }
 
     enum Buttons
@@ -40,6 +43,7 @@ public class LobbyUI : UIHUD
         Bind<TextMeshProUGUI>(typeof(Texts));
         codeText = Get<TextMeshProUGUI>((int)Texts.Text_Code);
         codeText.text = LobbyManager.Instance.HostLobbyCode;
+
 
         if (NetworkManager.Singleton != null && NetworkManager.Singleton.IsHost)
         {
@@ -70,7 +74,7 @@ public class LobbyUI : UIHUD
         //컴포넌트가 초기화 될 떄까지 기다리기
         yield return new WaitForEndOfFrame();
         ulong localClientId = NetworkManager.Singleton.LocalClientId;
-        PlayerPresenter localPlayer = PlayerHelperManager.Instance.GetPlayerPresenterByClientId(localClientId);
+        PlayerModel localPlayer = PlayerHelperManager.Instance.GetPlayerModelByClientId(localClientId);
         if (localPlayer!=null)
         {
             localPlayer.SubscribeToPlayerReadyStatusChanges(HandlePlayerStatusChanged);
@@ -111,6 +115,8 @@ public class LobbyUI : UIHUD
 
     private void OnClick_Button_StartGame(PointerEventData data)
     {
+        //사운드
+        SoundManager.Instance.SFXPlay("UIClickSFX", buttonClickSFX.clip);
         if (NetworkManager.Singleton != null && NetworkManager.Singleton.IsHost)
         {
             LobbyManager.Instance.StartGame();    
@@ -120,28 +126,31 @@ public class LobbyUI : UIHUD
             //ready 변수 켜기
             ToggleReadyState();
         }
-
-        
-        
     }
     private void ToggleReadyState(){
         ulong localClientId = NetworkManager.Singleton.LocalClientId;
-        PlayerPresenter localPlayer = PlayerHelperManager.Instance.GetPlayerPresenterByClientId(localClientId);
+        PlayerModel localPlayer = PlayerHelperManager.Instance.GetPlayerModelByClientId(localClientId);
         if(localPlayer!=null){
             localPlayer.ToggleReady();
         }
     }
     private void OnClick_Button_Back(PointerEventData data)
     {
+        //사운드
+        SoundManager.Instance.SFXPlay("UIClickSFX", buttonClickSFX.clip);
         LobbyManager.Instance.CleanUpLobby();
     }
     private void OnColorDropdownButton(Int32 colorIndex)
     {
+        //사운드
+        SoundManager.Instance.SFXPlay("UIClickSFX", buttonClickSFX.clip);
         PlayerHelperManager.Instance.GetPlayerModelByClientId(NetworkManager.Singleton.LocalClientId).ChangeColorServerRpc(colorIndex, NetworkManager.Singleton.LocalClientId);
     }
 
     private void OnClick_Button_CopyCode(PointerEventData data)
     {
+        //사운드
+        SoundManager.Instance.SFXPlay("UIClickSFX", buttonClickSFX.clip);
         GUIUtility.systemCopyBuffer = codeText.text;
     }
 }

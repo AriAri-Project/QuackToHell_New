@@ -51,7 +51,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  GlobalObjectIdHash: 241654087
+  GlobalObjectIdHash: 3039639338
   InScenePlacedSourceGlobalObjectIdHash: 0
   DeferredDespawnTick: 0
   Ownership: 1
@@ -128,7 +128,7 @@ SortingGroup:
   m_GameObject: {fileID: 5605374587913941141}
   m_Enabled: 1
   m_SortingLayerID: -1074147643
-  m_SortingLayer: 2
+  m_SortingLayer: 1
   m_SortingOrder: -100
   m_SortAtRoot: 0
 --- !u!58 &1528668449902005948
@@ -209,7 +209,7 @@ MonoBehaviour:
   exitAnimation: {fileID: 0}
   animator: {fileID: 0}
   enableSpacebar: 1
-  interactionRadius: 1
+  interactionRadius: 1.5
   cooldownSec: 0.5
   exitOffset: {x: 0, y: 0.5}
   linkedVents: []

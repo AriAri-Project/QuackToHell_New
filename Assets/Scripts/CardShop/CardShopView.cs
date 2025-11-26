@@ -20,7 +20,6 @@ public class CardShopView : MonoBehaviour
     [Header("UI")]
     [SerializeField] private Button lockButton;
     [SerializeField] private Button rerollButton;
-    [SerializeField] private Button xButton;
     [SerializeField] private GameObject cardShopPanel;
     [SerializeField] private Animator cardShopPanelAnimator;
 
@@ -33,11 +32,9 @@ public class CardShopView : MonoBehaviour
     {
         DebugUtils.AssertNotNull(lockButton, "lockButton", this);
         DebugUtils.AssertNotNull(rerollButton, "rerollButton", this);
-        DebugUtils.AssertNotNull(xButton, "xButton", this);
 
         lockButton.onClick.AddListener(() => OnClickLock?.Invoke());
         rerollButton.onClick.AddListener(() => OnClickReRoll?.Invoke());
-        xButton.onClick.AddListener(() => OnClickX?.Invoke());
     }
 
     private void Start()
@@ -55,10 +52,7 @@ public class CardShopView : MonoBehaviour
         {
             rerollButton.onClick.RemoveListener(() => OnClickReRoll?.Invoke());
         }
-        if (xButton != null)
-        {
-            xButton.onClick.RemoveListener(() => OnClickX?.Invoke());
-        }
+        
     }
     
     public void SetRefreshInteractable(bool interactable)
@@ -74,19 +68,6 @@ public class CardShopView : MonoBehaviour
         cardShopPanel.SetActive(isActive);
         cardShopPanelAnimator.SetBool("Active", isActive);
     }
-    
-/*
-    #region x버튼 바인딩 함수
 
-    /// <summary>
-    /// X버튼 바인딩 함수
-    /// </summary>
-    public void XButton_OnClick()
-    {
-        OnClickX?.Invoke();
-    }    
-
-    #endregion
-*/
 
 }

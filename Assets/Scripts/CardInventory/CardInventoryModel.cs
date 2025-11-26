@@ -76,4 +76,44 @@ public class CardInventoryModel : NetworkBehaviour
     }*/
     
     #endregion
+    
+    #region 외부 인터페이스 (메시지 기반)
+    
+    
+    /// <summary>
+    /// 소유한 카드 수 조회
+    /// </summary>
+    public int GetOwnedCardCount()
+    {
+        return ownedCards.Count;
+    }
+    
+    /// <summary>
+    /// 특정 카드 소유 여부 조회
+    /// </summary>
+    public bool HasCard(int cardId)
+    {
+        if (ownedCards == null) return false;
+        
+        foreach (CardItemData card in ownedCards)
+        {
+            if (card.cardItemStatusData.cardItemID == cardId)
+                return true;
+        }
+        return false;
+    }
+
+    public bool IsInventoryMaximum()
+    {
+        if (ownedCards.Count == GameConstants.Card.maxCardCount)
+        {
+            return true;
+        }
+
+        return false;
+    }
+
+
+    
+    #endregion
 }

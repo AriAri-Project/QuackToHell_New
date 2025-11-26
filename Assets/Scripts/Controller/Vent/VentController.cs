@@ -16,7 +16,8 @@ public sealed class VentController : NetworkBehaviour, IInteractable
 
     [Header("Interaction")]
     [SerializeField] private bool enableSpacebar = true;
-    [SerializeField, Range(0.5f, 5f)] private float interactionRadius = 6f;
+    [SerializeField, Range(0.5f, 5f)] private float interactionRadius = 1.5f;
+    public float InteractionRadius => interactionRadius;
     [SerializeField, Range(0f, 2f)] private float cooldownSec = 0.5f;
     [SerializeField] private Vector2 exitOffset = new(0f, 0.5f);
 
@@ -264,6 +265,8 @@ public sealed class VentController : NetworkBehaviour, IInteractable
             SpawnArrowsClientRpc(NetworkObjectId, BuildTargetIds(), TargetClient(sender));
 
             PlayEnterAnimation();
+
+            
         }
         else
         {
@@ -280,6 +283,13 @@ public sealed class VentController : NetworkBehaviour, IInteractable
             playerObj.transform.position = _tr.position + (Vector3)exitOffset;
 
             PlayExitAnimation();
+            PlayerModel playerModel = playerObj.GetComponent<PlayerModel>();
+            if (playerModel != null)
+            {
+                PlayerStateData newStateData = playerModel.PlayerStateData.Value;
+                newStateData.animationState = PlayerAnimationState.Idle;
+                playerModel.PlayerStateData.Value = newStateData;
+            }
         }
     }
 

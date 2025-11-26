@@ -120,52 +120,6 @@ namespace CardItem.MVP
         }
         #endregion
 
-        #region 외부 인터페이스 (메시지 기반)
         
-        /// <summary>
-        /// 카드 구매 요청
-        /// </summary>
-        public void RequestPurchase(ulong clientId = 0)
-        {
-            CardItemView_OnPurchaseClicked(clientId);
-        }
-        
-        /// <summary>
-        /// 카드 데이터 업데이트 요청
-        /// </summary>
-        public void RequestUpdateCardData(CardItemData newData)
-        {
-            if (cardItemModel != null)
-            {
-                cardItemModel.SetCardData(newData);
-            }
-        }
-        
-        /// <summary>
-        /// 카드 상태 조회
-        /// </summary>
-        public CardItemData GetCardData()
-        {
-            return cardItemModel?.CardItemData ?? default(CardItemData);
-        }
-        
-        /// <summary>
-        /// 카드 가격 조회
-        /// </summary>
-        public int GetCardPrice()
-        {
-            return cardItemModel?.CardItemData.cardItemStatusData.price ?? 0;
-        }
-        
-        /// <summary>
-        /// 카드 구매 가능 여부 조회
-        /// </summary>
-        public bool IsPurchasable()
-        {
-            CardItemData cardData = GetCardData();
-            return cardData.cardItemStatusData.state == CardItemState.None;
-        }
-        
-        #endregion
     }
 }
