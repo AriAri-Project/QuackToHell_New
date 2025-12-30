@@ -65,6 +65,14 @@ public sealed class VentController : NetworkBehaviour, IInteractable
     {
         if (player == null) return false;
 
+        if (!_occupied.Value) return true;
+
+        var pNo = player.GetComponent<NetworkObject>();
+        if (pNo == null) return false;
+        bool iAmOccupant = (_occupantNetId.Value != 0UL) && (_occupantNetId.Value == pNo.NetworkObjectId);
+        return iAmOccupant;
+
+        /*
         // 비점유면 누구나 가능, 점유면 "본인 점유자"만 탈출 가능
         float dist = Vector3.Distance(player.transform.position, _tr.position);
         if (!_occupied.Value) return dist <= interactionRadius;
@@ -74,6 +82,7 @@ public sealed class VentController : NetworkBehaviour, IInteractable
         if (pNo == null) return false;
         bool iAmOccupant = (_occupantNetId.Value != 0UL) && (_occupantNetId.Value == pNo.NetworkObjectId);
         return iAmOccupant && dist <= interactionRadius;
+        */
     }
 
     public void Interact(GameObject player)
@@ -185,7 +194,7 @@ public sealed class VentController : NetworkBehaviour, IInteractable
         if (!_occupied.Value)
         {
             if (NetworkManager.Singleton.ServerTime.Time - _lastExitServerTime < cooldownSec) return;
-            if (Vector3.Distance(playerObj.transform.position, _tr.position) > interactionRadius) return;
+            // if (Vector3.Distance(playerObj.transform.position, _tr.position) > interactionRadius) return;
 
             _occupied.Value = true;
             _occupantNetId.Value = playerObj.NetworkObjectId;
