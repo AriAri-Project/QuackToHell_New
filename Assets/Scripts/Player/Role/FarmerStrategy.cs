@@ -317,7 +317,7 @@ public class FarmerStrategy : NetworkBehaviour, IRoleStrategy
                         VentController vent = interactObj.GetComponent<VentController>();
                         GameObject player = PlayerHelperManager.Instance.GetPlayerGameObjectByClientId(sender);
               
-                        VentClientRpc(targetNetworkObjectId, true, new ClientRpcParams 
+                        VentEnterClientRpc(targetNetworkObjectId, true, new ClientRpcParams 
                         { 
                             Send = new ClientRpcSendParams { TargetClientIds = new[] { sender } } 
                         });
@@ -350,7 +350,7 @@ public class FarmerStrategy : NetworkBehaviour, IRoleStrategy
     }
     
     [ClientRpc]
-    private void VentClientRpc(ulong targetNetworkObjectId,bool isEntering, ClientRpcParams rpcParams = default)
+    private void VentEnterClientRpc(ulong targetNetworkObjectId,bool isEntering, ClientRpcParams rpcParams = default)
     {
     
         // PlayerVentEnterState에 진입/탈출 정보 전달
@@ -360,7 +360,7 @@ public class FarmerStrategy : NetworkBehaviour, IRoleStrategy
         PlayerModel playerModel = GetComponent<PlayerModel>();
         playerModel?.SetAnimationStateServerRpc(PlayerAnimationState.VentEnter);
         
-        isVentEntered=!isVentEntered;
+        isVentEntered=true;
         if (isVentEntered)
         {
             interatingVentNetworkId = targetNetworkObjectId;
@@ -374,7 +374,9 @@ public class FarmerStrategy : NetworkBehaviour, IRoleStrategy
     public void ExitVent()
     {
         if (interatingVentNetworkId == 0) return;
-    
+
+        isVentEntered = false;
+        
         // PlayerVentEnterState에 탈출 정보 전달
         PlayerVentEnterState ventState = GetComponent<PlayerVentEnterState>();
         ventState?.SetVentAction(false, interatingVentNetworkId, this);
