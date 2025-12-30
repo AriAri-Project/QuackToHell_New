@@ -316,8 +316,8 @@ public class FarmerStrategy : NetworkBehaviour, IRoleStrategy
                     {
                         VentController vent = interactObj.GetComponent<VentController>();
                         GameObject player = PlayerHelperManager.Instance.GetPlayerGameObjectByClientId(sender);
-                        vent.RequestToggleFromPlayer(player);
-                        VentClientRpc(targetNetworkObjectId, new ClientRpcParams 
+              
+                        VentClientRpc(targetNetworkObjectId, true, new ClientRpcParams 
                         { 
                             Send = new ClientRpcSendParams { TargetClientIds = new[] { sender } } 
                         });
@@ -350,8 +350,16 @@ public class FarmerStrategy : NetworkBehaviour, IRoleStrategy
     }
     
     [ClientRpc]
-    private void VentClientRpc(ulong targetNetworkObjectId, ClientRpcParams rpcParams = default)
+    private void VentClientRpc(ulong targetNetworkObjectId,bool isEntering, ClientRpcParams rpcParams = default)
     {
+    
+        // PlayerVentEnterState에 진입/탈출 정보 전달
+        PlayerVentEnterState ventState = GetComponent<PlayerVentEnterState>();
+        ventState?.SetVentAction(isEntering, targetNetworkObjectId, this);
+        // 상태 전환
+        PlayerModel playerModel = GetComponent<PlayerModel>();
+        playerModel?.SetAnimationStateServerRpc(PlayerAnimationState.VentEnter);
+        
         isVentEntered=!isVentEntered;
         if (isVentEntered)
         {
@@ -365,18 +373,14 @@ public class FarmerStrategy : NetworkBehaviour, IRoleStrategy
 
     public void ExitVent()
     {
-        NetworkObject interactObj = null;
-        if (NetworkManager.Singleton.SpawnManager.SpawnedObjects.TryGetValue(
-                interatingVentNetworkId, out NetworkObject obj))
-        {
-            interactObj = obj;
-        }
-
-        if (interactObj != null && interactObj.CompareTag(GameTags.Vent))
-        {
-            VentController vent = interactObj.GetComponent<VentController>();
-            vent.RequestToggleFromPlayer(this.gameObject);
-        }
+        if (interatingVentNetworkId == 0) return;
+    
+        // PlayerVentEnterState에 탈출 정보 전달
+        PlayerVentEnterState ventState = GetComponent<PlayerVentEnterState>();
+        ventState?.SetVentAction(false, interatingVentNetworkId, this);
+    
+        // 탈출 애니메이션 트리거
+        ventState?.TriggerExitAnimation();
     }
 
     public void ReportCorpse(ulong targetNetworkObjectId)

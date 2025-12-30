@@ -165,6 +165,17 @@ public class PlayerModel : NetworkBehaviour
             PlayerStateData.Value = newStateData;
         }
     }
+    
+    [ServerRpc(RequireOwnership = false)]
+    public void StopMovementServerRpc()
+    {
+        direction.Value = Vector2.zero;
+    
+        // 애니메이션 상태도 Idle로 변경
+        PlayerStateData newStateData = PlayerStateData.Value;
+        newStateData.animationState = PlayerAnimationState.Idle;
+        PlayerStateData.Value = newStateData;
+    }
     #endregion
 
 

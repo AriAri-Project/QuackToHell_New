@@ -1147,7 +1147,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ShowTopMostFoldoutHeaderGroup: 1
-  killCooltimeMax: 20
 --- !u!114 &9000094663293111928
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1172,6 +1171,7 @@ GameObject:
   - component: {fileID: 1085152858211590651}
   - component: {fileID: 2696677760322620458}
   - component: {fileID: 5639819905214187387}
+  - component: {fileID: 7840908720677706911}
   m_Layer: 0
   m_Name: Body
   m_TagString: Untagged
@@ -1271,3 +1271,15 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &7840908720677706911
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9157300098359662370}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c959b69f8f78ea249adcdeed8e6f4fa5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 

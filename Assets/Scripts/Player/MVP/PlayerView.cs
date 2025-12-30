@@ -445,6 +445,15 @@ public class PlayerView : NetworkBehaviour
         ulong senderClientID=  rpcParams.Receive.SenderClientId;
         PlayerView playerView =  PlayerHelperManager.Instance.GetPlayerViewlByClientId(senderClientID);
         playerView.ignoreMoveInput.Value = value;
+        
+        if (value)
+        {
+            PlayerModel playerModel = playerView.GetComponent<PlayerModel>();
+            if (playerModel != null)
+            {
+                playerModel.StopMovementServerRpc();
+            }
+        }
     }
 
     
