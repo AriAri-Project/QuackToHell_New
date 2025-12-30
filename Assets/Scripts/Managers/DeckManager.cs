@@ -19,6 +19,9 @@ using Random = UnityEngine.Random;
 #region Data Structs (기획서 타입 반영)
 public enum TierEnum { None = 0, Common = 1, Rare = 2, Special = 3 }
 public enum TypeEnum { None = 0, Attack = 1, Defense = 2, Special = 3, Number = 4, Operator = 5, Roll = 6}
+public enum SubTypeEnum
+{ None = 0, Const = 1, N = 2, Revolt = 3, Farmer = 4, Animal = 5 }
+
 public enum CardValue
 {
     Unknown = -1,
@@ -145,7 +148,7 @@ public struct CardDef : INetworkSerializable, IEquatable<CardDef>
     public FixedString64Bytes cardNameKey;
     public TierEnum tier;      // enum
     public TypeEnum type;      // enum
-    public int subType;        // 사용 안 하면 0
+    public SubTypeEnum subType;        // 사용 안 하면 0
     public CardValue Value;
     public bool isUniqueCard;
     public bool isSellableCard;
@@ -1152,7 +1155,7 @@ public class DeckManager : NetworkBehaviour
                     cardNameKey = S(columns, iName),
                     tier = ToTier(S(columns, iTier)),
                     type = ToType(S(columns, iType)),
-                    subType = ToInt(S(columns, iSub)),
+                    subType = ToSubType(S(columns, iSub)),
                     Value = value,
                     isUniqueCard = ToBool(S(columns, iUni)),
                     isSellableCard = ToBool(S(columns, iSell)),
@@ -1328,6 +1331,29 @@ public class DeckManager : NetworkBehaviour
             "roll" => TypeEnum.Roll,
 
             _ => TypeEnum.None
+        };
+    }
+    private static SubTypeEnum ToSubType(string s)
+    {
+        if (string.IsNullOrEmpty(s))
+            return SubTypeEnum.None;
+
+        // 숫자로 들어오는 경우도 대비
+        if (int.TryParse(s, out var n) &&
+            Enum.IsDefined(typeof(SubTypeEnum), n))
+            return (SubTypeEnum)n;
+
+        s = s.Trim().ToLowerInvariant();
+
+        return s switch
+        {
+            "const" => SubTypeEnum.Const,
+            "n" => SubTypeEnum.N,
+            "revolt" => SubTypeEnum.Revolt,
+            "farmer" => SubTypeEnum.Farmer,
+            "animal" => SubTypeEnum.Animal,
+
+            _ => SubTypeEnum.None
         };
     }
 

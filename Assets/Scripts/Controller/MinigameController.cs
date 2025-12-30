@@ -50,7 +50,7 @@ public class MinigameController : MonoBehaviour
     [Header("Highlight (Sprite Outline Clone)")]
     [SerializeField] private List<Renderer> highlightRenderers = new();
     [SerializeField, Min(1.0f)] private float outlineScale = 1.03f;
-    [SerializeField] private int outlineSortingOffset = -500;
+    [SerializeField] private int outlineSortingOffset = -1;
     [SerializeField] private float outlineAlpha = 1f;
 
     [SerializeField] private Renderer[] dimTargets;
@@ -113,13 +113,14 @@ public class MinigameController : MonoBehaviour
     }
 
     // =========================
-    // (옵션) 기존 self input 유지하고 싶을 때만
+    // 기존 self input 유지하고 싶을 때만
     // =========================
     private void Update()
     {
-        if (!enableSelfInput) return;
 
         UpdateLocalEligibilityAndHighlight();
+
+        if (!enableSelfInput) return;
 
         if (_isLocalEligible && Input.GetKeyDown(interactionKey))
         {
@@ -219,52 +220,48 @@ public class MinigameController : MonoBehaviour
 
     private void EnableHighlight()
     {
-        const int layers = 5;              
-        const float baseScale = 1.01f;      
-        const float scaleStep = 0.01f;       
-
         foreach (var r in highlightRenderers)
         {
             if (!r) continue;
             var sr = r as SpriteRenderer ?? r.GetComponent<SpriteRenderer>();
             if (sr == null || sr.sprite == null) continue;
 
-            if (sr.transform.Find("OutlineClone_0") != null)
+            var existing = sr.transform.Find("OutlineClone");
+            if (existing != null)
             {
-                foreach (Transform child in sr.transform)
-                {
-                    if (child.name.StartsWith("OutlineClone_"))
-                        child.gameObject.SetActive(true);
-                }
+                existing.gameObject.SetActive(true);
                 continue;
             }
 
-            for (int i = 0; i < layers; i++)
+            var go = new GameObject("OutlineClone");
+            go.transform.SetParent(sr.transform, false);
+            go.transform.localPosition = Vector3.zero;
+            go.transform.localRotation = Quaternion.identity;
+
+            go.transform.localScale = Vector3.one * 1.09f;
+
+            var sr2 = go.AddComponent<SpriteRenderer>();
+            sr2.sprite = sr.sprite;
+            sr2.flipX = sr.flipX;
+            sr2.flipY = sr.flipY;
+
+            sr2.sortingLayerID = sr.sortingLayerID;
+            sr2.sortingOrder = sr.sortingOrder - 1;
+
+            Shader shader = Shader.Find("Universal Render Pipeline/2D/Sprite-Unlit-Default");
+            if (shader == null) shader = Shader.Find("Sprites/Default");
+
+            if (shader != null)
             {
-                var go = new GameObject($"OutlineClone_{i}");
-                go.transform.SetParent(sr.transform, false);
-                go.transform.localPosition = Vector3.zero;
-                go.transform.localRotation = Quaternion.identity;
-                go.transform.localScale = Vector3.one * (baseScale + scaleStep * i);
-
-                var sr2 = go.AddComponent<SpriteRenderer>();
-                sr2.sprite = sr.sprite;
-                sr2.flipX = sr.flipX;
-                sr2.flipY = sr.flipY;
-
-                sr2.sortingLayerID = sr.sortingLayerID;
-                sr2.sortingOrder = sr.sortingOrder + outlineSortingOffset - i;
-
-                float alpha = Mathf.Lerp(0.45f, 0.1f, i / (float)(layers - 1));
-
-                var mat = new Material(Shader.Find("Unlit/Color"));
-                mat.color = new Color(1f, 1f, 0.9f, alpha); 
-                sr2.material = mat;
-
-                _outlineClones.Add(go);
+                sr2.material = new Material(shader); 
             }
+
+            sr2.color = new Color(1f, 1f, 1f, 0.85f);
+
+            _outlineClones.Add(go);
         }
     }
+
 
     private void DisableHighlight()
     {
