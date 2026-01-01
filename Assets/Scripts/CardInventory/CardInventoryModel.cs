@@ -1,5 +1,7 @@
+using Court.Hand;
 using UnityEngine;
 using Unity.Netcode;
+using UnityEngine.SceneManagement;
 
 
 public enum InventorySotringOption
@@ -26,6 +28,9 @@ public class CardInventoryModel : NetworkBehaviour
         myClientId = NetworkManager.Singleton.LocalClientId;
     }
     #endregion
+    
+    
+    
 
     #region InventoryCard 데이터 추가, 삭제 메서드
     [ServerRpc]
@@ -51,6 +56,140 @@ public class CardInventoryModel : NetworkBehaviour
         }
     }
     #endregion
+    
+    public override void OnNetworkSpawn()
+
+    {
+
+        base.OnNetworkSpawn();
+
+
+
+        // ★ [핵심] "이 캐릭터가 내 캐릭터(IsOwner)라면?"
+
+        if (IsOwner)
+
+        {
+
+            base.OnNetworkSpawn();
+
+
+
+            // 씬 로드 이벤트 등록 (씬이 바뀔 때마다 감시)
+
+            if (IsOwner)
+
+            {
+
+                SceneManager.sceneLoaded += OnSceneLoaded;
+
+        
+
+                // 혹시 이미 재판장에 들어와 있는 상태에서 스폰되었을 경우를 대비
+
+                CheckAndConnectUI(SceneManager.GetActiveScene().name);
+
+            }
+
+        }
+
+    }
+
+
+
+    public override void OnNetworkDespawn()
+
+    {
+
+        base.OnNetworkDespawn();
+
+        // 이벤트 해제 (메모리 누수 방지)
+
+        if (IsOwner)
+
+        {
+
+            SceneManager.sceneLoaded -= OnSceneLoaded;
+
+        }
+
+    }
+
+
+
+    /// <summary>
+
+    /// 씬 로딩이 끝날 때마다 호출됨
+
+    /// </summary>
+
+    private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+
+    {
+
+        CheckAndConnectUI(scene.name);
+
+    }
+
+
+
+    /// <summary>
+
+    /// 재판장인지 확인하고 UI 연결
+
+    /// </summary>
+
+    private void CheckAndConnectUI(string sceneName)
+
+    {
+
+        // 1. 내 캐릭터가 아니면 무시
+
+        if (!IsOwner) return;
+
+
+
+        // 2. 현재 씬이 "재판장(Court)"이 아니면 무시 (아무때나 찾지 않음!)
+
+        // GameScenes.Court 상수를 사용하거나 문자열 "Court" 사용
+
+        if (sceneName != GameScenes.Court) 
+
+        {
+
+            return;
+
+        }
+
+
+
+        // 3. 재판장이 맞다면 UI 찾기 시도
+
+        var handPresenter = FindAnyObjectByType<TrialHandPresenter>();
+
+    
+
+        if (handPresenter != null)
+
+        {
+
+            Debug.Log($"[CardInventory] 재판장 도착! 손패 UI 연결 시도...");
+
+            handPresenter.SetInventory(this);
+
+        }
+
+        else
+
+        {
+
+            // 재판장인데 UI가 없다면 에러 (배치 실수)
+
+            Debug.LogError("[CardInventory] 재판장(Court)인데 TrialHandPresenter가 없습니다!");
+
+        }
+
+    }
 
     #region 정렬
     //TODO: 정렬 버튼 생길 시 옵션에 따른 정렬 메서드 추가

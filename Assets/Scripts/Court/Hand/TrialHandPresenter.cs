@@ -1,48 +1,39 @@
+using System.Collections;
 using System.Collections.Generic;
-using Unity.Netcode;
-using UnityEngine;
-using UnityEngine.EventSystems;
-using Court; 
+using UnityEngine; // NetworkBehaviour 제거됨
+using Court;
+using Unity.Netcode; // NetworkListEvent 등을 위해 필요
 
 namespace Court.Hand
 {
-    public class TrialHandPresenter : NetworkBehaviour
+    // [수정] NetworkBehaviour -> MonoBehaviour 변경 (UI는 네트워크 몰라도 됨)
+    public class TrialHandPresenter : MonoBehaviour
     {
         [Header("References")] 
         [SerializeField] private GameObject trialCardContainerPrefab;
-        [SerializeField] private Transform handPivot;
-        [SerializeField] private Transform cardsParent;
+        [SerializeField] private Transform handPivot;  // 부채꼴의 중심점
+        [SerializeField] private Transform cardsParent; // 카드가 생성될 부모
         [SerializeField] private ArrowController arrowController;
 
         [Space(10)]
-        [Header("1. Basic Layout (기본 배치)")] 
-        [Tooltip("부채꼴의 반지름")]
+        [Header("1. Basic Layout")] 
         [SerializeField] private float arcRadius = 1500f;
-        
-        [Tooltip("카드 사이의 기본 각도 간격")]
         [SerializeField] private float angleSpacing = 5f;
 
         [Space(10)]
-        [Header("2. Interaction (반응 설정)")]
-        [Tooltip("호버링/선택 시 카드가 위로 올라오는 정도 (Y축)")]
+        [Header("2. Interaction")]
         [SerializeField] private float hoverYOffset = 120f;
-        
-        [Tooltip("선택/호버 시 카드가 커지는 배율")]
         [Range(1.0f, 2.0f)]
         [SerializeField] private float selectedScale = 1.3f; 
 
         [Space(10)]
-        [Header("3. Separation (밀어내기)")]
-        [Tooltip("호버링 시 밀려나는 각도")]
+        [Header("3. Separation")]
         [SerializeField] private float hoverSeparationAngle = 3f;
-        
-        [Tooltip("선택 시 밀려나는 각도")]
         [SerializeField] private float selectedSeparationAngle = 3f;
         
         [Space(10)]
-        [Header("4. Input Settings (입력 감도)")]
-        [Tooltip("마우스를 누르고 이 거리(픽셀)만큼 움직여야 드래그로 인식합니다.")]
-        [SerializeField] private float dragThreshold = 20f; // ★ 추가됨: 드래그 민감도
+        [Header("4. Input Settings")]
+        [SerializeField] private float dragThreshold = 20f;
 
         // 내부 상태 변수
         private List<TrialCardView> _spawnedCards = new List<TrialCardView>();
@@ -50,68 +41,104 @@ namespace Court.Hand
         private TrialCardView _hoveredCard;
         
         private bool _isDragging = false;
-        private bool _isMouseDownToCheck = false; // ★ 추가됨: 클릭인지 드래그인지 간 보는 중
-        private Vector2 _initialMousePos;         // ★ 추가됨: 처음 누른 위치
+        private bool _isMouseDownToCheck = false;
+        private Vector2 _initialMousePos;
         
         private CardInventoryModel _myInventory;
+        private float _debugTimer = 0f;
 
-        public override void OnNetworkSpawn()
+        private void Awake()
         {
-            if (!IsOwner) { this.enabled = false; return; }
-
-            ulong myId = NetworkManager.Singleton.LocalClientId;
-            var playerModel = global::PlayerHelperManager.Instance.GetPlayerModelByClientId(myId);
-            if (playerModel != null)
-            {
-                _myInventory = playerModel.GetComponent<CardInventoryModel>();
-                if (_myInventory != null)
-                {
-                    _myInventory.OwnedCards.OnListChanged += OnInventoryChanged;
-                    InitializeHand();
-                }
-            }
+            if (cardsParent == null) cardsParent = transform;
+            if (handPivot == null) handPivot = transform; // 피벗 없으면 내 위치 기준
         }
 
-        private void OnInventoryChanged(NetworkListEvent<CardItemData> changeEvent) => InitializeHand();
-
-        public override void OnNetworkDespawn()
+        private void OnDestroy()
         {
-            if (_myInventory != null) _myInventory.OwnedCards.OnListChanged -= OnInventoryChanged;
-        }
-
-        private void InitializeHand()
-        {
-            foreach (var card in _spawnedCards) if (card) Destroy(card.gameObject);
-            _spawnedCards.Clear();
-            _selectedIndices.Clear();
-            
-            if (arrowController != null) arrowController.HideArrow();
-
-            int index = 0;
-            foreach (var cardData in _myInventory.OwnedCards)
+            if (_myInventory != null && _myInventory.OwnedCards != null)
             {
-                GameObject container = Instantiate(trialCardContainerPrefab, cardsParent);
-                TrialCardView view = container.GetComponent<TrialCardView>();
-                GameObject visual = CardItemFactoryManager.Instance.CreateCardForInventory(cardData);
-
-                view.Initialize(cardData, index, visual);
-
-                view.OnHoverEnter += (v) => _hoveredCard = v;
-                view.OnHoverExit += (v) => { if (_hoveredCard == v) _hoveredCard = null; };
-                view.OnClick += HandleCardClick;
-
-                _spawnedCards.Add(view);
-                index++;
+                _myInventory.OwnedCards.OnListChanged -= OnInventoryChanged;
             }
         }
 
         private void Update()
         {
-            if (!IsOwner) return;
-            UpdateHandLayout();
-            UpdateDragInput();
+            // 인벤토리 연결 전에는 로직 수행 금지
+            if (_myInventory == null) return;
+
+            // [디버그] 3초마다 상태 확인
+            _debugTimer += Time.deltaTime;
+            if (_debugTimer > 3.0f)
+            {
+                _debugTimer = 0f;
+                int realCount = _myInventory.OwnedCards.Count;
+                int uiCount = _spawnedCards.Count;
+                // Debug.Log($"[Hand UI] 데이터: {realCount} | UI: {uiCount}");
+            }
+
+            UpdateHandLayout();    // 부채꼴 배치 계산
+            UpdateDragInput();     // 드래그 입력 처리
+            UpdateFilterVisuals(); // 선택/호버 비주얼 처리
         }
 
+        // ★ [핵심] 외부(CardInventoryModel)에서 호출해주는 초기화 함수
+        public void SetInventory(CardInventoryModel inventory)
+        {
+            _myInventory = inventory;
+            
+            // 데이터 변경 감지 이벤트 연결
+            _myInventory.OwnedCards.OnListChanged += OnInventoryChanged;
+
+            Debug.Log($"[UI] 인벤토리 연결됨! 현재 카드 수: {_myInventory.OwnedCards.Count}");
+            
+            // 초기화: 현재 데이터로 카드 생성
+            InitializeHand(); 
+        }
+
+        private void OnInventoryChanged(NetworkListEvent<CardItemData> changeEvent)
+        {
+            InitializeHand();
+        }
+
+        private void InitializeHand()
+        {
+            // 기존 카드 UI 삭제
+            foreach (var card in _spawnedCards)
+            {
+                if (card) Destroy(card.gameObject);
+            }
+            _spawnedCards.Clear();
+            _selectedIndices.Clear();
+            
+            if (arrowController != null) arrowController.HideArrow();
+
+            if (_myInventory == null) return;
+
+            // 데이터 기반으로 카드 UI 생성
+            int index = 0;
+            foreach (var cardData in _myInventory.OwnedCards)
+            {
+                GameObject container = Instantiate(trialCardContainerPrefab, cardsParent);
+                TrialCardView view = container.GetComponent<TrialCardView>();
+                
+                // 실제 카드 이미지 생성 (Factory 이용)
+                GameObject visual = CardItemFactoryManager.Instance.CreateCardForInventory(cardData);
+
+                view.Initialize(cardData, index, visual);
+
+                // UI 이벤트 연결 (클릭, 호버)
+                view.OnHoverEnter += (v) => { _hoveredCard = v; UpdateFilterVisuals(); }; 
+                view.OnHoverExit += (v) => { if (_hoveredCard == v) { _hoveredCard = null; UpdateFilterVisuals(); } };
+                view.OnClick += HandleCardClick;
+
+                _spawnedCards.Add(view);
+                index++;
+            }
+            
+            UpdateFilterVisuals();
+        }
+
+        // ... (기존 부채꼴 배치 로직 유지) ...
         private void UpdateHandLayout()
         {
             int count = _spawnedCards.Count;
@@ -124,16 +151,15 @@ namespace Court.Hand
             if (_hoveredCard != null)
             {
                 int rawIndex = _spawnedCards.IndexOf(_hoveredCard);
-                // 선택된 카드는 호버링 대상에서 제외
-                if (!_selectedIndices.Contains(rawIndex)) 
-                {
-                     hoveredIndex = rawIndex;
-                }
+                if (!_selectedIndices.Contains(rawIndex)) hoveredIndex = rawIndex;
             }
 
             for (int i = 0; i < count; i++)
             {
                 TrialCardView card = _spawnedCards[i];
+                // 카드 UI가 삭제되었거나 비활성 상태면 건너뜀
+                if (card == null) continue;
+
                 float angle = startAngle + (i * angleSpacing);
                 float pushAmount = 0f;
 
@@ -150,148 +176,170 @@ namespace Court.Hand
                 }
                 
                 angle += pushAmount;
-
                 float rad = angle * Mathf.Deg2Rad;
+                
+                // 위치 계산 (피벗 기준)
                 Vector3 pos = handPivot.localPosition + new Vector3(Mathf.Sin(rad) * arcRadius, Mathf.Cos(rad) * arcRadius, 0);
                 Quaternion rot = Quaternion.Euler(0, 0, -angle);
                 float scale = 1f;
 
                 bool isSelected = _selectedIndices.Contains(card.InventoryIndex);
 
-                if (i == hoveredIndex)
+                if (i == hoveredIndex || isSelected)
                 {
                     pos += transform.up * hoverYOffset;
                     rot = Quaternion.identity;
                     scale = selectedScale;
-                    card.transform.SetAsLastSibling();
-                }
-                else if (isSelected)
-                {
-                    pos += transform.up * hoverYOffset;
-                    rot = Quaternion.identity;
-                    scale = selectedScale;
-                    
-                    if (hoveredIndex == -1) card.transform.SetAsLastSibling();
+                    card.transform.SetAsLastSibling(); // 맨 앞으로 가져오기
                 }
                 else
                 {
                     if (hoveredIndex == -1) card.transform.SetSiblingIndex(i);
                 }
 
+                // TrialCardView 내부의 Lerp 이동 함수 호출
                 card.SetTargetState(pos, rot, scale);
             }
         }
 
+        // ... (입력 및 인터랙션 로직 유지) ...
         private void HandleCardClick(TrialCardView cardView)
         {
-            // 드래그 중이었다면 클릭 이벤트 무시 (드래그 끝내고 손 뗄 때 클릭으로 오인되는 것 방지)
             if (_isDragging) return;
 
             int idx = cardView.InventoryIndex;
-            if (_selectedIndices.Contains(idx)) _selectedIndices.Remove(idx);
-            else if (_selectedIndices.Count < 2) _selectedIndices.Add(idx);
 
+            if (_selectedIndices.Contains(idx))
+            {
+                _selectedIndices.Remove(idx);
+                UpdateFilterVisuals();
+                return;
+            }
+
+            if (_selectedIndices.Count >= 2)
+            {
+                Debug.Log("[System] 이미 2장을 선택했습니다.");
+                return;
+            }
+
+            if (!IsCardSelectable(cardView))
+            {
+                Debug.Log("[System] 호환되지 않는 카드입니다.");
+                return; 
+            }
+
+            _selectedIndices.Add(idx);
             UpdateFilterVisuals();
+        }
+
+        private bool IsCardSelectable(TrialCardView targetCard)
+        {
+            if (_selectedIndices.Count == 0) return true;
+            if (_selectedIndices[0] >= _myInventory.OwnedCards.Count) return false;
+
+            CardItemData firstCard = _myInventory.OwnedCards[_selectedIndices[0]];
+            return CourtGameRules.IsCompatible(firstCard, targetCard.Data);
         }
 
         private void UpdateFilterVisuals()
         {
-            if (_selectedIndices.Count == 0)
-            {
-                foreach (var c in _spawnedCards) c.SetVisualState(false, false);
-                return;
-            }
+            if (_myInventory == null) return;
 
-            CardItemData firstCard = _myInventory.OwnedCards[_selectedIndices[0]];
+            bool hasCriteria = _selectedIndices.Count > 0 || _hoveredCard != null;
+            CardItemData criteriaCard = default;
+            int criteriaIndex = -1;
+
+            if (_selectedIndices.Count > 0)
+            {
+                criteriaIndex = _selectedIndices[0];
+                if(criteriaIndex < _myInventory.OwnedCards.Count)
+                    criteriaCard = _myInventory.OwnedCards[criteriaIndex];
+            }
+            else if (_hoveredCard != null)
+            {
+                criteriaIndex = _hoveredCard.InventoryIndex;
+                criteriaCard = _hoveredCard.Data;
+            }
 
             foreach (var cardView in _spawnedCards)
             {
                 bool isSelected = _selectedIndices.Contains(cardView.InventoryIndex);
                 bool isDisabled = false;
 
-                if (!isSelected)
+                if (hasCriteria && !isSelected && _selectedIndices.Count < 2)
                 {
-                    if (!CourtGameRules.IsCompatible(firstCard, cardView.Data)) isDisabled = true;
-                    if (_selectedIndices.Count >= 2) isDisabled = true;
+                    if (cardView.InventoryIndex != criteriaIndex)
+                    {
+                        if (!CourtGameRules.IsCompatible(criteriaCard, cardView.Data))
+                            isDisabled = true;
+                    }
                 }
+                
                 cardView.SetVisualState(isSelected, isDisabled);
             }
         }
 
-        // ★ [수정됨] 드래그 판정 로직 개선
         private void UpdateDragInput()
         {
             if (_selectedIndices.Count != 2)
             {
-                // 조건 불만족 시 모든 상태 초기화
                 if (_isDragging) StopDrag();
                 _isMouseDownToCheck = false;
                 return;
             }
 
-            // 1. 마우스 누름: 드래그인지 클릭인지 감시 시작
             if (Input.GetMouseButtonDown(0))
             {
                 _isMouseDownToCheck = true;
                 _initialMousePos = Input.mousePosition;
-                // 아직 _isDragging = true로 만들지 않음!
             }
 
-            // 2. 마우스 누르고 있는 중
             if (Input.GetMouseButton(0))
             {
-                // 아직 드래그 상태가 아니라면, 이동 거리 체크
                 if (_isMouseDownToCheck && !_isDragging)
                 {
                     float dist = Vector2.Distance(_initialMousePos, Input.mousePosition);
-                    // 설정한 임계값(dragThreshold)보다 많이 움직이면 드래그 시작
-                    if (dist > dragThreshold)
-                    {
-                        _isDragging = true;
-                        Debug.Log("드래그 시작!");
-                    }
+                    if (dist > dragThreshold) _isDragging = true;
                 }
 
-                // 진짜 드래그 중일 때만 화살표 그리기
                 if (_isDragging)
                 {
-                    int rightIndex = Mathf.Max(_selectedIndices[0], _selectedIndices[1]);
-                    // 인덱스가 범위를 벗어나지 않도록 방어 코드
-                    if(rightIndex < _spawnedCards.Count)
-                    {
-                        TrialCardView rightCard = _spawnedCards[rightIndex]; 
-                        Vector3 startPos = rightCard.transform.position;
-
-                        Vector3 mouseScreenPos = Input.mousePosition;
-                        if (Camera.main != null)
-                        {
-                            float distanceToCamera = Mathf.Abs(startPos.z - Camera.main.transform.position.z);
-                            mouseScreenPos.z = distanceToCamera; 
-                            Vector3 mouseWorldPos = Camera.main.ScreenToWorldPoint(mouseScreenPos);
-                            mouseWorldPos.z = startPos.z;
-
-                            if (arrowController != null) 
-                            {
-                                arrowController.ShowArrow(startPos, mouseWorldPos);
-                            }
-                        }
+                    // 화살표 표시
+                    if(_selectedIndices.Count > 0) {
+                       int firstIdx = _selectedIndices[0];
+                       // UI상의 해당 카드 위치 찾기
+                       TrialCardView cardView = _spawnedCards.Find(x => x.InventoryIndex == firstIdx);
+                       if(cardView != null) {
+                           Vector3 startPos = cardView.transform.position;
+                           Vector3 mouseWorldPos = GetMouseWorldPosition(startPos.z);
+                           if (arrowController != null) arrowController.ShowArrow(startPos, mouseWorldPos);
+                       }
                     }
                 }
             }
 
-            // 3. 마우스 뗌
             if (Input.GetMouseButtonUp(0))
             {
                 if (_isDragging)
                 {
                     StopDrag();
-                    TrySubmitEvidence();
+                    //TrySubmitEvidence();
                 }
-                
-                // 상태 초기화
                 _isDragging = false;
                 _isMouseDownToCheck = false;
             }
+        }
+
+        private Vector3 GetMouseWorldPosition(float depthZ)
+        {
+            Vector3 mouseScreenPos = Input.mousePosition;
+            if (Camera.main != null)
+            {
+                float dist = Mathf.Abs(depthZ - Camera.main.transform.position.z);
+                mouseScreenPos.z = dist;
+                return Camera.main.ScreenToWorldPoint(mouseScreenPos);
+            }
+            return Vector3.zero;
         }
 
         private void StopDrag()
@@ -300,33 +348,29 @@ namespace Court.Hand
             if (arrowController != null) arrowController.HideArrow();
         }
 
+        /*
         private void TrySubmitEvidence()
         {
-            PointerEventData pointerData = new PointerEventData(EventSystem.current) { position = Input.mousePosition };
-            List<RaycastResult> results = new List<RaycastResult>();
-            EventSystem.current.RaycastAll(pointerData, results);
+            Vector3 mousePos = GetMouseWorldPosition(0f); 
+            RaycastHit2D hit = Physics2D.Raycast(mousePos, Vector2.zero);
 
-            foreach (var result in results)
+            if (hit.collider != null)
             {
-                var targetPlayer = result.gameObject.GetComponentInParent<global::PlayerView>();
-                if (targetPlayer != null && targetPlayer.OwnerClientId != NetworkManager.Singleton.LocalClientId)
+                var targetView = hit.collider.GetComponent<CourtPlayerView>();
+                // 내 자신이 아닌 다른 플레이어에게 드롭했을 때
+                if (targetView != null && targetView.OwnerId != NetworkManager.Singleton.LocalClientId)
                 {
-                    Debug.Log($"[TrialHand] 타겟 발견: {targetPlayer.OwnerClientId}");
-                    SubmitEvidenceServerRpc(_selectedIndices[0], _selectedIndices[1], targetPlayer.OwnerClientId);
+                    Debug.Log($"[TrialHand] 타겟 확정: {targetView.OwnerId}");
+                    
+                    // ★ [수정] UI는 RPC를 못 쏘므로, 인벤토리(NetworkBehaviour)에게 대신 쏴달라고 요청
+                    if(_myInventory != null)
+                    {
+                        _myInventory.SubmitEvidenceServerRpc(_selectedIndices[0], _selectedIndices[1], targetView.OwnerId);
+                    }
                     return;
                 }
             }
-        }
-
-        [ServerRpc]
-        public void SubmitEvidenceServerRpc(int idx1, int idx2, ulong targetId)
-        {
-            CardItemData c1 = _myInventory.OwnedCards[idx1];
-            CardItemData c2 = _myInventory.OwnedCards[idx2];
-            if (CourtGameRules.IsCompatible(c1, c2))
-            {
-                Debug.Log($"Player {OwnerClientId} submitted evidence against {targetId}");
-            }
-        }
+            Debug.Log("[TrialHand] 유효한 타겟에 드롭하지 않았습니다.");
+        }*/
     }
 }

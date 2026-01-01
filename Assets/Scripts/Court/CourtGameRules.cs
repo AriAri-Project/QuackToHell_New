@@ -56,6 +56,39 @@ namespace Court
                     return false;
             }
         }
+        
+        /// <summary>
+        /// [추가됨] 제출된 두 카드의 조합 점수(데미지)를 계산
+        /// </summary>
+        public static int CalculateEvidenceScore(global::CardItemData cardA, global::CardItemData cardB)
+        {
+            // 1. 정의 조회 (IsCompatible에서 검증했으므로 여기선 있다고 가정)
+            if (!global::DeckManager.Instance.TryGetCardDefinition(cardA.cardIdKey, out var defA) ||
+                !global::DeckManager.Instance.TryGetCardDefinition(cardB.cardIdKey, out var defB))
+                return 0;
+
+            // 2. 숫자/연산자 구분
+            var numDef = (defA.type == global::TypeEnum.Number) ? defA : defB;
+            var opDef = (defA.type == global::TypeEnum.Operator) ? defA : defB;
+
+            // 3. 기본 값 가져오기
+            int baseValue = GetIntFromCardValue(numDef.Value);
+            
+            // 'N' 카드나 에러 값 처리 (일단 0점 혹은 기본값 처리)
+            if (baseValue < 0) baseValue = 0; 
+
+            // 4. 연산자 등급(Tier)에 따른 배수 적용 (기획 예시)
+            // Common(x1), Rare(x2), Special(x3)
+            int multiplier = 1;
+            switch (opDef.tier)
+            {
+                case global::TierEnum.Common:  multiplier = 1; break;
+                case global::TierEnum.Rare:    multiplier = 2; break;
+                case global::TierEnum.Special: multiplier = 3; break;
+            }
+
+            return baseValue * multiplier;
+        }
 
         private static int GetIntFromCardValue(global::CardValue value)
         {
