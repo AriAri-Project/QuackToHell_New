@@ -28,7 +28,7 @@ public class CardInventoryModel : NetworkBehaviour
     #endregion
 
     #region InventoryCard 데이터 추가, 삭제 메서드
-    [ServerRpc]
+    [ServerRpc(RequireOwnership = false)]
     public void AddOwnedCardServerRpc(CardItemData card)
     {  
         if (ownedCards.Count >= GameConstants.Card.maxCardCount)
