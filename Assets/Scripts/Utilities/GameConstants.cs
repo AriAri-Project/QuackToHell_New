@@ -17,13 +17,19 @@ public static class GameConstants
     {
         
         public static class SortingOrder{
-            //참고문서: https://ariari-ewha.atlassian.net/wiki/spaces/~712020e9509d1767994750b2ca1d1e408ddb2d/pages/107773956/UI+order+in+layer
+            //참고문서: https://ariari-ewha.atlassian.net/wiki/spaces/~712020e9509d1767994750b2ca1d1e408ddb2d/pages/110690307/Sorting+Layer+order+in+layer
+            
+            //[인게임 UI] 닉네임, 말풍선, 머리 위 상호작용 아이콘
             public const int WorldSpace = -10;
+            //[UI 배경] 전체 화면 UI의 뒷배경 (검은 음영 등)
             public const int Background = 0;
+            //[HUD] 조이스틱, 스킬 버튼, 미니맵 (항상 떠있는 UI)
             public const int HUD = 10;
-            //인벤, 설정창, ..
+            //[패널/메뉴] 인벤토리, 설정 창, 미니게임 창 (HUD를 덮음)
             public const int MenusAndPanels = 20;
+            //[팝업] 아이템 획득 알림, 퀘스트 완료 메시지
             public const int Popup=30;
+            //[시스템] 로딩 화면, 에러 메시지, 최상위 페이드 효과
             public const int System=100;
         }
     }

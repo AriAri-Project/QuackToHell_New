@@ -5438,7 +5438,7 @@ MonoBehaviour:
   m_Intensity: 1
   m_LightVolumeIntensity: 1
   m_LightVolumeEnabled: 0
-  m_ApplyToSortingLayers: 000000008578f43bc5cef9bf49b0a8be4dd2b2842d63cd11
+  m_ApplyToSortingLayers: 00000000c5cef9bf49b0a8be4dd2b2842d63cd11333f6faf
   m_LightCookieSprite: {fileID: 0}
   m_DeprecatedPointLightCookieSprite: {fileID: 0}
   m_LightOrder: 0
@@ -6235,7 +6235,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8346127056311772779, guid: 9860cb070e2b4aa41ad287d40965b4c7, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0.29
+      value: 3.21
       objectReference: {fileID: 0}
     - target: {fileID: 8346127056311772779, guid: 9860cb070e2b4aa41ad287d40965b4c7, type: 3}
       propertyPath: m_LocalPosition.z
@@ -17248,7 +17248,7 @@ Canvas:
   m_AdditionalShaderChannelsFlag: 25
   m_UpdateRectTransformForStandalone: 0
   m_SortingLayerID: 0
-  m_SortingOrder: 0
+  m_SortingOrder: 30
   m_TargetDisplay: 0
 --- !u!224 &8400346109149326722
 RectTransform:
