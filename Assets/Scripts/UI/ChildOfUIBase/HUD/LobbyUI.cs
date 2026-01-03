@@ -67,6 +67,12 @@ public class LobbyUI : UIHUD
         BindEvent(Button_CopyCode_gameObject, OnClick_Button_CopyCode, GameEvents.UIEvent.Click);
         GameObject Button_Setting_gameObject = Get<Button>((int)Buttons.Button_Setting).gameObject;
         BindEvent(Button_Setting_gameObject, OnClick_Button_Setting, GameEvents.UIEvent.Click);
+        
+        if (!NetworkManager.Singleton.IsHost)
+        {
+            Button_Setting_gameObject.SetActive(false);
+        }
+        
 
         //플레이어가 생성된 후에 바인드하기.
         PlayerFactoryManager.Instance.onPlayerSpawned += () =>
