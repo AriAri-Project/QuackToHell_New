@@ -4,103 +4,103 @@ namespace Court
 {
     public static class CourtGameRules
     {
-        /// <summary>
-        /// 두 카드가 증거물로 제출 가능한 조합인지 검사
-        /// </summary>
-        public static bool IsCompatible(global::CardItemData cardA, global::CardItemData cardB)
+        public static bool IsCompatible(CardItemData cardA, CardItemData cardB)
         {
-            // 1. 카드 원본 ID(Key) 가져오기
-            int idA = cardA.cardIdKey;
-            int idB = cardB.cardIdKey;
+            // [수정] DeckManager에게 다시 물어볼 필요 없이, 이미 있는 데이터를 씁니다.
+            // (CardItemData 구조체 안에 CardDef가 이미 들어있기 때문)
+            CardDef defA = cardA.cardDef;
+            CardDef defB = cardB.cardDef;
 
-            // 2. DeckManager(Global Namespace)를 통해 카드 정의(Def) 조회
-            if (!global::DeckManager.Instance.TryGetCardDefinition(idA, out global::CardDef defA) ||
-                !global::DeckManager.Instance.TryGetCardDefinition(idB, out global::CardDef defB))
+            // [디버그 로그] 확실한 확인을 위해 출력
+            Debug.Log($"[Rule Log] 비교: A[{defA.type}/{defA.tier}/{defA.Value}] vs B[{defB.type}/{defB.tier}/{defB.Value}]");
+
+            // 1. 타입 검사 (숫자 1개 + 연산자 1개 필수)
+            bool hasNumber = defA.type == TypeEnum.Number || defB.type == TypeEnum.Number;
+            bool hasOperator = defA.type == TypeEnum.Operator || defB.type == TypeEnum.Operator;
+
+            if (!hasNumber || !hasOperator) 
             {
-                Debug.LogWarning($"[CourtGameRules] 카드 정의를 찾을 수 없습니다. Key: {idA}, {idB}");
+                Debug.LogError($"[Rule Log] ❌ 타입 조합 탈락! (A:{defA.type}, B:{defB.type}) -> 숫자+기호여야 함");
                 return false; 
             }
 
-            // 3. 타입 검사: 하나는 숫자(Number), 하나는 기호(Operator)여야 함
-            bool hasNumber = defA.type == global::TypeEnum.Number || defB.type == global::TypeEnum.Number;
-            bool hasOperator = defA.type == global::TypeEnum.Operator || defB.type == global::TypeEnum.Operator;
+            // 역할 분담
+            CardDef numberDef = (defA.type == TypeEnum.Number) ? defA : defB;
+            CardDef operatorDef = (defA.type == TypeEnum.Operator) ? defA : defB;
 
-            if (!hasNumber || !hasOperator) return false; 
-
-            // 4. 역할 분담 (누가 숫자고 누가 기호인지 구분)
-            global::CardDef numberDef = (defA.type == global::TypeEnum.Number) ? defA : defB;
-            global::CardDef operatorDef = (defA.type == global::TypeEnum.Operator) ? defA : defB;
-
-            // 5. 특수 카드 처리 ('N' 카드 등)
-            if (numberDef.subType == global::SubTypeEnum.N || numberDef.Value == global::CardValue.N) 
+            // 2. 특수 카드 ('N') 처리 -> 무조건 통과
+            if (numberDef.subType == SubTypeEnum.N || numberDef.Value == CardValue.N) 
             {
                 return true; 
             }
 
-            // 6. 기호 카드의 등급(Tier)에 따른 숫자 호환성 체크
+            // 3. 티어별 숫자 범위 검사
             int numVal = GetIntFromCardValue(numberDef.Value);
-            if (numVal == -1) return false; 
+            
+            // 값이 이상하면 실패
+            if (numVal == -1)
+            {
+                 Debug.LogError($"[Rule Log] ❌ 알 수 없는 숫자 값입니다: {numberDef.Value}");
+                 return false;
+            }
 
             switch (operatorDef.tier)
             {
-                case global::TierEnum.Common: // 동(Bronze): 1 ~ 2
-                    return numVal >= 1 && numVal <= 2;
+                case TierEnum.Common: // 동색: 1 ~ 2만 가능
+                    if (numVal >= 1 && numVal <= 2) return true;
+                    Debug.LogError($"[Rule Log] ❌ Common(동) 연산자는 1, 2만 가능. (현재: {numVal})");
+                    return false;
 
-                case global::TierEnum.Rare:   // 은(Silver): 1 ~ 4
-                    return numVal >= 1 && numVal <= 4;
+                case TierEnum.Rare:   // 은색: 1 ~ 4만 가능
+                    if (numVal >= 1 && numVal <= 4) return true;
+                    Debug.LogError($"[Rule Log] ❌ Rare(은) 연산자는 1~4만 가능. (현재: {numVal})");
+                    return false;
 
-                case global::TierEnum.Special:// 금(Gold): 0 ~ 6 (모두)
-                    return numVal >= 0 && numVal <= 6;
+                case TierEnum.Special:// 금색: 0 ~ 6 모두 가능
+                    if (numVal >= 0 && numVal <= 6) return true;
+                    Debug.LogError($"[Rule Log] ❌ Special(금) 범위 오류. (현재: {numVal})");
+                    return false;
 
                 default:
+                    Debug.LogError($"[Rule Log] ❌ 알 수 없는 티어: {operatorDef.tier}");
                     return false;
             }
         }
-        
-        /// <summary>
-        /// [추가됨] 제출된 두 카드의 조합 점수(데미지)를 계산
-        /// </summary>
-        public static int CalculateEvidenceScore(global::CardItemData cardA, global::CardItemData cardB)
+
+        public static int CalculateEvidenceScore(CardItemData cardA, CardItemData cardB)
         {
-            // 1. 정의 조회 (IsCompatible에서 검증했으므로 여기선 있다고 가정)
-            if (!global::DeckManager.Instance.TryGetCardDefinition(cardA.cardIdKey, out var defA) ||
-                !global::DeckManager.Instance.TryGetCardDefinition(cardB.cardIdKey, out var defB))
-                return 0;
+            // 여기도 똑같이 수정: DeckManager 조회 제거
+            CardDef defA = cardA.cardDef;
+            CardDef defB = cardB.cardDef;
 
-            // 2. 숫자/연산자 구분
-            var numDef = (defA.type == global::TypeEnum.Number) ? defA : defB;
-            var opDef = (defA.type == global::TypeEnum.Operator) ? defA : defB;
+            var numDef = (defA.type == TypeEnum.Number) ? defA : defB;
+            var opDef = (defA.type == TypeEnum.Operator) ? defA : defB;
 
-            // 3. 기본 값 가져오기
             int baseValue = GetIntFromCardValue(numDef.Value);
-            
-            // 'N' 카드나 에러 값 처리 (일단 0점 혹은 기본값 처리)
             if (baseValue < 0) baseValue = 0; 
 
-            // 4. 연산자 등급(Tier)에 따른 배수 적용 (기획 예시)
-            // Common(x1), Rare(x2), Special(x3)
             int multiplier = 1;
             switch (opDef.tier)
             {
-                case global::TierEnum.Common:  multiplier = 1; break;
-                case global::TierEnum.Rare:    multiplier = 2; break;
-                case global::TierEnum.Special: multiplier = 3; break;
+                case TierEnum.Common:  multiplier = 1; break;
+                case TierEnum.Rare:    multiplier = 2; break;
+                case TierEnum.Special: multiplier = 3; break;
             }
 
             return baseValue * multiplier;
         }
 
-        private static int GetIntFromCardValue(global::CardValue value)
+        private static int GetIntFromCardValue(CardValue value)
         {
             switch (value)
             {
-                case global::CardValue.V0: return 0;
-                case global::CardValue.V1: return 1;
-                case global::CardValue.V2: return 2;
-                case global::CardValue.V3: return 3;
-                case global::CardValue.V4: return 4;
-                case global::CardValue.V5: return 5;
-                case global::CardValue.V6: return 6;
+                case CardValue.V0: return 0;
+                case CardValue.V1: return 1;
+                case CardValue.V2: return 2;
+                case CardValue.V3: return 3;
+                case CardValue.V4: return 4;
+                case CardValue.V5: return 5;
+                case CardValue.V6: return 6;
                 default: return -1;
             }
         }
