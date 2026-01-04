@@ -561,5 +561,22 @@ public class PlayerView : NetworkBehaviour
     #endregion
     
     
-
+    /// <summary>
+    /// 플레이어 오브젝트 파괴 전에 카메라를 분리
+    /// </summary>
+    public void DetachCamera()
+    {
+        if (localCamera != null)
+        {
+            // 카메라를 플레이어에서 분리
+            localCamera.transform.SetParent(null);
+        
+            // 카메라 위치 초기화
+            localCamera.transform.position = new Vector3(0, 0, -10);
+            localCamera.gameObject.SetActive(true);
+            localCamera.enabled = true;
+        
+            localCamera = null;
+        }
+    }
 }

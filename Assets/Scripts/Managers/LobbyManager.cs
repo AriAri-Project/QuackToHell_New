@@ -165,16 +165,63 @@ public class LobbyManager : NetworkBehaviour
         try{
             if (hostLobby != null)
             {
-                await LobbyService.Instance.DeleteLobbyAsync(hostLobby.Id);
+                // 1. 먼저 모든 클라이언트에게 씬 전환 알림 (Shutdown 전에)
+                GoToHomeClientRpc();
+        
+                // 2. 로비 삭제 (실패해도 계속 진행)
+                try
+                {
+                    await LobbyService.Instance.DeleteLobbyAsync(hostLobby.Id);
+                }
+                catch(LobbyServiceException e)
+                {
+                    Debug.LogWarning($"로비 삭제 중 오류 (무시하고 계속 진행): {e.Message}");
+                }
+        
+                // 3. 플레이어 디스폰 (네트워크에서만 제거)
+                PlayerFactoryManager.Instance.DespawnAllPlayers();
+        
+                // 4. 셧다운(네트워크매니저 종료)
+                PlayerFactoryManager.Instance.ShutdownNetworkManager();
+            
+                // 5. Shutdown 후 남은 플레이어 오브젝트 파괴
+                PlayerFactoryManager.Instance.DestroyAllPlayerObjects();
+        
+                // 6. 호스트도 씬 전환
+                SceneManager.LoadScene(GameScenes.Home);
+                
+                // 7. 로비 상태 초기화 (중요!)
+                hostLobby = null;
+                joinedLobby = null;
+                _hostLobbyCode = "";
             }
             else if (joinedLobby != null)
             {
                 await LobbyService.Instance.RemovePlayerAsync(joinedLobby.Id, AuthenticationService.Instance.PlayerId);
+                PlayerFactoryManager.Instance.DespawnPlayerAsClient();
+                SceneManager.LoadScene(GameScenes.Home);
+                // 로비 상태 초기화 (중요!)
+                joinedLobby = null;
+                _hostLobbyCode = "";
             }
         }
         catch(LobbyServiceException e){
-            Debug.LogWarning($"로비 정리 중 오류: {e.Message}");
+            Debug.LogWarning($"로비 정리 중 예상치 못한 오류: {e.Message}");
+            // 예외가 발생해도 씬 전환은 시도
+            SceneManager.LoadScene(GameScenes.Home);
+        
+            // 예외 발생 시에도 상태 초기화
+            hostLobby = null;
+            joinedLobby = null;
+            _hostLobbyCode = "";
         }
+    }
+
+    //멀티캐스트
+    [ClientRpc]
+    private void GoToHomeClientRpc()
+    {
+        SceneManager.LoadScene(GameScenes.Home);
     }
     
     //로비

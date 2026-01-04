@@ -1,6 +1,7 @@
 using UnityEngine;
 using Unity.Netcode;
 using System;
+using UnityEditor.VersionControl;
 
 /// <summary>
 /// 플레이어 생성 담당
@@ -110,7 +111,108 @@ public class PlayerFactoryManager : NetworkBehaviour
         DontDestroyOnLoad(player);
         SpawnPlayerResultClientRpc(true);
     }
+    
+    // 클라이언트가 나갈 때 호출하는 메서드
+    public void DespawnPlayerAsClient()
+    {
+        ulong localClientId = NetworkManager.Singleton.LocalClientId;
+        GameObject playerGameObject = PlayerHelperManager.Instance.GetPlayerGameObjectByClientId(localClientId);
 
+        if (playerGameObject != null)
+        {
+            // 카메라 먼저 분리
+            PlayerView playerView = playerGameObject.GetComponent<PlayerView>();
+            if (playerView != null)
+            {
+                playerView.DetachCamera();
+            }
+        
+            NetworkObject networkObject = playerGameObject.GetComponent<NetworkObject>();
+            if (networkObject != null && networkObject.IsSpawned)
+            {
+                networkObject.Despawn(false);
+            }
+        }
+
+        if (NetworkManager.Singleton.IsClient)
+        {
+            NetworkManager.Singleton.Shutdown();
+        }
+    
+        // Shutdown 후 남은 오브젝트 파괴
+        if (playerGameObject != null)
+        {
+            Destroy(playerGameObject);
+        }
+
+        PlayerHelperManager.Instance.InvalidateCache();
+    }
+    
+    /// <summary>
+    /// warning: 호스트만 호출 가능
+    /// 플레이어만 Despawn (Shutdown은 하지 않음)
+    /// </summary>
+    public void DespawnAllPlayers()
+    {
+        if (!IsHost)
+        {
+            Debug.LogWarning($"클라이언트가 요청했으나 거부됨: 호스트만 모든 플레이어를 디스폰 할 권한이 있습니다.");
+            return;
+        }
+    
+        //모든 플레이어를 디스폰
+        NetworkObject[] networkObjects = PlayerHelperManager.Instance.GetAllPlayers<NetworkObject>();
+        foreach (var value in networkObjects)
+        {
+            if (value != null)
+            {
+                value.Despawn(false);
+            }
+        }
+    
+        // 캐시 무효화
+        PlayerHelperManager.Instance.InvalidateCache();
+    }
+
+    /// <summary>
+    /// Shutdown 후 남은 플레이어 오브젝트를 파괴
+    /// </summary>
+    public void DestroyAllPlayerObjects()
+    {
+        PlayerModel[] allPlayers = PlayerHelperManager.Instance.GetAllPlayers<PlayerModel>();
+        foreach (var player in allPlayers)
+        {
+            if (player != null && player.gameObject != null)
+            {
+                // 플레이어 오브젝트에 붙어있는 카메라를 먼저 분리
+                PlayerView playerView = player.gameObject.GetComponent<PlayerView>();
+                if (playerView != null)
+                {
+                    playerView.DetachCamera();
+                }
+            
+                Destroy(player.gameObject);
+            }
+        }
+
+        PlayerHelperManager.Instance.InvalidateCache();
+    }
+    
+    /// <summary>
+    /// warning: 호스트만 호출 가능
+    /// NetworkManager 종료
+    /// </summary>
+    public void ShutdownNetworkManager()
+    {
+        if (!IsHost)
+        {
+            Debug.LogWarning($"클라이언트가 요청했으나 거부됨: 호스트만 NetworkManager를 종료할 권한이 있습니다.");
+            return;
+        }
+    
+        NetworkManager.Singleton.Shutdown();
+    }
+    
     [ClientRpc]
     public void SpawnPlayerResultClientRpc(bool success)
     {
