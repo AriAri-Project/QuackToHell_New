@@ -27,6 +27,11 @@ public class FarmerStrategy : NetworkBehaviour, IRoleStrategy
     private float killCooltimeMax;
     private float killCooltimer = 0f;
     private bool canKill = false;
+
+    public bool CanKill
+    {
+        get{return canKill;}
+    }
     
     private float savotageCooltimeMax; 
     private float savotageCooltimer = 0f;  
@@ -121,8 +126,8 @@ public class FarmerStrategy : NetworkBehaviour, IRoleStrategy
             return;
         }
         
-        GameObject requesterPlayerView = PlayerHelperManager.Instance.GetPlayerGameObjectByClientId(requesterClientId);
-        if (requesterPlayerView == null)
+        GameObject requesterPlayerObject = PlayerHelperManager.Instance.GetPlayerGameObjectByClientId(requesterClientId);
+        if (requesterPlayerObject == null)
         {
             Debug.LogWarning($"[Kill 실패] 요청자 플레이어를 찾을 수 없습니다. RequesterClientId: {requesterClientId}");
             CanKillResultClientRpc(false, targetNetworkObjectId, new ClientRpcParams 
@@ -132,7 +137,9 @@ public class FarmerStrategy : NetworkBehaviour, IRoleStrategy
             return;
         }
         
-        FarmerStrategy requesterPlayerFarmerStrategy = requesterPlayerView.GetComponent<FarmerStrategy>();
+        
+        
+        FarmerStrategy requesterPlayerFarmerStrategy = requesterPlayerObject.GetComponent<FarmerStrategy>();
         if (requesterPlayerFarmerStrategy == null)
         {
             Debug.LogWarning($"[Kill 실패] 요청자가 Farmer가 아닙니다. RequesterClientId: {requesterClientId}");
@@ -144,7 +151,16 @@ public class FarmerStrategy : NetworkBehaviour, IRoleStrategy
         }
         
         bool result = false;
-    
+        // 벽에 가려진 플레이어인지 체크 
+        ShadowHider requesterShadowHider = requesterPlayerObject?.GetComponentInChildren<ShadowHider>();
+        if (requesterShadowHider != null && targetPlayerModel != null)
+        {
+            if (requesterShadowHider.IsTargetHiddenByShadow(targetPlayerModel.gameObject))
+            {
+                Debug.Log($"[Kill 실패] 타겟이 벽에 가려져 있습니다.");
+                result = false;
+            }
+        }
         if (targetPlayerModel.GetPlayerJob() != PlayerJob.Animal)
         {
             Debug.Log($"[Kill 실패] 타겟이 동물이 아닙니다. TargetJob: {targetPlayerModel.GetPlayerJob()}, TargetNetworkObjectId: {targetNetworkObjectId}, RequesterClientId: {requesterClientId}");
@@ -385,9 +401,9 @@ public class FarmerStrategy : NetworkBehaviour, IRoleStrategy
         ventState?.TriggerExitAnimation();
     }
 
-    public void ReportCorpse(ulong targetNetworkObjectId)
+    public void ReportCorpse(ulong corpseClientId)
     {
-        CanReportServerRpc(targetNetworkObjectId);
+        CanReportServerRpc(corpseClientId);
     }
     
 
@@ -404,31 +420,55 @@ public class FarmerStrategy : NetworkBehaviour, IRoleStrategy
 
     // 1. Can으로 조건검사: ServerRpc
     [ServerRpc(RequireOwnership = false)]
-    public void CanReportServerRpc(ulong corpseNetworkObjectId, ServerRpcParams rpcParams = default)
+    public void CanReportServerRpc(ulong corpseClientId, ServerRpcParams rpcParams = default)
     {
         ulong requesterClientId = rpcParams.Receive.SenderClientId;
-        
-        CanReportResultClientRpc(true, corpseNetworkObjectId, new ClientRpcParams 
-        { 
-            Send = new ClientRpcSendParams { TargetClientIds = new[] { requesterClientId } } 
+
+        // 요청자 및 ShadowHider
+        GameObject requester = PlayerHelperManager.Instance.GetPlayerGameObjectByClientId(requesterClientId);
+        ShadowHider shadowHider = requester != null ? requester.GetComponentInChildren<ShadowHider>() : null;
+
+        // ClientId로 시체 GameObject 찾기
+        GameObject corpseObject = null;
+        var corpses = FindObjectsByType<PlayerCorpse>(FindObjectsSortMode.None);
+        for (int i = 0; i < corpses.Length; i++)
+        {
+            if (corpses[i] != null && corpses[i].ClientId == corpseClientId)
+            {
+                corpseObject = corpses[i].gameObject;
+                break;
+            }
+        }
+
+        bool canReport = (corpseObject != null);
+        if (canReport && shadowHider != null)
+        {
+            if (shadowHider.IsTargetHiddenByShadow(corpseObject))
+            {
+                canReport = false;
+            }
+        }
+
+        CanReportResultClientRpc(canReport, corpseClientId, new ClientRpcParams {
+            Send = new ClientRpcSendParams { TargetClientIds = new[] { requesterClientId } }
         });
     }
 
     // 2. 결과를 전송: ClientRpc
     [ClientRpc]
-    public void CanReportResultClientRpc(bool canReport, ulong corpseNetworkObjectId, ClientRpcParams rpcParams = default)
+    public void CanReportResultClientRpc(bool canReport, ulong corpseClientId, ClientRpcParams rpcParams = default)
     {
         if (canReport==false)
         {
             return;
         }
         Debug.Log($"시체신고 가능여부={canReport}: Server Rpc호출");
-        ReportServerRpc(corpseNetworkObjectId);
+        ReportServerRpc(corpseClientId);
     }
 
     // 3. 실제 작업 수행: ServerRpc
     [ServerRpc(RequireOwnership = false)]
-    public void ReportServerRpc(ulong targetNetworkObjectId, ServerRpcParams rpcParams = default)
+    public void ReportServerRpc(ulong corpseClientId, ServerRpcParams rpcParams = default)
     {
         ulong reporterClientId = rpcParams.Receive.SenderClientId;
         TrialManager.Instance.TryTrialServerRpc(reporterClientId);

@@ -85,25 +85,25 @@ public class GhostStrategy : NetworkBehaviour, IRoleStrategy
     }
 
     [ServerRpc(RequireOwnership = false)]
-    public void CanReportServerRpc(ulong corpseNetworkObjectId, ServerRpcParams rpcParams = default)
+    public void CanReportServerRpc(ulong corpseClientId, ServerRpcParams rpcParams = default)
     {
         ulong requesterClientId = rpcParams.Receive.SenderClientId;
         
         //유령은 report못함
-        CanReportResultClientRpc(false, corpseNetworkObjectId, new ClientRpcParams 
+        CanReportResultClientRpc(false, corpseClientId, new ClientRpcParams 
         { 
             Send = new ClientRpcSendParams { TargetClientIds = new[] { requesterClientId } } 
         });
     }
 
     [ClientRpc]
-    public void CanReportResultClientRpc(bool canReport, ulong corpseNetworkObjectId, ClientRpcParams rpcParams = default)
+    public void CanReportResultClientRpc(bool canReport, ulong corpseClientId, ClientRpcParams rpcParams = default)
     {
         Debug.Log("유령은 시체 리포트 못 함");
     }
 
     [ServerRpc(RequireOwnership = false)]
-    public void ReportServerRpc(ulong targetNetworkObjectId, ServerRpcParams rpcParams = default)
+    public void ReportServerRpc(ulong corpseClientId, ServerRpcParams rpcParams = default)
     {
         Debug.Log("유령은 시체 리포트 못 함");
         return;
@@ -212,9 +212,9 @@ public class GhostStrategy : NetworkBehaviour, IRoleStrategy
     
 
     
-    public void ReportCorpse(ulong targetNetworkObjectId)
+    public void ReportCorpse(ulong corpseClientId)
     {
-        CanReportServerRpc(targetNetworkObjectId);
+        CanReportServerRpc(corpseClientId);
     }
     
     public bool CanKill(GameObject target)

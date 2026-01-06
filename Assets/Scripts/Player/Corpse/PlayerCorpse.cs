@@ -71,5 +71,13 @@ public class PlayerCorpse : NetworkBehaviour
         //}
     }
 
+    public void SetVisibility(bool visible)
+    {
+        Renderer[] renderers = GetComponentsInChildren<Renderer>();
+        foreach (Renderer renderer in renderers)
+        {
+            renderer.enabled = visible;
+        }
+    }
 
 }

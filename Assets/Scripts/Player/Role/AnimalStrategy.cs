@@ -85,26 +85,50 @@ public class AnimalStrategy : NetworkBehaviour, IRoleStrategy
 
 
     [ServerRpc(RequireOwnership = false)]
-    public void CanReportServerRpc(ulong corpseNetworkObjectId, ServerRpcParams rpcParams = default)
+    public void CanReportServerRpc(ulong corpseClientId, ServerRpcParams rpcParams = default)
     {
         ulong requesterClientId = rpcParams.Receive.SenderClientId;
-        
-        CanReportResultClientRpc(true, corpseNetworkObjectId, new ClientRpcParams 
-        { 
-            Send = new ClientRpcSendParams { TargetClientIds = new[] { requesterClientId } } 
+
+        // 요청자 및 ShadowHider
+        GameObject requester = PlayerHelperManager.Instance.GetPlayerGameObjectByClientId(requesterClientId);
+        ShadowHider shadowHider = requester != null ? requester.GetComponentInChildren<ShadowHider>() : null;
+
+        // ClientId로 시체 GameObject 찾기
+        GameObject corpseObject = null;
+        var corpses = FindObjectsByType<PlayerCorpse>(FindObjectsSortMode.None);
+        for (int i = 0; i < corpses.Length; i++)
+        {
+            if (corpses[i] != null && corpses[i].ClientId == corpseClientId)
+            {
+                corpseObject = corpses[i].gameObject;
+                break;
+            }
+        }
+
+        bool canReport = (corpseObject != null);
+        if (canReport && shadowHider != null)
+        {
+            if (shadowHider.IsTargetHiddenByShadow(corpseObject))
+            {
+                canReport = false;
+            }
+        }
+
+        CanReportResultClientRpc(canReport, corpseClientId, new ClientRpcParams {
+            Send = new ClientRpcSendParams { TargetClientIds = new[] { requesterClientId } }
         });
     }
 
     [ClientRpc]
-    public void CanReportResultClientRpc(bool canReport, ulong corpseNetworkObjectId, ClientRpcParams rpcParams = default)
+    public void CanReportResultClientRpc(bool canReport, ulong corpseClientId, ClientRpcParams rpcParams = default)
     {
         if (!canReport) return;
         Debug.Log($"시체신고 가능여부={canReport}: Server Rpc호출");
-        ReportServerRpc(corpseNetworkObjectId);
+        ReportServerRpc(corpseClientId);
     }
 
     [ServerRpc(RequireOwnership = false)]
-    public void ReportServerRpc(ulong targetNetworkObjectId, ServerRpcParams rpcParams = default)
+    public void ReportServerRpc(ulong corpseClientId, ServerRpcParams rpcParams = default)
     {
         ulong reporterClientId = rpcParams.Receive.SenderClientId;
         TrialManager.Instance.TryTrialServerRpc(reporterClientId);
@@ -214,9 +238,9 @@ public class AnimalStrategy : NetworkBehaviour, IRoleStrategy
         minigameController.TryOpenFromPlayer(this.transform);
     }
     
-    public void ReportCorpse(ulong targetNetworkObjectId)
+    public void ReportCorpse(ulong corpseClientId)
     {
-        CanReportServerRpc(targetNetworkObjectId);
+        CanReportServerRpc(corpseClientId);
     }
 
     

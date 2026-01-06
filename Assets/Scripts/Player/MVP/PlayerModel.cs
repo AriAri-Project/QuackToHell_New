@@ -3,6 +3,7 @@ using System;
 using Unity.Netcode;
 using UnityEngine;
 using Unity.Collections;
+using UnityEngine.Rendering.Universal;
 
 /// <summary>
 /// *MVP를 잘 몰랐을 떄 썼으므로 아래로 의미를 재정의함
@@ -53,7 +54,14 @@ public class PlayerModel : NetworkBehaviour
         aliveStateComponent = GetComponent<PlayerAliveState>();
         deadStateComponent = GetComponent<PlayerDeadState>();
         ventEnterStateComponent = GetComponent<PlayerVentEnterState>();
-
+        
+        //내가 owner가 아니면 light 2d component삭제
+        if (!IsOwner)
+        {
+            Destroy(GetComponentInChildren<Light2D>());
+        }
+        
+        
         // 초기 상태 설정
         SetAnimationStateByEnum(PlayerStateData.Value.AnimationState);
         SetAliveStateByEnum(PlayerStateData.Value.AliveState);

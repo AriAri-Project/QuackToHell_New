@@ -41,15 +41,15 @@ public interface IRoleStrategy
     void CanKillResultClientRpc(bool canKill, ulong targetNetworkObjectId, ClientRpcParams rpcParams = default);  // 결과 전송
 
 
-    public void ReportCorpse(ulong targetNetworkObjectId);
+    public void ReportCorpse(ulong corpseClientId);
 
     [ServerRpc(RequireOwnership = false)]
-    void CanReportServerRpc(ulong targetNetworkObjectId, ServerRpcParams rpcParams = default); // 서버에서 조건 검사
+    void CanReportServerRpc(ulong corpseClientId, ServerRpcParams rpcParams = default); // 서버에서 조건 검사
     
     [ClientRpc]
-    void CanReportResultClientRpc(bool canReport, ulong targetNetworkObjectId, ClientRpcParams rpcParams = default);  // 결과 전송
+    void CanReportResultClientRpc(bool canReport, ulong corpseClientId, ClientRpcParams rpcParams = default);  // 결과 전송
     [ServerRpc(RequireOwnership = false)]
-    void ReportServerRpc(ulong targetNetworkObjectId, ServerRpcParams rpcParams = default);
+    void ReportServerRpc(ulong corpseClientId, ServerRpcParams rpcParams = default);
 
 
 

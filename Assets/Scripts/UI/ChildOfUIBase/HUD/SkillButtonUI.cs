@@ -71,10 +71,44 @@ public class SkillButtonUI : UIHUD
         
         SetUpButtons();
     }
+
+    private void Update()
+    {
+        if (playerJob == PlayerJob.Farmer && farmerStrategy != null && playerView != null)
+        {
+            // 타겟이 있고 쿨타임이 준비되었으면 버튼 활성화
+            bool shouldBeEnabled = playerView.TargetPlayerCache != null && farmerStrategy.CanKill;
+        
+            if (shouldBeEnabled && !Button_Kill.interactable)
+            {
+                EnableButton(Buttons.Button_Kill);
+            }
+            else if (!shouldBeEnabled && Button_Kill.interactable)
+            {
+                DisableButton(Buttons.Button_Kill);
+            }
+        }
+        
+        if (playerModel.GetPlayerAliveState() == PlayerLivingState.Alive && playerView != null)
+        {
+            bool reportShouldBeEnabled = playerView.TargetCorpseCache != null;
+            if (reportShouldBeEnabled && !Button_Report.interactable)
+            {
+                EnableButton(Buttons.Button_Report);
+            }
+            else if (!reportShouldBeEnabled && Button_Report.interactable)
+            {
+                DisableButton(Buttons.Button_Report);
+            }
+        }
+    }
     
     private void HandleKillCooldownReady()
     {
-        EnableButton(Buttons.Button_Kill);
+        if (playerView != null && playerView.TargetPlayerCache != null)
+        {
+            EnableButton(Buttons.Button_Kill);
+        }
     }
     private void HandleSavotageCooldownReady()
     {

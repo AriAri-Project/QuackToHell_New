@@ -26,10 +26,10 @@ public class PlayerView : NetworkBehaviour
     [Header("SFX")]
     [SerializeField] private AudioSource playerKillSFX;
 
-
-    // PlayerView.cs에 추가
-    [Header("Player Detection")]
-    [SerializeField] private float playerDetectionRadius = 2f;
+    [Header("For Trigger Detect Colliders")]
+    [Tooltip("this is for hide player behind shadow.")]
+    //플레이어만 감지하는 콜라이더
+    [SerializeField] private Collider2D forShadowCollider;
 
     public Action<GameObject> onPlayerDetected;
     public Action<GameObject> onPlayerExited;
@@ -40,7 +40,14 @@ public class PlayerView : NetworkBehaviour
     
     private Camera localCamera = null;
 
-    List<GameObject> OverlappingAliveAnimalPlayers = new List<GameObject>();
+    List<GameObject> overlappingAliveAnimalPlayers = new List<GameObject>();
+    List<GameObject> overlappingPlayers = new List<GameObject>();
+
+    public List<GameObject> OverlappingPlayers
+    {
+        get { return overlappingPlayers; }
+    }
+    
     private GameObject killTargetPlayerCache = null;
 
     public GameObject TargetPlayerCache
@@ -49,10 +56,24 @@ public class PlayerView : NetworkBehaviour
     }
     
     private GameObject targetCorpseCache = null;
+    
 
     public GameObject TargetCorpseCache
     {
-        get { return targetCorpseCache; }
+        get
+        {
+            if (targetCorpseCache == null)
+            {
+                return null;
+                
+            }
+            ShadowHider shadowHider = GetComponentInChildren<ShadowHider>();
+            if (shadowHider != null && shadowHider.IsTargetHiddenByShadow(targetCorpseCache))
+            {
+                return null;
+            }
+            return targetCorpseCache;
+        }
     }
     
     private GameObject interactObjCache = null;
@@ -108,30 +129,41 @@ public class PlayerView : NetworkBehaviour
     private void OnTriggerEnter2D(Collider2D collision)
     {
         if (!IsOwner) return;
+        
+        
         GameObject detectedObject = collision.gameObject;
+
+        //for shadow collider는 플레이어 및 시체만 감지되도록 인스펙터 설정되어있으므로 코드에서 태그비교x
+        if (forShadowCollider.IsTouching(collision))
+        {
+            //중복방지
+            if (!overlappingPlayers.Contains(detectedObject))
+            {
+                overlappingPlayers.Add(detectedObject);
+            }
+        }
+        
         if (collision.CompareTag(GameTags.Player))
         {
-            if (detectedObject.Equals(this.gameObject))
+            if (!detectedObject.Equals(this.gameObject))
             {
-                return;
-            }
-            
-            // 직업이 Animal이고 Alive인 플레이어만 추가
-            PlayerModel detectedPlayerModel = detectedObject.GetComponent<PlayerModel>();
-            if (detectedPlayerModel == null) return;
-        
-            if (detectedPlayerModel.GetPlayerJob() != PlayerJob.Animal || 
-                detectedPlayerModel.GetPlayerAliveState() != PlayerLivingState.Alive)
-            {
-                return; // Animal이 아니거나 죽은 플레이어는 추가하지 않음
-            }
+                // 직업이 Animal이고 Alive인 플레이어만 추가
+                PlayerModel detectedPlayerModel = detectedObject.GetComponent<PlayerModel>();
+                if (detectedPlayerModel == null) return;
+    
+                if (detectedPlayerModel.GetPlayerJob() != PlayerJob.Animal || 
+                    detectedPlayerModel.GetPlayerAliveState() != PlayerLivingState.Alive)
+                {
+                    return; // Animal이 아니거나 죽은 플레이어는 추가하지 않음
+                }
 
-            if (OverlappingAliveAnimalPlayers.Contains(detectedObject))
-            {
-                return;
+                if (!overlappingAliveAnimalPlayers.Contains(detectedObject))
+                {
+                    overlappingAliveAnimalPlayers?.Add(detectedObject);
+                    onPlayerDetected?.Invoke(detectedObject);
+                }
+                
             }
-            OverlappingAliveAnimalPlayers?.Add(detectedObject);
-            onPlayerDetected?.Invoke(detectedObject);
         }
         else if (collision.CompareTag(GameTags.PlayerCorpse))
         {
@@ -143,6 +175,9 @@ public class PlayerView : NetworkBehaviour
             interactObjCache = collision.gameObject;
             OnObjectEntered?.Invoke(detectedObject);
         }
+        
+        
+        
     }
     
     //note: 민수님 /이것도 view가 가지면 어색함
@@ -150,19 +185,32 @@ public class PlayerView : NetworkBehaviour
     {
         if (!IsOwner) return;
         GameObject detectedObject = collision.gameObject;
+        
+        //for shadow collider는 플레이어 및 시체만 감지되도록 인스펙터 설정되어있으므로 코드에서 태그비교x
+        if (!forShadowCollider.IsTouching(collision))
+        {
+            //중복방지
+            if (overlappingPlayers.Contains(detectedObject))
+            {
+                overlappingPlayers?.Remove(detectedObject);
+            }
+        }
+        
         if (collision.CompareTag(GameTags.Player))
         {
             if (detectedObject.Equals(this.gameObject))
             {
                 return;
             }
+        
 
-            if (!(OverlappingAliveAnimalPlayers.Contains(detectedObject)))
+            // 직업이 Animal이고 Alive인 플레이어만 제거
+            if (overlappingAliveAnimalPlayers.Contains(detectedObject))
             {
-                return;
+                overlappingAliveAnimalPlayers?.Remove(detectedObject);
+                onPlayerExited?.Invoke(detectedObject);
             }
-            OverlappingAliveAnimalPlayers?.Remove(detectedObject);
-            onPlayerExited?.Invoke(detectedObject);
+            
         }
         else if (collision.CompareTag(GameTags.PlayerCorpse))
         {
@@ -174,11 +222,13 @@ public class PlayerView : NetworkBehaviour
             interactObjCache = null;
             OnObjectExited?.Invoke(detectedObject);
         }
+        
+        
     }
 
     private GameObject GetClosestPlayer()
     {
-        if (OverlappingAliveAnimalPlayers?.Count == 0)
+        if (overlappingAliveAnimalPlayers?.Count == 0)
         {
             return null;
         }
@@ -186,7 +236,11 @@ public class PlayerView : NetworkBehaviour
         GameObject closestPlayer = null;
         float minDistance = float.MaxValue;
         
-        foreach(GameObject player in OverlappingAliveAnimalPlayers)
+        // 현재 플레이어가 Farmer인지 확인
+        PlayerModel myModel = GetComponent<PlayerModel>();
+        ShadowHider myShadowHider = GetComponentInChildren<ShadowHider>();
+        
+        foreach(GameObject player in overlappingAliveAnimalPlayers)
         {
             if (player == null) continue;
         
@@ -198,6 +252,15 @@ public class PlayerView : NetworkBehaviour
                 playerModel.GetPlayerAliveState() != PlayerLivingState.Alive)
             {
                 continue;
+            }
+            
+            // Farmer인 경우: 벽에 가려진 플레이어는 제외
+            if (myModel != null && myModel.GetPlayerJob() == PlayerJob.Farmer && myShadowHider != null)
+            {
+                if (myShadowHider.IsTargetHiddenByShadow(player))
+                {
+                    continue; // 벽에 가려진 플레이어는 스킵
+                }
             }
             
             //나와 상대방 간 거리
@@ -216,11 +279,11 @@ public class PlayerView : NetworkBehaviour
     public void RemoveDeadPlayerFromOverlappingPlayers(GameObject player)
     {
         //기록용: 상태체크하여 remove하니 성공(그냥 gameobject바로 넣어서 remove하니 실패했었음)
-        if (OverlappingAliveAnimalPlayers == null) return;
+        if (overlappingAliveAnimalPlayers == null) return;
   
-        for (int i = OverlappingAliveAnimalPlayers.Count - 1; i >= 0; i--)
+        for (int i = overlappingAliveAnimalPlayers.Count - 1; i >= 0; i--)
         {
-            GameObject p = OverlappingAliveAnimalPlayers[i];
+            GameObject p = overlappingAliveAnimalPlayers[i];
             if (p == null) continue;
         
             PlayerModel model = p.GetComponent<PlayerModel>();
@@ -230,8 +293,14 @@ public class PlayerView : NetworkBehaviour
                 model.GetPlayerAliveState() != PlayerLivingState.Alive ||
                 model.GetPlayerJob() != PlayerJob.Animal)
             {
-                OverlappingAliveAnimalPlayers.RemoveAt(i);
+                overlappingAliveAnimalPlayers.RemoveAt(i);
             }
+        }
+        
+        // OverlappingPlayers에서도 제거
+        if (overlappingPlayers != null && overlappingPlayers.Contains(player))
+        {
+            overlappingPlayers.Remove(player);
         }
     }
 
@@ -530,7 +599,7 @@ public class PlayerView : NetworkBehaviour
     private void OnCorpseReportInput(InputAction.CallbackContext context)
     {
         if (!IsOwner) return;
-
+        
         ulong targetCorpseId = targetCorpseCache.GetComponent<PlayerCorpse>().ClientId;
         OnCorpseReported?.Invoke(targetCorpseId);
     }
@@ -579,4 +648,6 @@ public class PlayerView : NetworkBehaviour
             localCamera = null;
         }
     }
+    
+    
 }
