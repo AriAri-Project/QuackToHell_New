@@ -354,7 +354,12 @@ public class LobbyManager : NetworkBehaviour
             data["SavotageCooltime"] = new DataObject(DataObject.VisibilityOptions.Public, lobbyData.savotageCooltime.ToString());
             data["KillCooltime"] = new DataObject(DataObject.VisibilityOptions.Public, lobbyData.killCooltime.ToString());
             data["IsShowKillerInfo"] = new DataObject(DataObject.VisibilityOptions.Public, lobbyData.isShowKillerInfo.ToString());
-        
+            data["InnerEyesight"] =
+                new DataObject(DataObject.VisibilityOptions.Public, lobbyData.innerEyesightValue.ToString());
+            data["OuterEyesight"] = 
+                new  DataObject(DataObject.VisibilityOptions.Public, lobbyData.outerEyesightValue.ToString());
+            
+            
             UpdateLobbyOptions updateLobbyOptions = new UpdateLobbyOptions
             {
                 Name = lobbyData.lobbyName, 
@@ -374,7 +379,9 @@ public class LobbyManager : NetworkBehaviour
                 lobbyData.FarmerNum,
                 lobbyData.savotageCooltime,
                 lobbyData.killCooltime,
-                lobbyData.isShowKillerInfo
+                lobbyData.isShowKillerInfo,
+                lobbyData.innerEyesightValue,
+                lobbyData.outerEyesightValue
             );
     
         
@@ -395,7 +402,9 @@ private void SyncLobbyDataClientRpc(
     int farmerNum,
     int savotageCooltime,
     int killCooltime,
-    bool isShowKillerInfo)
+    bool isShowKillerInfo,
+    float  innerEyesight,
+    float outerEyesight)
 {
     // 호스트는 이미 _lobbyData가 업데이트되어 있으므로, 클라이언트만 업데이트
     if (IsHost) return;
@@ -409,6 +418,8 @@ private void SyncLobbyDataClientRpc(
     _lobbyData.savotageCooltime = savotageCooltime;
     _lobbyData.killCooltime = killCooltime;
     _lobbyData.isShowKillerInfo = isShowKillerInfo;
+    _lobbyData.innerEyesightValue = innerEyesight;
+    _lobbyData.outerEyesightValue = outerEyesight;
     
     Debug.Log($"LobbyData synced: KillCooltime={killCooltime}, FarmerNum={farmerNum}");
 }
@@ -526,6 +537,12 @@ private void SyncLobbyDataClientRpc(
         
             if (_joinedLobby.Data.ContainsKey("IsShowKillerInfo"))
                 _lobbyData.isShowKillerInfo = _joinedLobby.Data["IsShowKillerInfo"].Value == "True";
+            
+            if(_joinedLobby.Data.ContainsKey("InnerEyesight"))
+                _lobbyData.innerEyesightValue =  float.Parse(_joinedLobby.Data["InnerEyesight"].Value);
+            
+            if(_joinedLobby.Data.ContainsKey("OuterEyesight"))
+                _lobbyData.outerEyesightValue = float.Parse(_joinedLobby.Data["OuterEyesight"].Value);
             
             
             Debug.Log($"Joined Lobby with code: {lobbyCode}");

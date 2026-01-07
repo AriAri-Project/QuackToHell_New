@@ -32,7 +32,10 @@ public class LobbySettingPopup : UIPopup
         MaximumNumberOfPlayersSettingSlider,
         MaximumNumberOfFarmersSettingSlider,
         SabotageCooltimeSettingSlider,
-        KillCooltimeSettingSlider
+        KillCooltimeSettingSlider,
+        EyeSightInnerRangeSettingSlider,
+        EyeSightOuterRangeSettingSlider
+
     }
 
     enum Texts
@@ -41,6 +44,8 @@ public class LobbySettingPopup : UIPopup
         MaximumNumberOfFarmersSettingSlderValueText,
         SabotageCooltimeSettingSlderValueText,
         KillCooltimeSettingSlderValueText,
+        EyeSightInnerRangeSettingValueText,
+        EyeSightOuterRangeSettingValueText
     }
     
     private static readonly Color TAP_ACTIVED_COLOR = new Color(214f / 255f, 214f / 255f, 214f / 255f, 1f);
@@ -59,11 +64,15 @@ public class LobbySettingPopup : UIPopup
     private Slider MaximumNumberOfFarmersSettingSlider;
     private Slider SabotageCooltimeSettingSlider;
     private Slider KillCooltimeSettingSlide;
+    private Slider  EyeSightInnerRangeSettingSlider;
+    private Slider  EyeSightOuterRangeSettingSlider;
 
     private TextMeshProUGUI MaximumNumberOfPlayersSettingSlderValueText;
     private TextMeshProUGUI MaximumNumberOfFarmersSettingSlderValueText;
     private TextMeshProUGUI SabotageCooltimeSettingSlderValueText;
     private TextMeshProUGUI KillCooltimeSettingSlderValueText;
+    private TextMeshProUGUI EyeSightInnerRangeSettingValueText;
+    private TextMeshProUGUI EyeSightOuterRangeSettingValueText;
 
     
     private void Start()
@@ -103,20 +112,34 @@ public class LobbySettingPopup : UIPopup
          KillCooltimeSettingSlide =  Get<Slider>((int)Sliders.KillCooltimeSettingSlider);
         KillCooltimeSettingSlide.value = LobbyManager.Instance.LobbyData.killCooltime;
         KillCooltimeSettingSlide.onValueChanged.AddListener(OnValueChanged_KillCooltimeSettingSlide);
+        EyeSightInnerRangeSettingSlider =   Get<Slider>((int)Sliders.EyeSightInnerRangeSettingSlider);
+        EyeSightInnerRangeSettingSlider.value = LobbyManager.Instance.LobbyData.innerEyesightValue;
+        EyeSightInnerRangeSettingSlider.onValueChanged.AddListener((value) => {
+            EyeSightInnerRangeSettingValueText.text = $"Slider value: {value}";
+        });
+        BindEvent(EyeSightInnerRangeSettingSlider.gameObject, OnEndDrag_EyeSightInnerRangeSettingSlider, GameEvents.UIEvent.EndDrag);
+        EyeSightOuterRangeSettingSlider =    Get<Slider>((int)Sliders.EyeSightOuterRangeSettingSlider);
+        EyeSightOuterRangeSettingSlider.value = LobbyManager.Instance.LobbyData.outerEyesightValue;
+        EyeSightOuterRangeSettingSlider.onValueChanged.AddListener((value) => {
+            EyeSightOuterRangeSettingValueText.text = $"Slider value: {value}";
+        });
+        BindEvent(EyeSightOuterRangeSettingSlider.gameObject, OnEndDrag_EyeSightOuterRangeSettingSlider, GameEvents.UIEvent.EndDrag);
         
         Bind<TextMeshProUGUI>(typeof(Texts));
         MaximumNumberOfPlayersSettingSlderValueText = Get<TextMeshProUGUI>((int)Texts.MaximumNumberOfPlayersSettingSlderValueText);
         MaximumNumberOfFarmersSettingSlderValueText = Get<TextMeshProUGUI>((int)Texts.MaximumNumberOfFarmersSettingSlderValueText);
         SabotageCooltimeSettingSlderValueText = Get<TextMeshProUGUI>((int)Texts.SabotageCooltimeSettingSlderValueText);
         KillCooltimeSettingSlderValueText = Get<TextMeshProUGUI>((int)Texts.KillCooltimeSettingSlderValueText);
+        EyeSightInnerRangeSettingValueText = Get<TextMeshProUGUI>((int)Texts.EyeSightInnerRangeSettingValueText);
+        EyeSightOuterRangeSettingValueText =  Get<TextMeshProUGUI>((int)Texts.EyeSightOuterRangeSettingValueText);
         
         //init
         Data.LobbyData lobbyData = LobbyManager.Instance.LobbyData;
-        Init(lobbyData.isPrivateRoom, lobbyData.maxPlayerNum, lobbyData.FarmerNum, lobbyData.savotageCooltime, lobbyData.killCooltime,lobbyData.isShowKillerInfo);
+        Init(lobbyData.isPrivateRoom, lobbyData.maxPlayerNum, lobbyData.FarmerNum, lobbyData.savotageCooltime, lobbyData.killCooltime,lobbyData.isShowKillerInfo, lobbyData.innerEyesightValue, lobbyData.outerEyesightValue);
     }
 
     
-    private void Init(bool isPrivateLobby, int maxPlayerNum, int FarmerNum, int savotageCooltime, int killCooltime, bool isShowKillerInfo)
+    private void Init(bool isPrivateLobby, int maxPlayerNum, int FarmerNum, int savotageCooltime, int killCooltime, bool isShowKillerInfo, float innerEyesightValue, float  outerEyesightValue)
     {
         //TAP1: 비공개 로비 (T/F), 최대 플레이어 수 (슬라이더), 농장주 수 (슬라이더), 사보타지 쿨타임 (슬라이더), 킬 쿨타임 (슬라이더), 처형자 정보 표시 (T/F)
         PrivateLobbySettingSwitcher.isOn = isPrivateLobby;
@@ -132,6 +155,11 @@ public class LobbySettingPopup : UIPopup
     
         KillCooltimeSettingSlide.value = killCooltime;
         KillCooltimeSettingSlderValueText.text = $"Slider value: {killCooltime}";  
+        
+        EyeSightInnerRangeSettingSlider.value = innerEyesightValue;
+        EyeSightOuterRangeSettingSlider.value = outerEyesightValue;
+        EyeSightInnerRangeSettingValueText.text = $"Slider value: {innerEyesightValue}";
+        EyeSightOuterRangeSettingValueText.text =  $"Slider value: {outerEyesightValue}";
     
         DisplayExecutorInformationSettingSwitcher.isOn = isShowKillerInfo;
     
@@ -176,6 +204,23 @@ public class LobbySettingPopup : UIPopup
         //text반영
         KillCooltimeSettingSlderValueText.text = $"Slider value: {(int)value}";
     }
+
+    private void OnEndDrag_EyeSightInnerRangeSettingSlider(PointerEventData eventData)
+    {
+        //lobby 데이터에 set
+        Data.LobbyData lobbyData = LobbyManager.Instance.LobbyData;
+        lobbyData.innerEyesightValue = EyeSightInnerRangeSettingSlider.value;
+        LobbyManager.Instance.LobbyData = lobbyData;
+    }
+    private void OnEndDrag_EyeSightOuterRangeSettingSlider(PointerEventData eventData)
+    {
+        //lobby 데이터에 set
+        Data.LobbyData lobbyData = LobbyManager.Instance.LobbyData;
+        lobbyData.outerEyesightValue = EyeSightOuterRangeSettingSlider.value;
+        LobbyManager.Instance.LobbyData = lobbyData;
+    }
+    
+    
     
     private void OnValueChanged_PrivateLobbySettingSwitcher(bool isOn)
     {

@@ -10,6 +10,8 @@ namespace Data
         public int savotageCooltime;
         public int killCooltime;
         public bool isShowKillerInfo;
+        public float innerEyesightValue;
+        public float outerEyesightValue;
 
         public static LobbyData CreateDefault()
         {
@@ -19,7 +21,9 @@ namespace Data
                 FarmerNum = GameConstants.Lobby.Initials.FarmerNum,
                 savotageCooltime = GameConstants.Lobby.Initials.SavotageCooltime,
                 killCooltime = GameConstants.Lobby.Initials.KillCooltime,
-                isShowKillerInfo = GameConstants.Lobby.Initials.IsShowKillerInfo
+                isShowKillerInfo = GameConstants.Lobby.Initials.IsShowKillerInfo,
+                innerEyesightValue = GameConstants.Lobby.Initials.InnerEyesight,
+                outerEyesightValue = GameConstants.Lobby.Initials.OuterEyesight
             };
         }
     }

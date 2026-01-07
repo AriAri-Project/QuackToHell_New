@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
+using UnityEngine.Rendering.Universal;
+using UnityEngine.SceneManagement;
 
 /// <summary>
 /// 특정 오브젝트가 그림자에 가려질경우 안보이게 처리하는 클래스
@@ -14,6 +16,9 @@ public class ShadowHider : NetworkBehaviour
     private PlayerView playerView;
     private PlayerModel playerModel;
     private LayerMask detectionLayer;
+    private float innerEyesight;
+    private float outerEyesight;
+    private Light2D light2D;
     
     List<GameObject> detectionObjects;
     
@@ -25,6 +30,13 @@ public class ShadowHider : NetworkBehaviour
         playerModel = playerView.GetComponent<PlayerModel>();
         //레이캐스트로 감지할 레이어: 벽
         detectionLayer.value = GameLayers.GetLayerMask(GameLayers.Wall);
+        //로비세팅된대로 시야범위 세팅
+        light2D = GetComponent<Light2D>();
+        if (light2D != null)
+        {
+            light2D.pointLightInnerRadius =  LobbyManager.Instance.LobbyData.innerEyesightValue;
+            light2D.pointLightOuterRadius = LobbyManager.Instance.LobbyData.outerEyesightValue;
+        }
     }
 
     private void Update()
@@ -39,6 +51,14 @@ public class ShadowHider : NetworkBehaviour
         {
             return;
         }
+        
+        //시야범위세팅
+        if (SceneManager.GetActiveScene().name == GameScenes.Lobby)
+        {
+            light2D.pointLightInnerRadius =  LobbyManager.Instance.LobbyData.innerEyesightValue;
+            light2D.pointLightOuterRadius = LobbyManager.Instance.LobbyData.outerEyesightValue;
+        }
+
         
         foreach (var target in playerView.OverlappingPlayers)
         {
