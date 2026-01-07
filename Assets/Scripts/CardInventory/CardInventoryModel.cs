@@ -54,7 +54,7 @@ public class CardInventoryModel : NetworkBehaviour
 
     #region 정렬
     //TODO: 정렬 버튼 생길 시 옵션에 따른 정렬 메서드 추가
-    
+
     /*public void SortCardsByAcquiredTicks()
     {
 
@@ -74,12 +74,16 @@ public class CardInventoryModel : NetworkBehaviour
             ownedCards.Add(card);
         }
     }*/
-    
+
     #endregion
-    
+
     #region 외부 인터페이스 (메시지 기반)
-    
-    
+
+    public bool HasAllRevoltCards()
+    {
+        return HasCard(60100) && HasCard(60200) && HasCard(60300);
+    }
+
     /// <summary>
     /// 소유한 카드 수 조회
     /// </summary>

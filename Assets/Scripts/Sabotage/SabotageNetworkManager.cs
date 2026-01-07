@@ -4,15 +4,15 @@ using UnityEngine;
 
 public enum SabotageType
 {
-    LightsOff,     
-    ForcedInteract   
+    LightsOff,        // 기존: 불 꺼지고 어두워짐
+    ForcedInteract    // 신규: 타깃 아이템 상호작용 필요 (불 끄기 연출 X)
 }
 
 public class SabotageNetworkManager : NetworkBehaviour
 {
     public static SabotageNetworkManager Instance;
 
-    [Header("시야 연출 컨트롤러 (씬에 1개)")]
+    [Header("시야/메시지 연출 컨트롤러 (씬에 1개)")]
     public SabotageVisualController visualController;
 
     [Header("LightsOff 사보타지 유지 시간(초)")]
@@ -21,7 +21,13 @@ public class SabotageNetworkManager : NetworkBehaviour
     [Header("ForcedInteract 제한 시간(초)")]
     public float forcedInteractLimit = 20f;
 
-    private Coroutine forcedInteractRoutine;
+    [Header("ForcedInteract 타깃 아이템 (NetworkObject)")]
+    public NetworkObject forcedTargetItem;
+
+    // 서버 상태
+    private bool forcedActive = false;
+    private ulong forcedTargetItemId = 0;
+    private Coroutine forcedRoutine;
 
     void Awake()
     {
@@ -29,39 +35,62 @@ public class SabotageNetworkManager : NetworkBehaviour
         else Destroy(gameObject);
     }
 
-    /// <summary>
-    /// 버튼에서 호출: 사보타지 시작 요청 (타입만 넘김)
-    /// 로컬 -> 서버 -> 전체 브로드캐스트
-    /// </summary>
+    // =========================
+    //  Start Sabotage (Public)
+    // =========================
+
     public void TryStartSabotage(SabotageType type)
     {
-        if (IsServer)
-        {
-            StartSabotageServer(type);
-        }
-        else
-        {
-            RequestSabotageServerRpc(type);
-        }
+        if (IsServer) StartSabotageServer(type);
+        else RequestSabotageServerRpc(type);
     }
 
-    /// <summary>
-    /// 플레이어 객체 기반으로 요청하고 싶을 때 사용 (소유권 검증 포함)
-    /// </summary>
     public void TryStartSabotageFromPlayer(GameObject player, SabotageType type)
     {
         if (player == null) return;
-
         var no = player.GetComponent<NetworkObject>();
         if (no == null) return;
 
-        if (IsServer)
-            StartSabotageServer(type);
-        else
-            RequestSabotageFromPlayerServerRpc(no.NetworkObjectId, type);
+        if (IsServer) StartSabotageServer(type);
+        else RequestSabotageFromPlayerServerRpc(no.NetworkObjectId, type);
     }
 
-    // ---- Server RPCs ----
+    public bool IsForcedInteractActiveClient()
+    {
+        return forcedActive;
+    }
+
+    // =========================
+    //  ForcedInteract Resolve (Public)
+    // =========================
+
+    /// <summary>
+    /// 타깃 아이템에서 상호작용 시 호출 (로컬->서버)
+    /// itemObject는 상호작용한 "그 아이템" GameObject
+    /// </summary>
+    public void TryResolveForcedInteract(GameObject player, GameObject itemObject)
+    {
+        if (!forcedActive) return; // (클라에선 로컬 상태라 100% 일치하진 않지만, 불필요 호출 방지)
+
+        if (player == null || itemObject == null) return;
+
+        var playerNO = player.GetComponent<NetworkObject>();
+        var itemNO = itemObject.GetComponent<NetworkObject>();
+        if (playerNO == null || itemNO == null) return;
+
+        if (IsServer)
+        {
+            ResolveForcedInteractServer(playerNO.NetworkObjectId, itemNO.NetworkObjectId, default);
+        }
+        else
+        {
+            RequestResolveForcedInteractServerRpc(playerNO.NetworkObjectId, itemNO.NetworkObjectId);
+        }
+    }
+
+    // =========================
+    //  Server RPCs
+    // =========================
 
     [ServerRpc(RequireOwnership = false)]
     private void RequestSabotageServerRpc(SabotageType type, ServerRpcParams rpcParams = default)
@@ -78,7 +107,18 @@ public class SabotageNetworkManager : NetworkBehaviour
         StartSabotageServer(type);
     }
 
-    // ---- Server logic ----
+    [ServerRpc(RequireOwnership = false)]
+    private void RequestResolveForcedInteractServerRpc(
+        ulong playerNetId,
+        ulong itemNetId,
+        ServerRpcParams rpcParams = default)
+    {
+        ResolveForcedInteractServer(playerNetId, itemNetId, rpcParams);
+    }
+
+    // =========================
+    //  Server Logic
+    // =========================
 
     private void StartSabotageServer(SabotageType type)
     {
@@ -89,9 +129,6 @@ public class SabotageNetworkManager : NetworkBehaviour
                 break;
 
             case SabotageType.ForcedInteract:
-                TriggerSabotageClientRpc(type, 0f);
-
-                // 서버에서 20초 제한 타이머 시작(실패 시 몰살 로직을 여기)
                 StartForcedInteractSabotageServer();
                 break;
         }
@@ -101,44 +138,76 @@ public class SabotageNetworkManager : NetworkBehaviour
     {
         if (!IsServer) return;
 
-        if (forcedInteractRoutine != null)
-            StopCoroutine(forcedInteractRoutine);
+        if (forcedTargetItem == null)
+        {
+            Debug.LogWarning("[Sabotage] ForcedInteract target item is null. Assign forcedTargetItem in inspector.");
+            return;
+        }
 
-        forcedInteractRoutine = StartCoroutine(ForcedInteractRoutine());
+        forcedTargetItemId = forcedTargetItem.NetworkObjectId;
+        forcedActive = true;
+
+        TriggerForcedInteractStateClientRpc(true);
+
+        if (forcedRoutine != null) StopCoroutine(forcedRoutine);
+        forcedRoutine = StartCoroutine(ForcedInteractRoutine());
     }
 
     private IEnumerator ForcedInteractRoutine()
     {
         float t = 0f;
 
-        // TODO: 필요 상호작용 카운트/상태 초기화
-        // 예: required = 3; current = 0;
-
         while (t < forcedInteractLimit)
         {
-            // TODO: 아이템 상호작용 성공 조건 체크
-            // if (current >= required)
-            // {
-            //     StopForcedInteractSuccess();
-            //     yield break;
-            // }
-
+            if (!forcedActive) yield break;
             t += Time.deltaTime;
             yield return null;
         }
 
-        KillAllPlayersServer();
+        forcedActive = false;
+        TriggerForcedInteractStateClientRpc(false);
 
-        forcedInteractRoutine = null;
+        // 임시: 전원 사망 대신 "실패했습니다" 문구만 띄우기
+        ShowMessageAllClientRpc("실패했습니다");
+
+        // TODO: 나중에 여기서 전원 사망 처리 연결
+
+        forcedRoutine = null;
     }
 
-    private void KillAllPlayersServer()
+    private void ResolveForcedInteractServer(
+        ulong playerNetId,
+        ulong itemNetId,
+        ServerRpcParams rpcParams)
     {
-        // TODO: "전원 사망 처리" 함수로 연결
-        Debug.Log("[Sabotage] ForcedInteract FAIL -> KILL ALL (TODO 구현 필요)");
+        if (!IsServer) return;
+        if (!forcedActive) return;
+
+        if (!NetworkManager.SpawnManager.SpawnedObjects.TryGetValue(playerNetId, out var playerObj)) return;
+        if (rpcParams.Receive.SenderClientId != 0) // host(0)일 수도 있어서, rpcParams가 default일 경우 대비
+        {
+            if (rpcParams.Receive.SenderClientId != default && playerObj.OwnerClientId != rpcParams.Receive.SenderClientId)
+                return;
+        }
+
+        if (itemNetId != forcedTargetItemId) return;
+
+        forcedActive = false;
+        TriggerForcedInteractStateClientRpc(false);
+
+        if (forcedRoutine != null)
+        {
+            StopCoroutine(forcedRoutine);
+            forcedRoutine = null;
+        }
+
+        // 성공 안내(원하면 다른 문구로)
+        ShowMessageAllClientRpc("사보타지 해제!");
     }
 
-    // ---- Client RPC ----
+    // =========================
+    //  Client RPCs
+    // =========================
 
     [ClientRpc]
     private void TriggerSabotageClientRpc(SabotageType type, float duration)
@@ -152,6 +221,32 @@ public class SabotageNetworkManager : NetworkBehaviour
 
             case SabotageType.ForcedInteract:
                 break;
+        }
+    }
+
+    [ClientRpc]
+    private void TriggerForcedInteractStateClientRpc(bool active)
+    {
+        // 클라 로컬 상태도 같이 맞춰줘서 TryResolveForcedInteract()의 early return이 동작하게 함
+        forcedActive = active;
+
+        // 시작 시 안내 문구
+        if (active && visualController != null)
+        {
+            visualController.ShowCenterMessage($"사보타지 발생! {forcedInteractLimit:0}초 안에 타깃 아이템과 상호작용!", 2.5f);
+        }
+    }
+
+    [ClientRpc]
+    private void ShowMessageAllClientRpc(string msg)
+    {
+        if (visualController != null)
+        {
+            visualController.ShowCenterMessage(msg, 2.0f);
+        }
+        else
+        {
+            Debug.Log($"[Sabotage Message] {msg}");
         }
     }
 }

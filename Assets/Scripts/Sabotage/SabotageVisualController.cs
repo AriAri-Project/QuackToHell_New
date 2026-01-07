@@ -8,20 +8,23 @@ public class SabotageVisualController : MonoBehaviour
     public Image darknessImage;
 
     [Header("플레이어 시야 SpriteMask (카메라 자식)")]
-    public Transform maskTransform;       
-    public GameObject maskObject; 
+    public Transform maskTransform;
+    public GameObject maskObject;
+
+    [Header("중앙 메시지(Text) - 임시 안내/실패 문구")]
+    public Text messageText;
 
     [Header("설정 값")]
-    public float fadeDuration = 1f;      // 어두워지기/밝아지기 시간
-    public float targetAlpha = 0.9f;     // 최종 어두운 정도
-    public float startMaskScale = 2.0f;  // 평상시 마스크 크기
-    public float endMaskScale = 0.8f;    // 사보타지 때 마스크 크기
+    public float fadeDuration = 1f;
+    public float targetAlpha = 0.9f;
+    public float startMaskScale = 2.0f;
+    public float endMaskScale = 0.8f;
 
     private bool isRunning = false;
+    private Coroutine msgRoutine;
 
     void Awake()
     {
-        // 시작 상태 : 사보타지 꺼져 있음
         if (darknessImage != null)
         {
             var c = darknessImage.color;
@@ -35,33 +38,30 @@ public class SabotageVisualController : MonoBehaviour
 
         if (maskTransform != null)
             maskTransform.localScale = Vector3.one * startMaskScale;
+
+        if (messageText != null)
+            messageText.gameObject.SetActive(false);
     }
 
-    /// <summary>
-    /// 이 클라이언트 화면에 사보타지 연출 1번 실행
-    /// </summary>
+    // 기존: 불 끄기 사보타지 연출
     public void PlaySabotageOnce(SabotageType type, float sabotageDuration)
     {
         if (isRunning) return;
-        StartCoroutine(SabotageRoutine(type, sabotageDuration));
+        StartCoroutine(SabotageRoutine(sabotageDuration));
     }
 
-    private IEnumerator SabotageRoutine(SabotageType type, float sabotageDuration)
+    private IEnumerator SabotageRoutine(float sabotageDuration)
     {
         isRunning = true;
 
         if (darknessImage != null)
-        {
             darknessImage.gameObject.SetActive(true);
-        }
 
         if (maskObject != null)
             maskObject.SetActive(true);
 
         yield return StartCoroutine(FadeAndScale(0f, targetAlpha, startMaskScale, endMaskScale, fadeDuration));
-
         yield return new WaitForSeconds(sabotageDuration);
-
         yield return StartCoroutine(FadeAndScale(targetAlpha, 0f, endMaskScale, startMaskScale, fadeDuration));
 
         if (maskObject != null)
@@ -86,8 +86,7 @@ public class SabotageVisualController : MonoBehaviour
             t += Time.deltaTime;
             float k = t / duration;
 
-            float a = Mathf.Lerp(alphaFrom, alphaTo, k);
-            c.a = a;
+            c.a = Mathf.Lerp(alphaFrom, alphaTo, k);
             darknessImage.color = c;
 
             if (maskTransform != null)
@@ -104,5 +103,28 @@ public class SabotageVisualController : MonoBehaviour
 
         if (maskTransform != null)
             maskTransform.localScale = new Vector3(scaleTo, scaleTo, 1f);
+    }
+
+    public void ShowCenterMessage(string msg, float seconds)
+    {
+        if (messageText == null)
+        {
+            Debug.Log($"[SabotageUI] {msg}");
+            return;
+        }
+
+        if (msgRoutine != null) StopCoroutine(msgRoutine);
+        msgRoutine = StartCoroutine(MessageRoutine(msg, seconds));
+    }
+
+    private IEnumerator MessageRoutine(string msg, float seconds)
+    {
+        messageText.text = msg;
+        messageText.gameObject.SetActive(true);
+
+        yield return new WaitForSeconds(seconds);
+
+        messageText.gameObject.SetActive(false);
+        msgRoutine = null;
     }
 }
