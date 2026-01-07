@@ -43,12 +43,10 @@ public class SabotagePopup : UIPopup
 
     private void OnClick_SabotageAButton(PointerEventData data)
     {
-        //TODO: 사보타지 A호출
         roleController.CurrentStrategy?.Savotage(SabotageType.LightsOff);
     }
     private void OnClick_SabotageBButton(PointerEventData data)
     {
-        //TODO: 사보타지 B호출 
         roleController.CurrentStrategy?.Savotage(SabotageType.ForcedInteract);
 
     }

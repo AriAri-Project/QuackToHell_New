@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-//TODO: UI 참조 가져오는 메서드 뚫기 
 public class UIManager:MonoBehaviour
 {
     #region 싱글톤

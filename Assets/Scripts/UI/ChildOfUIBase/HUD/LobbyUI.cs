@@ -154,7 +154,7 @@ public class LobbyUI : UIHUD
     {
         //사운드
         SoundManager.Instance.SFXPlay("UIClickSFX", buttonClickSFX.clip);
-        //TODO: 뒤로가기처리
+        //로비 나가기
         LobbyManager.Instance.CleanUpLobby();
     }
     private void OnColorDropdownButton(Int32 colorIndex)
