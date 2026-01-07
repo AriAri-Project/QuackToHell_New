@@ -53,15 +53,15 @@ public interface IRoleStrategy
 
 
 
-    public void Savotage();
+    public void Savotage(SabotageType  sabotageType);
 
     [ServerRpc(RequireOwnership = false)]
-    void CanSavotageServerRpc(ServerRpcParams rpcParams = default); // 서버에서 조건 검사
+    void CanSavotageServerRpc(SabotageType  sabotageType, ServerRpcParams rpcParams = default); // 서버에서 조건 검사
     
     [ClientRpc]
-    void CanSavotageResultClientRpc(bool canSabotage, ClientRpcParams rpcParams = default);  // 결과 전송
+    void CanSavotageResultClientRpc(SabotageType  sabotageType, bool canSabotage, ClientRpcParams rpcParams = default);  // 결과 전송
     [ServerRpc(RequireOwnership = false)]
-    void SavotageServerRpc(ServerRpcParams rpcParams = default);
+    void SavotageServerRpc(SabotageType  sabotageType, ServerRpcParams rpcParams = default);
 
 
     

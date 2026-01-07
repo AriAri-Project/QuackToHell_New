@@ -200,6 +200,8 @@ public class FarmerStrategy : NetworkBehaviour, IRoleStrategy
 
 
     // 3. 실제 작업 수행: ServerRpc
+
+    /// <param name="targetNetworkObjectId">죽이려는 대상의 client id</param>
     [ServerRpc(RequireOwnership = false)]
     public void KillServerRpc(ulong targetNetworkObjectId, ServerRpcParams rpcParams = default)
     {
@@ -257,18 +259,18 @@ public class FarmerStrategy : NetworkBehaviour, IRoleStrategy
         OnSavotageSuccess?.Invoke();
     }
     
-    public void Savotage()
+    public void Savotage(SabotageType  sabotageType)
     {
-        CanSavotageServerRpc();
+        CanSavotageServerRpc(sabotageType);
     }
 
 
     [ServerRpc(RequireOwnership = false)]
-    public void SavotageServerRpc(ServerRpcParams rpcParams = default)
+    public void SavotageServerRpc(SabotageType  sabotageType, ServerRpcParams rpcParams = default)
     {
         ulong requesterClientId = rpcParams.Receive.SenderClientId;
         GameObject requesterPlayer = PlayerHelperManager.Instance.GetPlayerGameObjectByClientId(requesterClientId);
-        SabotageNetworkManager.Instance.TryStartSabotageFromPlayer(requesterPlayer);
+        SabotageNetworkManager.Instance.TryStartSabotageFromPlayer(requesterPlayer,sabotageType);
         SavotageClientRpc();
     }
 
@@ -476,7 +478,7 @@ public class FarmerStrategy : NetworkBehaviour, IRoleStrategy
     
 
     [ServerRpc(RequireOwnership = false)]
-    public void CanSavotageServerRpc(ServerRpcParams rpcParams = default)
+    public void CanSavotageServerRpc(SabotageType sabotageType ,ServerRpcParams rpcParams = default)
     {
         //TODO: 사보타지 조건구현
         bool result = false;
@@ -492,21 +494,21 @@ public class FarmerStrategy : NetworkBehaviour, IRoleStrategy
         }
         
         ulong requesterClientId = rpcParams.Receive.SenderClientId;
-        CanSavotageResultClientRpc(true, new ClientRpcParams 
+        CanSavotageResultClientRpc(sabotageType, true, new ClientRpcParams 
         { 
             Send = new ClientRpcSendParams { TargetClientIds = new[] { requesterClientId } } 
         });
     }
 
     [ClientRpc]
-    public void CanSavotageResultClientRpc(bool canSabotage, ClientRpcParams rpcParams = default)
+    public void CanSavotageResultClientRpc(SabotageType sabotageType, bool canSabotage, ClientRpcParams rpcParams = default)
     {
         if (canSabotage==false)
         {
             return;
         }
         
-        SavotageServerRpc();
+        SavotageServerRpc(sabotageType);
     }
 
     

@@ -381,7 +381,7 @@ public class SkillButtonUI : UIHUD
     public void OnSavotageButton(PointerEventData eventData){
         if (playerModel.GetPlayerAliveState() == PlayerLivingState.Dead) return;
         
-        roleController.CurrentStrategy?.Savotage();
+        UIManager.Instance.ShowPopupUI<SabotagePopup>();
     }
     
     public void OnDynamicInteractionButton(PointerEventData eventData){

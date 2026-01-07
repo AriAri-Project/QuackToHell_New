@@ -346,8 +346,8 @@ public class PlayerPresenter : NetworkBehaviour
     private void HandleSavotageInput()
     {
         if (playerModel.GetPlayerAliveState() == PlayerLivingState.Dead) return;
-        
-        roleController.CurrentStrategy?.Savotage();
+
+        UIManager.Instance.ShowPopupUI<SabotagePopup>();
     }
     
     /// <summary>

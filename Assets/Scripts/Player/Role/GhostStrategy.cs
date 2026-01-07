@@ -109,35 +109,35 @@ public class GhostStrategy : NetworkBehaviour, IRoleStrategy
         return;
     }
 
-    public void Savotage()
+    public void Savotage(SabotageType sabotageType)
     {
-        CanSavotageServerRpc();
+        CanSavotageServerRpc(sabotageType);
     }
 
     [ServerRpc(RequireOwnership = false)]
-    public void CanSavotageServerRpc(ServerRpcParams rpcParams = default)
+    public void CanSavotageServerRpc(SabotageType sabotageType, ServerRpcParams rpcParams = default)
     {
         //ghost는 사보타지 불가
         ulong requesterClientId = rpcParams.Receive.SenderClientId;
-        CanSavotageResultClientRpc(false, new ClientRpcParams 
+        CanSavotageResultClientRpc(sabotageType,false, new ClientRpcParams 
         { 
             Send = new ClientRpcSendParams { TargetClientIds = new[] { requesterClientId } } 
         });
     }
 
     [ClientRpc]
-    public void CanSavotageResultClientRpc(bool canSabotage, ClientRpcParams rpcParams = default)
+    public void CanSavotageResultClientRpc(SabotageType sabotageType, bool canSabotage, ClientRpcParams rpcParams = default)
     {
         if (!canSabotage)
         {
             return;
         }
         Debug.Log($"사보타지 가능여부={canSabotage}: Server Rpc호출");
-        SavotageServerRpc();
+        SavotageServerRpc(sabotageType);
     }
 
     [ServerRpc(RequireOwnership = false)]
-    public void SavotageServerRpc(ServerRpcParams rpcParams = default)
+    public void SavotageServerRpc(SabotageType sabotageType, ServerRpcParams rpcParams = default)
     {
         Debug.Log("유령은 사보타지 불가");
     }

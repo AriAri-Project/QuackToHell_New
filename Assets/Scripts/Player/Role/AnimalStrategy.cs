@@ -134,24 +134,24 @@ public class AnimalStrategy : NetworkBehaviour, IRoleStrategy
         TrialManager.Instance.TryTrialServerRpc(reporterClientId);
     }
 
-    public void Savotage()
+    public void Savotage(SabotageType  sabotageType)
     {
-        CanSavotageServerRpc();
+        CanSavotageServerRpc(sabotageType);
     }
 
     [ServerRpc(RequireOwnership = false)]
-    public void CanSavotageServerRpc(ServerRpcParams rpcParams = default)
+    public void CanSavotageServerRpc(SabotageType  sabotageType, ServerRpcParams rpcParams = default)
     {
         //애니멀이므로 사보타지 못 함
         ulong requesterClientId = rpcParams.Receive.SenderClientId;
-        CanSavotageResultClientRpc(false, new ClientRpcParams 
+        CanSavotageResultClientRpc(sabotageType, false, new ClientRpcParams 
         { 
             Send = new ClientRpcSendParams { TargetClientIds = new[] { requesterClientId } } 
         });
     }
 
     [ClientRpc]
-    public void CanSavotageResultClientRpc(bool canSabotage, ClientRpcParams rpcParams = default)
+    public void CanSavotageResultClientRpc(SabotageType  sabotageType,bool canSabotage, ClientRpcParams rpcParams = default)
     {
         
         if (!canSabotage)
@@ -159,11 +159,11 @@ public class AnimalStrategy : NetworkBehaviour, IRoleStrategy
             return;
         }
         Debug.Log($"사보타지 가능여부={canSabotage}: Server Rpc호출");
-        SavotageServerRpc();
+        SavotageServerRpc(sabotageType);
     }
 
     [ServerRpc(RequireOwnership = false)]
-    public void SavotageServerRpc(ServerRpcParams rpcParams = default)
+    public void SavotageServerRpc(SabotageType  sabotageType, ServerRpcParams rpcParams = default)
     {
         Debug.Log("애니멀이므로 사보타지 못 함");
     }
