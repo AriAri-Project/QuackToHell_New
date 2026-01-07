@@ -49,6 +49,8 @@ public sealed class VentController : NetworkBehaviour, IInteractable
 
     private static float _localClickSuppressUntil = 0f;
 
+    private VentController _selectedTargetVent;
+
     void Awake()
     {
         _tr = transform;
@@ -221,12 +223,12 @@ public sealed class VentController : NetworkBehaviour, IInteractable
     }
 
     // (기존) 벤트간 이동은 occupant & sender로 검증하므로 유지
-    public void RequestMoveTo(VentController target)
+    public void RequestMoveToSelected()
     {
-        if (!IsClient || target == null) return;
-        _localClickSuppressUntil = Mathf.Max(_localClickSuppressUntil, Time.time + 0.2f);
+        if (!IsClient || _selectedTargetVent == null) return;
 
-        MoveToVentServerRpc(target.NetworkObjectId);
+        _localClickSuppressUntil = Mathf.Max(_localClickSuppressUntil, Time.time + 0.2f);
+        MoveToVentServerRpc(_selectedTargetVent.NetworkObjectId);
     }
 
     [ServerRpc(RequireOwnership = false)]
@@ -343,6 +345,11 @@ public sealed class VentController : NetworkBehaviour, IInteractable
         for (int i = 0; i < _spawnedArrows.Count; i++)
             if (_spawnedArrows[i]) Destroy(_spawnedArrows[i]);
         _spawnedArrows.Clear();
+    }
+
+    public void SetSelectedLinkedVent(VentController target)
+    {
+        _selectedTargetVent = target;
     }
 
     private ulong[] BuildTargetIds()

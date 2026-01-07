@@ -59,7 +59,10 @@ public sealed class VentArrowController : MonoBehaviour
         if (_source != null && _target != null)
         {
             Debug.Log($"Arrow clicked: {_source.name} -> {_target.name}");
-            _source.RequestMoveTo(_target);
+
+            _source.SetSelectedLinkedVent(_target);
+
+            _source.RequestMoveToSelected();
         }
     }
 }
