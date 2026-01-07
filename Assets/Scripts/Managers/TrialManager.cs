@@ -64,7 +64,10 @@ public class TrialManager : NetworkBehaviour
     public void TryTrialServerRpc(ulong reporterClientId, ServerRpcParams rpcParams = default)
     {
         ulong requesterClientId = rpcParams.Receive.SenderClientId;
-        
+
+        if (RebellionVictoryService.TryTriggerRebellion(reporterClientId))
+            return;
+
         // 1. 서버에서 리포터 클라이언트 ID 검증
         if (!NetworkManager.Singleton.ConnectedClients.ContainsKey(reporterClientId))
         {
@@ -90,6 +93,11 @@ public class TrialManager : NetworkBehaviour
         }
 
         this.reporterClientId = reporterClientId;
+
+        if (RebellionVictoryService.TryTriggerRebellion(reporterClientId)) // 재판 안 열리게 처리(임시)
+        {
+            return; 
+        }
 
         // 4. 재판 시작 (서버가 권위적 정보로 처리)
         TrialResultClientRpc(reporterClientId);
@@ -163,5 +171,20 @@ public class TrialManager : NetworkBehaviour
                 }
             }
         }
+    }
+
+    [ClientRpc]
+    public void RebellionVictoryClientRpc(ulong winnerClientId)
+    {
+        Debug.Log($"[Rebellion] Winner = {winnerClientId}");
+
+        // 모든 플레이어 이동 잠금 (기존 TrialResultClientRpc 흐름과 유사)
+        ulong localClientId = NetworkManager.Singleton.LocalClientId;
+        PlayerView playerView = PlayerHelperManager.Instance.GetPlayerViewlByClientId(localClientId);
+        playerView.SetIgnoreAllPlayerMoveInputServerRpc(true);
+
+        // TODO: 결과 화면/결과 씬이 있으면 여기서 연결
+        // if (NetworkManager.Singleton.IsHost)
+        //     NetworkManager.Singleton.SceneManager.LoadScene(GameScenes.Result, LoadSceneMode.Single);
     }
 }

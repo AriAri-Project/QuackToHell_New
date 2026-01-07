@@ -1,6 +1,6 @@
 using System.Text;
 using UnityEngine;
-using UnityEngine.UI;
+using TMPro;
 
 public class ResultScreenUI : MonoBehaviour
 {
@@ -8,9 +8,9 @@ public class ResultScreenUI : MonoBehaviour
     [SerializeField] private GameObject root; // ResultPanel
 
     [Header("Texts")]
-    [SerializeField] private Text winnersText;
-    [SerializeField] private Text losersText;
-    [SerializeField] private Text reasonText;
+    [SerializeField] private TextMeshProUGUI winnersText;
+    [SerializeField] private TextMeshProUGUI losersText;
+    [SerializeField] private TextMeshProUGUI reasonText;
 
     private void Awake()
     {
@@ -60,8 +60,6 @@ public class ResultScreenUI : MonoBehaviour
 
     private string BuildReason(GameResultPayload p)
     {
-        // WinType도 같이 찍고 싶으면 아래처럼
-        // return $"승리 요인 ({p.WinType})\n- {p.WinReason}";
         return $"승리 요인\n- {p.WinReason}";
     }
 }
