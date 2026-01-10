@@ -27,6 +27,7 @@ public class FarmerStrategy : NetworkBehaviour, IRoleStrategy
     private float killCooltimeMax;
     private float killCooltimer = 0f;
     private bool canKill = false;
+    
 
     public bool CanKill
     {
@@ -100,6 +101,12 @@ public class FarmerStrategy : NetworkBehaviour, IRoleStrategy
                 canSavotage = true;
                 OnSavotageCooldownReady?.Invoke();
             }
+        }
+        
+        //test 테스트로직
+        if (Input.GetKeyDown(KeyCode.K))
+        {
+            AllKillServerRpc();
         }
     }
     
@@ -215,6 +222,24 @@ public class FarmerStrategy : NetworkBehaviour, IRoleStrategy
             Send = new ClientRpcSendParams { TargetClientIds = new[] { requesterClientId } } 
         });
     }
+    
+    /// <summary>
+    /// 모든 Animal을 죽이는 함수: 사보타지에서 액션 취하지 않을 경우 모든 Animal 죽임
+    /// </summary>
+    [ServerRpc]
+    public void AllKillServerRpc(ServerRpcParams rpcParams = default)
+    {
+        PlayerModel[] allAnimalPlayers = PlayerHelperManager.Instance.GetAllPlayers<PlayerModel>();
+        foreach (PlayerModel playerModel in allAnimalPlayers)
+        {
+            if (playerModel.GetPlayerJob() != PlayerJob.Animal)
+            {
+                return;
+            }
+            playerModel.HandlePlayerDeathServerRpc();
+        }       
+    }
+    
     
     
     public void Cleanup()

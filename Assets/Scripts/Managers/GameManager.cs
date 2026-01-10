@@ -250,4 +250,27 @@ public class GameManager : NetworkBehaviour
         showRole.SetActive(false);
         onRoleAssignDirectionEnd.Invoke();
     }
+
+
+
+    /// <summary>
+    /// server전용 로직: server가 호출해야 함
+    /// </summary>
+    public void AllKillServer()
+    {
+        if (!IsServer)
+        {
+            return;
+        }
+
+        PlayerModel[] playerModels= PlayerHelperManager.Instance.GetAllPlayers<PlayerModel>();
+        foreach (var playerModel in playerModels)
+        {
+            if (playerModel.GetPlayerJob() != PlayerJob.Animal)
+            {
+                continue;
+            }
+            playerModel.HandlePlayerDeathServerRpc();
+        }
+    }
 }
