@@ -337,7 +337,7 @@ public class PlayerModel : NetworkBehaviour
     }
     #endregion
 
-    #region 색깔 변경
+    
 
     [ServerRpc]
     public void ChangeColorServerRpc(Int32 colorIndex, ulong clientId, ServerRpcParams rpcParams = default)
@@ -355,7 +355,19 @@ public class PlayerModel : NetworkBehaviour
         tempAppearanceData.ColorIndex = colorIndex;
         _playerAppearanceData.Value = tempAppearanceData;
     }
-    #endregion
+
+    [ServerRpc]
+    public void ChangeNicknameServerRpc(string value, ServerRpcParams rpcParams = default)
+    {
+        ulong senderCliendId = rpcParams.Receive.SenderClientId;
+        PlayerModel playerModel =  PlayerHelperManager.Instance.GetPlayerModelByClientId(senderCliendId);
+        PlayerStatusData senderPlayerStateData = playerModel.PlayerStatusData.Value;
+        string baseNickname = value;
+        senderPlayerStateData.Nickname = baseNickname;        
+
+        playerModel.PlayerStatusData.Value = senderPlayerStateData;
+    }
+    
 
     #region Die
     /// <summary>

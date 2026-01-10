@@ -24,6 +24,7 @@ TagManager:
   - MiniGame
   - task-wire
   - MainCanvas
+  - Closet
   layers:
   - Default
   - TransparentFX

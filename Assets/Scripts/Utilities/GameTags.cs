@@ -31,5 +31,6 @@ public static class GameTags
     public const string Vent = "Vent";                    // 벤트 (농장주 전용)
     public const string MiniGame = "MiniGame";            // 미니게임
     public const string ConvocationOfTrial = "ConvocationOfTrial";  // 재판 소집 (기존과 동일)
+    public const string Closet = "Closet"; //로비의 옷장설정
 
 }

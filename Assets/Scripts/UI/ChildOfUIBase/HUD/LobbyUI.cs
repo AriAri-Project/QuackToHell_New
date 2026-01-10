@@ -11,15 +11,12 @@ public class LobbyUI : UIHUD
 {
     public AudioSource buttonClickSFX;
     
-    private TMP_Dropdown colorDropdown;
+
     private TMP_Text codeText;
 
     public Action OnClikcedButton_Setting;
 
-    enum Dropdowns
-    {
-        Dropdown_Color,
-    }
+
 
     enum Texts
     {
@@ -40,9 +37,7 @@ public class LobbyUI : UIHUD
     {
         base.Init();
         
-        Bind<TMP_Dropdown>(typeof(Dropdowns));
-        colorDropdown = Get<TMP_Dropdown>((int)Dropdowns.Dropdown_Color);
-        colorDropdown.onValueChanged.AddListener(OnColorDropdownButton);
+ 
         
         Bind<TextMeshProUGUI>(typeof(Texts));
         codeText = Get<TextMeshProUGUI>((int)Texts.Text_Code);
@@ -157,12 +152,7 @@ public class LobbyUI : UIHUD
         //로비 나가기
         LobbyManager.Instance.CleanUpLobby();
     }
-    private void OnColorDropdownButton(Int32 colorIndex)
-    {
-        //사운드
-        SoundManager.Instance.SFXPlay("UIClickSFX", buttonClickSFX.clip);
-        PlayerHelperManager.Instance.GetPlayerModelByClientId(NetworkManager.Singleton.LocalClientId).ChangeColorServerRpc(colorIndex, NetworkManager.Singleton.LocalClientId);
-    }
+
 
     private void OnClick_Button_CopyCode(PointerEventData data)
     {

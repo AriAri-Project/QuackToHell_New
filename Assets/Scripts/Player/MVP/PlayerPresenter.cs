@@ -167,16 +167,17 @@ public class PlayerPresenter : NetworkBehaviour
             StartCoroutine(WaitForSecondsAndBindChatFocusUnFocusEvent(0.5f));
             return;
         }
-        chatTestView.OnFocusInputField += OnChatFocused;
-        chatTestView.OnUnFocusInputField += OnChatUnfocused;
+        chatTestView.OnFocusInputField += OnInputFieldFocused;
+        chatTestView.OnUnFocusInputField += OnInputFieldUnfocused;
+        
     }
 
     private IEnumerator WaitForSecondsAndBindChatFocusUnFocusEvent(float waitTime)
     {
         yield return new WaitForSeconds(waitTime);
         chatTestView = FindAnyObjectByType<ChatTestView>();
-        chatTestView.OnFocusInputField += OnChatFocused;
-        chatTestView.OnUnFocusInputField += OnChatUnfocused;
+        chatTestView.OnFocusInputField += OnInputFieldFocused;
+        chatTestView.OnUnFocusInputField += OnInputFieldUnfocused;
     }
     
     private void OnSceneUnLoaded()
@@ -185,16 +186,16 @@ public class PlayerPresenter : NetworkBehaviour
         {
             return;
         }
-        chatTestView.OnFocusInputField -= OnChatFocused;
-        chatTestView.OnUnFocusInputField -= OnChatUnfocused;
+        chatTestView.OnFocusInputField -= OnInputFieldFocused;
+        chatTestView.OnUnFocusInputField -= OnInputFieldUnfocused;
         chatTestView = null;
     }
 
-    private void OnChatFocused()
+    private void OnInputFieldFocused()
     {
         playerView.SetIgnorePlayerMoveInputServerRpc(true);
     }
-    private void OnChatUnfocused()
+    private void OnInputFieldUnfocused()
     {
         playerView.SetIgnorePlayerMoveInputServerRpc(false);
     }
@@ -317,12 +318,28 @@ public class PlayerPresenter : NetworkBehaviour
                 }
             }
         }
+
+        GameObject interactionObj = playerView.InteractObjCache;
         
-        string targetObjTag= playerView.InteractObjCache?.tag;
-        ulong targetObjectId=0;
-        if (playerView.InteractObjCache.GetComponent<NetworkObject>() != null)
+        if(interactionObj==null)
         {
-            targetObjectId =  playerView.InteractObjCache.GetComponent<NetworkObject>().NetworkObjectId;
+            return;
+        }
+        
+        //옷장 상호작용
+        if(interactionObj.CompareTag(GameTags.Closet))
+        {
+            //TODO: 옷장 팝업 띄우기
+            UIManager.Instance.ShowPopupUI<LobbyClosetPopup>();
+            //로비씬이므로 리턴.(아직 역할배정 전)
+            return;
+        }
+        
+        string targetObjTag= interactionObj.tag;
+        ulong targetObjectId=0;
+        if (interactionObj.GetComponent<NetworkObject>() != null)
+        {
+            targetObjectId =  interactionObj.GetComponent<NetworkObject>().NetworkObjectId;
         }
         roleController.CurrentStrategy?.Interact(targetObjTag,targetObjectId);
     }
