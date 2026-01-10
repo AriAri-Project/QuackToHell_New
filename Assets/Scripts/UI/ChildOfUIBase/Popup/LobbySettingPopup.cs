@@ -139,7 +139,7 @@ public class LobbySettingPopup : UIPopup
     }
 
     
-    private void Init(bool isPrivateLobby, int maxPlayerNum, int FarmerNum, int savotageCooltime, int killCooltime, bool isShowKillerInfo, float innerEyesightValue, float  outerEyesightValue)
+    private void Init(bool isPrivateLobby, int maxPlayerNum, int FarmerNum, int savotageCooltime, int killCooltime, bool isShowKillerInfo, int innerEyesightValue, int  outerEyesightValue)
     {
         //TAP1: 비공개 로비 (T/F), 최대 플레이어 수 (슬라이더), 농장주 수 (슬라이더), 사보타지 쿨타임 (슬라이더), 킬 쿨타임 (슬라이더), 처형자 정보 표시 (T/F)
         PrivateLobbySettingSwitcher.isOn = isPrivateLobby;
@@ -209,14 +209,14 @@ public class LobbySettingPopup : UIPopup
     {
         //lobby 데이터에 set
         Data.LobbyData lobbyData = LobbyManager.Instance.LobbyData;
-        lobbyData.innerEyesightValue = EyeSightInnerRangeSettingSlider.value;
+        lobbyData.innerEyesightValue = (int)EyeSightInnerRangeSettingSlider.value;
         LobbyManager.Instance.LobbyData = lobbyData;
     }
     private void OnEndDrag_EyeSightOuterRangeSettingSlider(PointerEventData eventData)
     {
         //lobby 데이터에 set
         Data.LobbyData lobbyData = LobbyManager.Instance.LobbyData;
-        lobbyData.outerEyesightValue = EyeSightOuterRangeSettingSlider.value;
+        lobbyData.outerEyesightValue = (int)EyeSightOuterRangeSettingSlider.value;
         LobbyManager.Instance.LobbyData = lobbyData;
     }
     

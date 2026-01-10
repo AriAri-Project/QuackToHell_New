@@ -10,8 +10,8 @@ namespace Data
         public int savotageCooltime;
         public int killCooltime;
         public bool isShowKillerInfo;
-        public float innerEyesightValue;
-        public float outerEyesightValue;
+        public int innerEyesightValue;
+        public int outerEyesightValue;
 
         public static LobbyData CreateDefault()
         {

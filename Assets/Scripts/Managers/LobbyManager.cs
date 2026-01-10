@@ -403,8 +403,8 @@ private void SyncLobbyDataClientRpc(
     int savotageCooltime,
     int killCooltime,
     bool isShowKillerInfo,
-    float  innerEyesight,
-    float outerEyesight)
+    int  innerEyesight,
+    int outerEyesight)
 {
     // 호스트는 이미 _lobbyData가 업데이트되어 있으므로, 클라이언트만 업데이트
     if (IsHost) return;
@@ -539,10 +539,10 @@ private void SyncLobbyDataClientRpc(
                 _lobbyData.isShowKillerInfo = _joinedLobby.Data["IsShowKillerInfo"].Value == "True";
             
             if(_joinedLobby.Data.ContainsKey("InnerEyesight"))
-                _lobbyData.innerEyesightValue =  float.Parse(_joinedLobby.Data["InnerEyesight"].Value);
+                _lobbyData.innerEyesightValue =  int.Parse(_joinedLobby.Data["InnerEyesight"].Value);
             
             if(_joinedLobby.Data.ContainsKey("OuterEyesight"))
-                _lobbyData.outerEyesightValue = float.Parse(_joinedLobby.Data["OuterEyesight"].Value);
+                _lobbyData.outerEyesightValue = int.Parse(_joinedLobby.Data["OuterEyesight"].Value);
             
             
             Debug.Log($"Joined Lobby with code: {lobbyCode}");
