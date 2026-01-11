@@ -255,53 +255,110 @@ namespace Court.Hand
         }
 
         /// <summary>
-        /// 드래그 중 마우스 아래 플레이어 감지 및 프리뷰 요청
+        /// 드래그 중 마우스 아래 플레이어 감지 및 프리뷰 요청 (리팩토링됨)
         /// </summary>
         private void HandleDragHoverPreview(Vector3 mousePos)
         {
-            // 2D Raycast로 플레이어 감지
-            RaycastHit2D hit = Physics2D.Raycast(mousePos, Vector2.zero);
-            
-            if (hit.collider != null)
+            // 1. 유효한 타겟 플레이어를 찾음 (못 찾으면 null)
+            CourtPlayerView targetView = TryGetValidTarget(mousePos);
+
+            // 2. 타겟이 없으면 -> 기존 프리뷰 끄고 종료 (Early Return)
+            if (targetView == null)
             {
-                var targetView = hit.collider.GetComponent<CourtPlayerView>();
-                
-                // 나 자신이 아닌 다른 플레이어인지 확인
-                if (targetView != null && targetView.OwnerId != NetworkManager.Singleton.LocalClientId)
-                {
-                    // 마우스가 다른 플레이어로 넘어갔다면 이전 플레이어 프리뷰 끄기
-                    if (_lastHoveredPlayer != null && _lastHoveredPlayer != targetView)
-                    {
-                        _lastHoveredPlayer.HidePreview();
-                    }
-
-                    // 데미지 계산
-                    int idx1 = _selectedIndices[0];
-                    int idx2 = _selectedIndices[1];
-                    
-                    if (_myInventory != null)
-                    {
-                        // 인벤토리 범위 체크
-                        if(idx1 < _myInventory.OwnedCards.Count && idx2 < _myInventory.OwnedCards.Count)
-                        {
-                            CardItemData c1 = _myInventory.OwnedCards[idx1];
-                            CardItemData c2 = _myInventory.OwnedCards[idx2];
-                            int damage = CourtGameRules.CalculateEvidenceScore(c1, c2);
-
-                            // 프리뷰 켜기 (현재점수 + damage, 초록색)
-                            targetView.ShowPreview(damage);
-                            _lastHoveredPlayer = targetView;
-                            return; 
-                        }
-                    }
-                }
+                ClearLastHoveredPlayer();
+                return;
             }
 
-            // 아무것도 안 맞았거나 플레이어가 아니면 -> 프리뷰 끄기
+            // 3. 타겟이 바뀌었으면 -> 이전 타겟 프리뷰 끄기
+            if (_lastHoveredPlayer != null && _lastHoveredPlayer != targetView)
+            {
+                _lastHoveredPlayer.HidePreview();
+            }
+
+            // 4. 인벤토리나 선택된 카드가 유효한지 확인하고 카드 가져오기
+            if (!TryGetSelectedCards(out CardItemData card1, out CardItemData card2))
+            {
+                return; 
+            }
+
+            // 5. 실제 프리뷰 업데이트 로직 수행
+            UpdateTargetPreview(targetView, card1, card2);
+
+            // 6. 현재 타겟 캐싱
+            _lastHoveredPlayer = targetView;
+        }
+
+        // --- ⬇️ 아래는 새로 추가된 헬퍼 함수들입니다 ⬇️ ---
+
+        /// <summary>
+        /// 마우스 위치에서 유효한 타겟(나 제외)을 찾습니다.
+        /// </summary>
+        private CourtPlayerView TryGetValidTarget(Vector3 mousePos)
+        {
+            RaycastHit2D hit = Physics2D.Raycast(mousePos, Vector2.zero);
+            if (hit.collider == null) return null;
+
+            var view = hit.collider.GetComponent<CourtPlayerView>();
+            
+            // 뷰가 없거나, 타겟이 나 자신이면 무효
+            if (view == null || view.OwnerId == NetworkManager.Singleton.LocalClientId) return null;
+
+            return view;
+        }
+
+        /// <summary>
+        /// 마지막으로 호버했던 플레이어의 프리뷰를 끕니다.
+        /// </summary>
+        private void ClearLastHoveredPlayer()
+        {
             if (_lastHoveredPlayer != null)
             {
                 _lastHoveredPlayer.HidePreview();
                 _lastHoveredPlayer = null;
+            }
+        }
+
+        /// <summary>
+        /// 현재 선택된 2장의 카드를 안전하게 가져옵니다.
+        /// </summary>
+        private bool TryGetSelectedCards(out CardItemData c1, out CardItemData c2)
+        {
+            c1 = default;
+            c2 = default;
+
+            if (_myInventory == null) return false;
+            if (_selectedIndices.Count < 2) return false;
+
+            int idx1 = _selectedIndices[0];
+            int idx2 = _selectedIndices[1];
+
+            // 인덱스 범위 체크
+            if (idx1 >= _myInventory.OwnedCards.Count || idx2 >= _myInventory.OwnedCards.Count) return false;
+
+            c1 = _myInventory.OwnedCards[idx1];
+            c2 = _myInventory.OwnedCards[idx2];
+            return true;
+        }
+
+        /// <summary>
+        /// 타겟 뷰에 실제 프리뷰(N카드 여부 등)를 적용합니다.
+        /// </summary>
+        private void UpdateTargetPreview(CourtPlayerView targetView, CardItemData c1, CardItemData c2)
+        {
+            // N 카드가 포함되어 있는지 확인 (Rules 사용)
+            if (CourtGameRules.IsUnknownResult(c1, c2))
+            {
+                targetView.ShowPreview("?");
+            }
+            else
+            {
+                // 타겟의 현재 점수 가져오기
+                int targetIndex = VoteModel.Instance.GetPlayerIndex(targetView.OwnerId);
+                int currentVote = (targetIndex != -1) ? VoteModel.Instance.GetVoteCount(targetIndex) : 0;
+
+                // 확정된 점수 계산
+                int damage = CourtGameRules.CalculatePreviewScore(c1, c2, currentVote);
+                targetView.ShowPreview(damage);
             }
         }
 

@@ -11,7 +11,7 @@ namespace Court
     {
         [Header("UI References")]
         [SerializeField] private TextMeshProUGUI currentVoteText;
-        [SerializeField] private Canvas hudCanvas; // 껐다 켰다 할 캔버스
+        [SerializeField] private Canvas hudCanvas; 
 
         [Header("Visual References")]
         [SerializeField] private SpriteRenderer characterRenderer; 
@@ -34,36 +34,20 @@ namespace Court
         private Material _targetMaterial;
 
         // ==================================================================================
-        // ★ 씬 로딩 이벤트 연결 (이동할 때마다 체크)
+        // ★ 씬 로딩 및 초기화
         // ==================================================================================
-        private void OnEnable()
-        {
-            SceneManager.sceneLoaded += OnSceneLoaded;
-        }
+        private void OnEnable() => SceneManager.sceneLoaded += OnSceneLoaded;
+        private void OnDisable() => SceneManager.sceneLoaded -= OnSceneLoaded;
+        private void OnSceneLoaded(Scene scene, LoadSceneMode mode) => CheckAndEnableUI(scene.name);
 
-        private void OnDisable()
-        {
-            SceneManager.sceneLoaded -= OnSceneLoaded;
-        }
-
-        private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
-        {
-            CheckAndEnableUI(scene.name);
-        }
-
-        // ==================================================================================
-        // ★ 초기화 (Start, OnNetworkSpawn)
-        // ==================================================================================
         public override void OnNetworkSpawn()
         {
-            // 스폰 직후 내 위치 확인
             CheckAndEnableUI(SceneManager.GetActiveScene().name);
             StartCoroutine(TryConnectRoutine());
         }
 
         private void Start()
         {
-            // 혹시 모르니 Start에서도 체크
             CheckAndEnableUI(SceneManager.GetActiveScene().name);
 
             if (characterRenderer != null)
@@ -78,35 +62,17 @@ namespace Court
             }
         }
 
-        // ==================================================================================
-        // ★ [핵심] 씬 이름에 따라 UI 끄고 켜기
-        // ==================================================================================
         private void CheckAndEnableUI(string sceneName)
         {
-            // 1. 캔버스가 연결 안 돼있으면 찾기 (안전장치)
-            if (hudCanvas == null)
-            {
-                hudCanvas = GetComponentInChildren<Canvas>(true);
-            }
-
-            // 2. 씬 이름 검사
+            if (hudCanvas == null) hudCanvas = GetComponentInChildren<Canvas>(true);
+            
             if (sceneName.Contains("Court"))
             {
-                // 재판장임 -> UI 켜기
-                if (hudCanvas != null)
-                {
-                    hudCanvas.gameObject.SetActive(true);
-                    Debug.Log($"[View] '{sceneName}' 도착. 재판장 UI를 켭니다.");
-                }
+                if (hudCanvas != null) hudCanvas.gameObject.SetActive(true);
             }
             else
             {
-                // 재판장이 아님 (마을 등) -> UI 끄기! (SetFalse)
-                if (hudCanvas != null)
-                {
-                    hudCanvas.gameObject.SetActive(false);
-                    Debug.Log($"[View] '{sceneName}' 도착. 재판장 UI를 끕니다.");
-                }
+                if (hudCanvas != null) hudCanvas.gameObject.SetActive(false);
             }
         }
 
@@ -119,20 +85,18 @@ namespace Court
         }
 
         // ==================================================================================
-        // ★ 데이터 연결 로직 (기존 유지)
+        // ★ 데이터 연결 (VoteModel)
         // ==================================================================================
         private IEnumerator TryConnectRoutine()
         {
             while (!_isSubscribed)
             {
-                // 모델이나 매니저가 없으면 대기
                 if (VoteModel.Instance == null || PlayerHelperManager.Instance == null)
                 {
                     yield return new WaitForSeconds(1.0f);
                     continue;
                 }
 
-                // 내 인덱스 찾기
                 int foundIndex = VoteModel.Instance.GetPlayerIndex(OwnerId);
 
                 if (foundIndex != -1)
@@ -141,11 +105,9 @@ namespace Court
                     VoteModel.Instance.VoteDataList.OnListChanged += OnVoteDataChanged;
                     _isSubscribed = true;
 
-                    // 연결 성공 시 초기값 갱신
                     if (_myVoteIndex < VoteModel.Instance.VoteDataList.Count)
                     {
-                        int currentDataScore = VoteModel.Instance.GetVoteCount(_myVoteIndex);
-                        UpdateScoreUI(currentDataScore);
+                        UpdateScoreUI(VoteModel.Instance.GetVoteCount(_myVoteIndex));
                     }
                     yield break; 
                 }
@@ -174,20 +136,36 @@ namespace Court
         }
 
         // ==================================================================================
-        // ★ 프리뷰 & 쉐이더 (기존 유지)
+        // ★ [핵심 수정] 프리뷰 기능 (숫자 및 문자열 지원)
         // ==================================================================================
+        
+        // 1. 숫자 입력 (일반적인 경우)
         public void ShowPreview(int damage)
+        {
+            int predictedScore = _realScore + damage;
+            ShowPreviewInternal(predictedScore.ToString());
+        }
+
+        // 2. 문자열 입력 (N 카드 "?" 표시용)
+        public void ShowPreview(string text)
+        {
+            ShowPreviewInternal(text);
+        }
+
+        // 내부 처리 로직 (중복 제거)
+        private void ShowPreviewInternal(string textToDisplay)
         {
             if (_targetMaterial != null) _targetMaterial.SetFloat(outlineProperty, outlineOnValue);
             if (currentVoteText == null) return;
 
-            int predictedScore = _realScore + damage;
-            if (_isPreviewing && currentVoteText.text == predictedScore.ToString()) return;
+            // 이미 같은 텍스트면 애니메이션 생략
+            if (_isPreviewing && currentVoteText.text == textToDisplay) return;
 
             _isPreviewing = true;
-            currentVoteText.text = predictedScore.ToString();
+            currentVoteText.text = textToDisplay;
             currentVoteText.color = previewColor;
             
+            // 펀치 효과
             currentVoteText.transform.DOKill();
             currentVoteText.transform.localScale = Vector3.one;
             currentVoteText.transform.DOPunchScale(Vector3.one * 0.3f, 0.2f, 10, 1f);

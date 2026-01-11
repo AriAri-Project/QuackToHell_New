@@ -190,63 +190,42 @@ public class CardInventoryModel : NetworkBehaviour
     #endregion
     
     
-    #region 증거물 제출 로직 (신규 구현)
+    #region 증거물 제출 로직 
 
-    /// <summary>
-    /// 클라이언트가 선택한 카드 2장을 제출하고 타겟에게 데미지를 줌
-    /// </summary>
     [ServerRpc]
     public void SubmitEvidenceServerRpc(int handIndex1, int handIndex2, ulong targetClientId)
     {
-        // 1. 인덱스 유효성 검사
-        if (handIndex1 < 0 || handIndex1 >= OwnedCards.Count ||
-            handIndex2 < 0 || handIndex2 >= OwnedCards.Count ||
-            handIndex1 == handIndex2)
-        {
-            Debug.LogError($"[Inventory] 잘못된 카드 인덱스 요청: {handIndex1}, {handIndex2}");
-            return;
-        }
+        // 1. 유효성 검사
+        if (handIndex1 < 0 || handIndex1 >= ownedCards.Count ||
+            handIndex2 < 0 || handIndex2 >= ownedCards.Count || handIndex1 == handIndex2) return;
 
-        // 2. 카드 데이터 가져오기
-        // (주의: RemoveAt을 하면 인덱스가 밀리므로 데이터를 먼저 확보)
-        CardItemData card1 = OwnedCards[handIndex1];
-        CardItemData card2 = OwnedCards[handIndex2];
+        CardItemData card1 = ownedCards[handIndex1];
+        CardItemData card2 = ownedCards[handIndex2];
 
-        // 3. 호환성 검사 (서버 보안 검증)
-        if (!CourtGameRules.IsCompatible(card1, card2))
-        {
-            Debug.LogWarning("[Inventory] 호환되지 않는 카드 조합입니다.");
-            return;
-        }
+        // 2. 호환성 검사 (Rules 사용)
+        if (!CourtGameRules.IsCompatible(card1, card2)) return;
 
-        // 4. 점수(데미지) 계산
-        int damage = CourtGameRules.CalculateEvidenceScore(card1, card2);
+        // 3. 타겟 정보 가져오기
+        int currentVote = 0;
+        int targetIndex = VoteModel.Instance.GetPlayerIndex(targetClientId);
+        if (targetIndex != -1) currentVote = VoteModel.Instance.GetVoteCount(targetIndex);
+        else return;
 
-        // 5. VoteModel을 통해 타겟에게 점수 반영
-        if (VoteModel.Instance != null)
-        {
-            VoteModel.Instance.AddVote(targetClientId, damage);
-        }
-        else
-        {
-            Debug.LogError("[Inventory] VoteModel 인스턴스를 찾을 수 없습니다!");
-            return; // 모델 없으면 카드 소모 안 함
-        }
-
-        // 6. 사용한 카드 인벤토리에서 제거
-        // (인덱스가 큰 것부터 지워야 앞쪽 인덱스가 변하지 않음)
-        if (handIndex1 > handIndex2)
-        {
-            OwnedCards.RemoveAt(handIndex1);
-            OwnedCards.RemoveAt(handIndex2);
-        }
-        else
-        {
-            OwnedCards.RemoveAt(handIndex2);
-            OwnedCards.RemoveAt(handIndex1);
-        }
+        // ★ 4. Rules에게 계산 위임! (여기가 핵심 변경점)
+        // CardInventoryModel은 이제 수학을 몰라도 됩니다.
+        int finalDelta = CourtGameRules.CalculateFinalScore(card1, card2, currentVote);
         
-        Debug.Log($"[Server] 카드 제출 완료! 타겟:{targetClientId}, 데미지:{damage}");
+        Debug.Log($"[Server] 카드 사용: Target({targetClientId}), 변동량({finalDelta})");
+
+        // 5. 결과 적용
+        if (VoteModel.Instance != null && finalDelta != 0)
+        {
+            VoteModel.Instance.AddVote(targetClientId, finalDelta);
+        }
+
+        // 6. 카드 소모
+        if (handIndex1 > handIndex2) { ownedCards.RemoveAt(handIndex1); ownedCards.RemoveAt(handIndex2); }
+        else { ownedCards.RemoveAt(handIndex2); ownedCards.RemoveAt(handIndex1); }
     }
 
     #endregion

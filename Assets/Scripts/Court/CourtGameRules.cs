@@ -1,108 +1,152 @@
 using UnityEngine;
+using System.Collections.Generic;
+
+// [DeckManager의 데이터 타입을 사용하기 위한 네임스페이스 확인 필요]
+// CardValue, TierEnum 등이 전역 namespace에 있다면 그대로 사용.
 
 namespace Court
 {
     public static class CourtGameRules
     {
-        public static bool IsCompatible(CardItemData cardA, CardItemData cardB)
+        // ==================================================================================
+        // ★ 1. 공개 API (Presenter와 Model이 사용할 함수들)
+        // ==================================================================================
+
+        /// <summary>
+        /// (서버용) 실제 점수 변동량을 계산합니다. (N카드일 경우 Random 확률 적용)
+        /// </summary>
+        public static int CalculateFinalScore(CardItemData card1, CardItemData card2, int currentTargetVote)
         {
-            // [수정] DeckManager에게 다시 물어볼 필요 없이, 이미 있는 데이터를 씁니다.
-            // (CardItemData 구조체 안에 CardDef가 이미 들어있기 때문)
-            CardDef defA = cardA.cardDef;
-            CardDef defB = cardB.cardDef;
+            // 1. 역할 분담 (누가 기호고 누가 숫자인지)
+            ClassifyCards(card1, card2, out CardItemData opCard, out CardItemData valCard, out bool isNInteraction);
 
-            // [디버그 로그] 확실한 확인을 위해 출력
-            Debug.Log($"[Rule Log] 비교: A[{defA.type}/{defA.tier}/{defA.Value}] vs B[{defB.type}/{defB.tier}/{defB.Value}]");
-
-            // 1. 타입 검사 (숫자 1개 + 연산자 1개 필수)
-            bool hasNumber = defA.type == TypeEnum.Number || defB.type == TypeEnum.Number;
-            bool hasOperator = defA.type == TypeEnum.Operator || defB.type == TypeEnum.Operator;
-
-            if (!hasNumber || !hasOperator) 
-            {
-                Debug.LogError($"[Rule Log] ❌ 타입 조합 탈락! (A:{defA.type}, B:{defB.type}) -> 숫자+기호여야 함");
-                return false; 
-            }
-
-            // 역할 분담
-            CardDef numberDef = (defA.type == TypeEnum.Number) ? defA : defB;
-            CardDef operatorDef = (defA.type == TypeEnum.Operator) ? defA : defB;
-
-            // 2. 특수 카드 ('N') 처리 -> 무조건 통과
-            if (numberDef.subType == SubTypeEnum.N || numberDef.Value == CardValue.N) 
-            {
-                return true; 
-            }
-
-            // 3. 티어별 숫자 범위 검사
-            int numVal = GetIntFromCardValue(numberDef.Value);
+            int numberValue = 0;
             
-            // 값이 이상하면 실패
-            if (numVal == -1)
+            // 2. 숫자 결정 (N이면 확률, 일반이면 고정값)
+            if (isNInteraction)
             {
-                 Debug.LogError($"[Rule Log] ❌ 알 수 없는 숫자 값입니다: {numberDef.Value}");
-                 return false;
+                numberValue = ResolveNCardValue(opCard); // 기호 등급에 따라 랜덤 결정
+            }
+            else
+            {
+                numberValue = GetNumberValue(valCard);
             }
 
-            switch (operatorDef.tier)
+            // 3. 연산 수행 (기호와 숫자로 최종 변동량 계산)
+            string op = GetOperatorType(opCard);
+            return CalculateDelta(currentTargetVote, op, numberValue);
+        }
+
+        /// <summary>
+        /// (클라이언트 프리뷰용) N 카드가 포함된 조합인지 확인합니다.
+        /// </summary>
+        public static bool IsUnknownResult(CardItemData card1, CardItemData card2)
+        {
+            return IsNCard(card1) || IsNCard(card2);
+        }
+
+        /// <summary>
+        /// (클라이언트 프리뷰용) 일반 카드 조합일 때 예측 점수(변동량)를 계산합니다.
+        /// </summary>
+        public static int CalculatePreviewScore(CardItemData card1, CardItemData card2, int currentTargetVote)
+        {
+            if (IsUnknownResult(card1, card2)) return 0; // N카드는 계산 불가
+
+            return CalculateFinalScore(card1, card2, currentTargetVote);
+        }
+
+        /// <summary>
+        /// 두 카드가 호환되는지 검사 (기존 로직 유지)
+        /// </summary>
+        public static bool IsCompatible(CardItemData card1, CardItemData card2)
+        {
+            bool hasOp = IsOperatorCard(card1) || IsOperatorCard(card2);
+            bool hasNum = IsNumberCard(card1) || IsNumberCard(card2);
+            bool hasN = IsNCard(card1) || IsNCard(card2);
+
+            // 기호 + 숫자  OR  기호 + N  조합만 가능
+            return hasOp && (hasNum || hasN);
+        }
+
+        // ==================================================================================
+        // ★ 2. 내부 로직 (규칙 구현부)
+        // ==================================================================================
+
+        private static void ClassifyCards(CardItemData c1, CardItemData c2, out CardItemData opCard, out CardItemData valCard, out bool isN)
+        {
+            if (IsOperatorCard(c1)) { opCard = c1; valCard = c2; }
+            else { opCard = c2; valCard = c1; }
+            
+            isN = IsNCard(valCard);
+        }
+
+        // --- 값 식별 헬퍼 (DeckManager Enums 사용) ---
+        private static bool IsOperatorCard(CardItemData card) => card.cardDef.type == TypeEnum.Operator;
+        private static bool IsNumberCard(CardItemData card) => card.cardDef.type == TypeEnum.Number;
+        private static bool IsNCard(CardItemData card) => card.cardDef.Value == CardValue.N; // 혹은 SubTypeEnum.N
+
+        private static int GetNumberValue(CardItemData card)
+        {
+            if (card.cardDef.Value >= CardValue.V0 && card.cardDef.Value <= CardValue.V6)
+                return (int)card.cardDef.Value;
+            return 0;
+        }
+
+        private static string GetOperatorType(CardItemData card)
+        {
+            switch (card.cardDef.Value)
             {
-                case TierEnum.Common: // 동색: 1 ~ 2만 가능
-                    if (numVal >= 1 && numVal <= 2) return true;
-                    Debug.LogError($"[Rule Log] ❌ Common(동) 연산자는 1, 2만 가능. (현재: {numVal})");
-                    return false;
+                case CardValue.ADD: return "+";
+                case CardValue.SUB: return "-";
+                case CardValue.MULT: return "x";
+                case CardValue.DIV: return "/";
+                default: return "+";
+            }
+        }
 
-                case TierEnum.Rare:   // 은색: 1 ~ 4만 가능
-                    if (numVal >= 1 && numVal <= 4) return true;
-                    Debug.LogError($"[Rule Log] ❌ Rare(은) 연산자는 1~4만 가능. (현재: {numVal})");
-                    return false;
-
-                case TierEnum.Special:// 금색: 0 ~ 6 모두 가능
-                    if (numVal >= 0 && numVal <= 6) return true;
-                    Debug.LogError($"[Rule Log] ❌ Special(금) 범위 오류. (현재: {numVal})");
-                    return false;
-
+        // --- 확률 로직 (N 카드) ---
+        private static int ResolveNCardValue(CardItemData opCard)
+        {
+            // 기호 카드의 등급(Tier)에 따라 범위 결정
+            // Common=Bronze, Rare=Silver, Special=Gold
+            switch (opCard.cardDef.tier)
+            {
+                case TierEnum.Special: // Gold
+                    return Random.Range(0, 7); // 0~6
+                
+                case TierEnum.Rare:    // Silver
+                    return Random.Range(1, 5); // 1~4
+                
+                case TierEnum.Common:  // Bronze
                 default:
-                    Debug.LogError($"[Rule Log] ❌ 알 수 없는 티어: {operatorDef.tier}");
-                    return false;
+                    return Random.Range(1, 3); // 1~2
             }
         }
 
-        public static int CalculateEvidenceScore(CardItemData cardA, CardItemData cardB)
+        // --- 최종 연산 로직 (Delta 계산) ---
+        private static int CalculateDelta(int current, string op, int val)
         {
-            // 여기도 똑같이 수정: DeckManager 조회 제거
-            CardDef defA = cardA.cardDef;
-            CardDef defB = cardB.cardDef;
+            int finalResult = current;
 
-            var numDef = (defA.type == TypeEnum.Number) ? defA : defB;
-            var opDef = (defA.type == TypeEnum.Operator) ? defA : defB;
-
-            int baseValue = GetIntFromCardValue(numDef.Value);
-            if (baseValue < 0) baseValue = 0; 
-
-            int multiplier = 1;
-            switch (opDef.tier)
+            switch (op)
             {
-                case TierEnum.Common:  multiplier = 1; break;
-                case TierEnum.Rare:    multiplier = 2; break;
-                case TierEnum.Special: multiplier = 3; break;
+                case "+": finalResult = current + val; break;
+                case "-": finalResult = current - val; break;
+                
+                case "x": 
+                case "*":
+                    if (val == 0) finalResult = 0; // x0 무효화
+                    else finalResult = current * val;
+                    break;
+                
+                case "/": 
+                case "÷":
+                    if (val == 0) finalResult = current + 10; // ÷0 패널티
+                    else finalResult = current / val;
+                    break;
             }
 
-            return baseValue * multiplier;
-        }
-
-        private static int GetIntFromCardValue(CardValue value)
-        {
-            switch (value)
-            {
-                case CardValue.V0: return 0;
-                case CardValue.V1: return 1;
-                case CardValue.V2: return 2;
-                case CardValue.V3: return 3;
-                case CardValue.V4: return 4;
-                case CardValue.V5: return 5;
-                case CardValue.V6: return 6;
-                default: return -1;
-            }
+            return finalResult - current; // 변동량 반환
         }
     }
 }
