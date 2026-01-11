@@ -19,7 +19,7 @@ public class SabotageNetworkManager : NetworkBehaviour
     public float sabotageDuration = 8f;
 
     [Header("ForcedInteract 제한 시간(초)")]
-    public float forcedInteractLimit = 20f;
+    public float forcedInteractLimit = 10f;
 
     [Header("ForcedInteract 타깃 아이템 (NetworkObject)")]
     public NetworkObject forcedTargetItem;
@@ -153,6 +153,19 @@ public class SabotageNetworkManager : NetworkBehaviour
         forcedRoutine = StartCoroutine(ForcedInteractRoutine());
     }
 
+    private void TryAllKillServer()
+    {
+        if (!IsServer) return;
+
+        if (GameManager.Instance == null)
+        {
+            Debug.LogWarning("[Sabotage] GameManager.Instance is null. AllKillServer not called.");
+            return;
+        }
+
+        GameManager.Instance.AllKillServer();
+    }
+
     private IEnumerator ForcedInteractRoutine()
     {
         float t = 0f;
@@ -167,10 +180,11 @@ public class SabotageNetworkManager : NetworkBehaviour
         forcedActive = false;
         TriggerForcedInteractStateClientRpc(false);
 
-        // 임시: 전원 사망 대신 "실패했습니다" 문구만 띄우기
+        TriggerForcedInteractStateClientRpc(false);
+
         ShowMessageAllClientRpc("실패했습니다");
 
-        // TODO: 나중에 여기서 전원 사망 처리 연결
+        TryAllKillServer();
 
         forcedRoutine = null;
     }
@@ -233,7 +247,7 @@ public class SabotageNetworkManager : NetworkBehaviour
         // 시작 시 안내 문구
         if (active && visualController != null)
         {
-            visualController.ShowCenterMessage($"사보타지 발생! {forcedInteractLimit:0}초 안에 타깃 아이템과 상호작용!", 2.5f);
+            visualController.ShowCenterMessage($"사보타지 발생! 10초 안에 타깃 아이템과 상호작용!", 2.5f);
         }
     }
 
