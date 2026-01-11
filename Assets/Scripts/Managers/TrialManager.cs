@@ -3,6 +3,9 @@ using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
+using System.Collections.Generic;
+using System.Linq;
+using Court;
 
 public class TrialManager : NetworkBehaviour
 {
@@ -110,6 +113,8 @@ public class TrialManager : NetworkBehaviour
         //5초뒤 씬 이동
         Invoke("LoadCourtScene", 5f);
     }
+    
+    
 
     private void LoadCourtScene()
     {
@@ -164,4 +169,49 @@ public class TrialManager : NetworkBehaviour
             }
         }
     }
+
+    #region 재판 진입 후 관리 (서현)
+
+    public PlayerTrialState LocalPlayer { get; private set; }
+    private List<PlayerTrialState> _allPlayers = new List<PlayerTrialState>();
+    
+    public void SetLocalPlayer(PlayerTrialState player)
+    {
+        LocalPlayer = player;
+    }
+
+    public void RegisterPlayer(PlayerTrialState player)
+    {
+        if (!_allPlayers.Contains(player)) _allPlayers.Add(player);
+    }
+
+    public void UnregisterPlayer(PlayerTrialState player)
+    {
+        if (_allPlayers.Contains(player)) _allPlayers.Remove(player);
+    }
+
+    /// <summary>
+    /// 서버 전용: 모든 플레이어가 발언을 마쳤는지 확인
+    /// </summary>
+    public void CheckAllPlayersEnded()
+    {
+        if (!IsServer) return;
+        if (_allPlayers.Count == 0) return;
+
+        // 모든 플레이어의 HasEndedSpeech가 true인지 검사
+        bool isAllEnded = _allPlayers.All(p => p.HasEndedSpeech.Value);
+
+        if (isAllEnded)
+        {
+            EndTrial();
+        }
+    }
+    
+    private void EndTrial()
+    {
+        Debug.Log("<color=yellow>[TrialManager] 모든 플레이어 발언 종료! 처형 대상 선정 단계로 진입합니다.</color>");
+        // TODO: 처형 씬 전환 또는 투표 결과 집계 로직 호출
+    }
+
+    #endregion
 }

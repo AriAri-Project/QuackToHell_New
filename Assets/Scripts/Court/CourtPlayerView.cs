@@ -33,9 +33,7 @@ namespace Court
         
         private Material _targetMaterial;
 
-        // ==================================================================================
-        // ★ 씬 로딩 및 초기화
-        // ==================================================================================
+        // --- (초기화 및 연결 로직 생략, 기존과 동일) ---
         private void OnEnable() => SceneManager.sceneLoaded += OnSceneLoaded;
         private void OnDisable() => SceneManager.sceneLoaded -= OnSceneLoaded;
         private void OnSceneLoaded(Scene scene, LoadSceneMode mode) => CheckAndEnableUI(scene.name);
@@ -49,17 +47,12 @@ namespace Court
         private void Start()
         {
             CheckAndEnableUI(SceneManager.GetActiveScene().name);
-
             if (characterRenderer != null)
             {
                 _targetMaterial = characterRenderer.material;
                 _targetMaterial.SetFloat(outlineProperty, 0f);
             }
-
-            if (currentVoteText)
-            {
-                currentVoteText.text = _realScore.ToString();
-            }
+            if (currentVoteText) currentVoteText.text = _realScore.ToString();
         }
 
         private void CheckAndEnableUI(string sceneName)
@@ -84,9 +77,6 @@ namespace Court
             }
         }
 
-        // ==================================================================================
-        // ★ 데이터 연결 (VoteModel)
-        // ==================================================================================
         private IEnumerator TryConnectRoutine()
         {
             while (!_isSubscribed)
@@ -136,36 +126,38 @@ namespace Court
         }
 
         // ==================================================================================
-        // ★ [핵심 수정] 프리뷰 기능 (숫자 및 문자열 지원)
+        // ★ [핵심 수정] 프리뷰 0 미만 방지
         // ==================================================================================
         
-        // 1. 숫자 입력 (일반적인 경우)
         public void ShowPreview(int damage)
         {
             int predictedScore = _realScore + damage;
+
+            // ★ 0점 미만이면 0점으로 고정 (Clamp)
+            if (predictedScore < 0) 
+            {
+                predictedScore = 0;
+            }
+
             ShowPreviewInternal(predictedScore.ToString());
         }
 
-        // 2. 문자열 입력 (N 카드 "?" 표시용)
         public void ShowPreview(string text)
         {
             ShowPreviewInternal(text);
         }
 
-        // 내부 처리 로직 (중복 제거)
         private void ShowPreviewInternal(string textToDisplay)
         {
             if (_targetMaterial != null) _targetMaterial.SetFloat(outlineProperty, outlineOnValue);
             if (currentVoteText == null) return;
 
-            // 이미 같은 텍스트면 애니메이션 생략
             if (_isPreviewing && currentVoteText.text == textToDisplay) return;
 
             _isPreviewing = true;
             currentVoteText.text = textToDisplay;
             currentVoteText.color = previewColor;
             
-            // 펀치 효과
             currentVoteText.transform.DOKill();
             currentVoteText.transform.localScale = Vector3.one;
             currentVoteText.transform.DOPunchScale(Vector3.one * 0.3f, 0.2f, 10, 1f);

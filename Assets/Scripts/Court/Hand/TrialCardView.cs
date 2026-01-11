@@ -10,8 +10,8 @@ namespace Court.Hand
     {
         [Header("Visual References")]
         public Transform visualContainer; 
-        public Image selectionBorder;     // 선택 시 켜질 초록색 테두리
-        public Image dimPanel;            // 비활성 시 켜질 검은 반투명 패널
+        public Image selectionBorder;     
+        public Image dimPanel;            
 
         // 데이터
         public int InventoryIndex { get; private set; }
@@ -31,23 +31,29 @@ namespace Court.Hand
         private bool _isShaking = false;
         private Vector3 _shakeOffset = Vector3.zero;
 
+        // ★ 외부에서 자동 정렬 기능을 켜고 끄는 스위치 (발언 마치기 카드용)
+        public bool IsAutoLayoutEnabled { get; set; } = true;
+
         public void Initialize(CardItemData data, int index, GameObject visualPrefab)
         {
             this.Data = data;
             this.InventoryIndex = index;
 
-            // 비주얼 생성 및 부착
-            visualPrefab.transform.SetParent(visualContainer, false);
-            visualPrefab.transform.localPosition = Vector3.zero;
-            visualPrefab.transform.localRotation = Quaternion.identity;
-            visualPrefab.transform.localScale = Vector3.one;
-            
-            var canvasGroup = visualPrefab.GetOrAddComponent<CanvasGroup>();
-            canvasGroup.blocksRaycasts = false; 
-            
-            // 초기화: 모두 끄기
-            if(selectionBorder) selectionBorder.gameObject.SetActive(false);
-            if(dimPanel) dimPanel.gameObject.SetActive(false);
+            if (visualPrefab != null)
+            {
+                visualPrefab.transform.SetParent(visualContainer, false);
+                visualPrefab.transform.localPosition = Vector3.zero;
+                visualPrefab.transform.localRotation = Quaternion.identity;
+                visualPrefab.transform.localScale = Vector3.one;
+                
+                // 캔버스 그룹이 있다면 레이캐스트 차단 해제 (클릭 통과 방지)
+                var canvasGroup = visualPrefab.GetComponent<CanvasGroup>();
+                if (canvasGroup == null) canvasGroup = visualPrefab.AddComponent<CanvasGroup>();
+                canvasGroup.blocksRaycasts = false; 
+            }
+
+            if (selectionBorder) selectionBorder.gameObject.SetActive(false);
+            if (dimPanel) dimPanel.gameObject.SetActive(false);
         }
 
         public void SetTargetState(Vector3 pos, Quaternion rot, float scale)
@@ -57,39 +63,25 @@ namespace Court.Hand
             _targetScale = scale;
         }
 
-        /// <summary>
-        /// 카드의 시각적 상태 설정 (선택됨 / 비활성화됨)
-        /// </summary>
+        // ★ [수정됨] Presenter에서 호출하는 이름에 맞춰 통합
         public void SetVisualState(bool isSelected, bool isDisabled)
         {
-            // 1. 선택 테두리 제어
-            if (selectionBorder) 
+            // 1. 선택 테두리
+            if (selectionBorder) selectionBorder.gameObject.SetActive(isSelected);
+
+            // 2. 딤 패널 (선택된 카드는 절대 어둡게 하지 않음)
+            if (dimPanel)
             {
-                selectionBorder.gameObject.SetActive(isSelected);
-            }
-            
-            // 2. 어두운 패널(Dim) 제어
-            if (dimPanel) 
-            {
-                // 선택된 카드는 절대 어둡게 하지 않음
-                if (isSelected)
-                {
-                    dimPanel.gameObject.SetActive(false);
-                }
-                else
-                {
-                    // 선택 안 된 카드 중, 호환 안 되는 녀석만 켬
-                    dimPanel.gameObject.SetActive(isDisabled);
-                }
+                if (isSelected) dimPanel.gameObject.SetActive(false);
+                else dimPanel.gameObject.SetActive(isDisabled);
             }
         }
-        
-        /// <summary>
-        /// 덜덜 떨리는 효과 (선택 불가 피드백)
-        /// </summary>
+
+        // ★ [수정됨] 이름 변경 (PlayShakeEffect -> TriggerShake)
         public void TriggerShake()
         {
-            if (!_isShaking) StartCoroutine(ShakeRoutine());
+            StopAllCoroutines();
+            StartCoroutine(ShakeRoutine());
         }
 
         private IEnumerator ShakeRoutine()
@@ -115,6 +107,9 @@ namespace Court.Hand
 
         private void Update()
         {
+            // 스위치가 꺼져있으면 위치 강제 이동 안 함 (드래그 중)
+            if (!IsAutoLayoutEnabled) return;
+
             float dt = Time.deltaTime * 12f;
             
             Vector3 finalPos = Vector3.Lerp(transform.localPosition, _targetPos, dt);
@@ -129,5 +124,5 @@ namespace Court.Hand
         public void OnPointerEnter(PointerEventData eventData) => OnHoverEnter?.Invoke(this);
         public void OnPointerExit(PointerEventData eventData) => OnHoverExit?.Invoke(this);
         public void OnPointerClick(PointerEventData eventData) => OnClick?.Invoke(this);
-    }    
+    }
 }

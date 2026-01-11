@@ -176,6 +176,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9fdb267d285ba734f92a9a82d36447ed, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  voteNumberText: {fileID: 0}
+  voteRankingText: {fileID: 0}
+  timeSlider: {fileID: 0}
 --- !u!114 &19944768
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3145,6 +3148,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   trialCardContainerPrefab: {fileID: 7466862056052520862, guid: fd90af95256be964fa1cbd6db2017784, type: 3}
+  endSpeechCardPrefab: {fileID: 7466862056052520862, guid: 00435749c09fe034bac56041cbee0b59, type: 3}
   handPivot: {fileID: 7314195961895984592}
   cardsParent: {fileID: 4131692492756262910}
   arrowController: {fileID: 1564859013}
@@ -3171,7 +3175,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: -2000}
+  m_AnchoredPosition: {x: 0, y: -1950}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1660057539 &9223372036854775807

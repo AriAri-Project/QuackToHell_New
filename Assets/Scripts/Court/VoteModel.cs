@@ -1,93 +1,112 @@
-using System;
-using Unity.Netcode;
 using UnityEngine;
-using System.Collections.Generic;
+using Unity.Netcode;
+using System;
 
 namespace Court
 {
+    public struct VoteData : INetworkSerializable, IEquatable<VoteData>
+    {
+        public ulong clientId;
+        public int count;
+
+        public void NetworkSerialize<T>(BufferSerializer<T> serializer) where T : IReaderWriter
+        {
+            serializer.SerializeValue(ref clientId);
+            serializer.SerializeValue(ref count);
+        }
+
+        public bool Equals(VoteData other) => clientId == other.clientId && count == other.count;
+    }
+
     public class VoteModel : NetworkBehaviour
     {
-        public static VoteModel Instance => SingletonHelper<VoteModel>.Instance;
+        public static VoteModel Instance;
 
-        // Presenter가 구독할 수 있도록 공개 (읽기 전용)
-        public NetworkList<VoteData> VoteDataList => _voteDataList;
-        
-        private NetworkList<VoteData> _voteDataList;
+        public NetworkList<VoteData> VoteDataList;
 
         private void Awake()
         {
-            SingletonHelper<VoteModel>.InitializeSingleton(this, false);
-            _voteDataList = new NetworkList<VoteData>(
-                readPerm: NetworkVariableReadPermission.Everyone,
-                writePerm: NetworkVariableWritePermission.Server
-            );
+            Instance = this;
+            VoteDataList = new NetworkList<VoteData>();
         }
 
         public override void OnNetworkSpawn()
         {
             if (IsServer)
             {
-                InitializeVoteList();
+                InitializeVoters();
+                NetworkManager.Singleton.OnClientConnectedCallback += OnClientConnected;
             }
         }
 
-        private void InitializeVoteList()
+        public override void OnNetworkDespawn()
         {
-            _voteDataList.Clear();
-            // 전체 플레이어 수만큼 슬롯 생성 (초기값 1)
-            int playerSize = PlayerHelperManager.Instance.GetAllPlayers<NetworkBehaviour>().Length;
-            for (int i = 0; i < playerSize; i++)
+            if (IsServer)
             {
-                _voteDataList.Add(new VoteData { count = 1 });
+                NetworkManager.Singleton.OnClientConnectedCallback -= OnClientConnected;
             }
         }
 
-        // --- 서버 로직 ---
+        private void OnClientConnected(ulong clientId)
+        {
+            if (GetPlayerIndex(clientId) == -1)
+            {
+                // ★ [수정 1] 접속 시 초기 점수 1점 부여
+                VoteDataList.Add(new VoteData { clientId = clientId, count = 1 });
+            }
+        }
 
-        /// <summary>
-        /// (서버) 특정 플레이어(ClientId)에게 투표수 추가
-        /// </summary>
-        public void AddVote(ulong targetClientId, int amount)
+        private void InitializeVoters()
+        {
+            VoteDataList.Clear();
+            foreach (var client in NetworkManager.Singleton.ConnectedClientsList)
+            {
+                // ★ [수정 2] 초기화 시 점수 1점 부여
+                VoteDataList.Add(new VoteData { clientId = client.ClientId, count = 1 });
+            }
+        }
+
+        public void AddVote(ulong targetClientId, int delta)
         {
             if (!IsServer) return;
 
             int index = GetPlayerIndex(targetClientId);
             if (index != -1)
             {
-                // NetworkList는 구조체 값 수정 시, 다시 대입해야 변경 감지됨
-                VoteData data = _voteDataList[index];
-                data.count += amount;
-                _voteDataList[index] = data; 
+                VoteData data = VoteDataList[index];
+                int oldScore = data.count;
+                int newScore = oldScore + delta;
                 
-                Debug.Log($"[VoteModel] {targetClientId}번(Index:{index}) 투표수 증가: +{amount} (총 {data.count})");
+                // 0점 미만 방지
+                if (newScore < 0) newScore = 0;
+
+                data.count = newScore;
+                VoteDataList[index] = data;
+
+                Debug.Log($"[VoteModel] 득표수 갱신! 타겟:{targetClientId}, 변동:{delta}, 최종:{newScore}");
+            }
+            else
+            {
+                Debug.LogWarning($"[VoteModel] 타겟({targetClientId})을 리스트에서 찾을 수 없습니다.");
             }
         }
 
-        /// <summary>
-        /// ClientId로 리스트 내 인덱스를 찾는 헬퍼 함수
-        /// </summary>
         public int GetPlayerIndex(ulong clientId)
         {
-            var players = PlayerHelperManager.Instance.GetAllPlayers<NetworkBehaviour>();
-            for (int i = 0; i < players.Length; i++)
+            for (int i = 0; i < VoteDataList.Count; i++)
             {
-                if (players[i].OwnerClientId == clientId) return i;
+                if (VoteDataList[i].clientId == clientId) return i;
             }
             return -1;
         }
 
         public int GetVoteCount(int index)
         {
-            if (index >= 0 && index < _voteDataList.Count) return _voteDataList[index].count;
+            if (index >= 0 && index < VoteDataList.Count)
+            {
+                return VoteDataList[index].count;
+            }
             return 0;
         }
     }
-}
-
-[System.Serializable]
-public struct VoteData : INetworkSerializable, IEquatable<VoteData>
-{
-    public int count;
-    public void NetworkSerialize<T>(BufferSerializer<T> serializer) where T : IReaderWriter => serializer.SerializeValue(ref count);
-    public bool Equals(VoteData other) => count == other.count;
 }
