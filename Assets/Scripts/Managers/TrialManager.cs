@@ -141,7 +141,7 @@ public class TrialManager : NetworkBehaviour
         PlayerModel reporterModel = PlayerHelperManager.Instance.GetPlayerModelByClientId(reporterClientId);
         PlayerAppearanceData playerAppearanceData = reporterModel.PlayerAppearanceData.Value;
         int colorIndex = playerAppearanceData.ColorIndex;
-        reporterImage.color = ColorUtils.GetColorByIndex(colorIndex);               
+        reporterImage.color = AppearanceUtils.GetColorByIndex(colorIndex);               
         
     }
 

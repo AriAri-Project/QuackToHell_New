@@ -11,6 +11,7 @@ public class LobbyClosetPopup : UIPopup
     enum Dropdowns
     {
         Dropdown_Color,
+        Dropdown_Skill
     }
 
     enum InputFields
@@ -25,6 +26,8 @@ public class LobbyClosetPopup : UIPopup
 
     
     private TMP_Dropdown colorDropdown;
+    private TMP_Dropdown skillDropdown;
+    
     private TMP_InputField nicknameSettingInputField;
     
     private PlayerModel playerModel;
@@ -38,6 +41,8 @@ public class LobbyClosetPopup : UIPopup
         Bind<TMP_Dropdown>(typeof(Dropdowns));
         colorDropdown = Get<TMP_Dropdown>((int)Dropdowns.Dropdown_Color);
         colorDropdown.onValueChanged.AddListener(OnColorDropdownButton);
+        skillDropdown =  Get<TMP_Dropdown>((int)Dropdowns.Dropdown_Skill);
+        skillDropdown.onValueChanged.AddListener(OnSkillDropdownButton);
         
         Bind<TMP_InputField>(typeof(InputFields));
         nicknameSettingInputField = Get<TMP_InputField>((int)InputFields.NicknameSettingInputField);
@@ -57,6 +62,14 @@ public class LobbyClosetPopup : UIPopup
     private void OnColorDropdownButton(Int32 colorIndex)
     {
         PlayerHelperManager.Instance.GetPlayerModelByClientId(NetworkManager.Singleton.LocalClientId).ChangeColorServerRpc(colorIndex, NetworkManager.Singleton.LocalClientId);
+    }
+
+    private void OnSkillDropdownButton(Int32 skillIndex)
+    {
+        //플레이어 farmer strategy에 스킬을 저장
+        ulong localClientId = NetworkManager.Singleton.LocalClientId;
+        FarmerStrategy farmerStrategy = PlayerHelperManager.Instance.GetPlayerGameObjectByClientId(localClientId).GetComponent<FarmerStrategy>();
+        farmerStrategy.ChangeSkillServerRpc(skillIndex);
     }
     
     private void OnClick_XButton(PointerEventData data)

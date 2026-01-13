@@ -1,29 +1,24 @@
+using Unity.Collections;
 using Unity.Netcode;
 using UnityEngine;
+using UnityEngine.Diagnostics;
 using UnityEngine.InputSystem;
 public class PlayerDeadState : NetworkStateBase
 {
     [SerializeField] private GameObject head;
     [SerializeField] private Animator animator;
-    public AudioSource deathSFX;
 
     [SerializeField]
     private PlayerModel playerModel;
     
-   
+    
     public override void OnStateEnter()
     {
         head.SetActive(false);
         //애니메이션 on
         TriggerWalkAnimation();
-        //죽으면 이펙트 
-        //Assets/Resources/Prefabs/FX_PF_Electricity_AreaExplosion_Blue.prefab
-        GameObject effect = Resources.Load<GameObject>("Prefabs/FX_PF_Electricity_AreaExplosion_Blue");
-        if (IsOwner)
-        {
-            Instantiate(effect,transform.position,Quaternion.identity);   
-            SoundManager.Instance.SFXPlay(deathSFX.name, deathSFX.clip);
-        }
+        
+        
         //모든플레이어의 가시성 업뎃
         UpdateVisibilityForAllPlayers();
     }
@@ -91,4 +86,18 @@ public class PlayerDeadState : NetworkStateBase
     {
     }
 
+    [ClientRpc]
+    public void KilledClientRpc(FixedString128Bytes skillPrefabPath, ClientRpcParams rpcParams = default)
+    {
+        //죽으면 이펙트 
+        GameObject effect = Resources.Load<GameObject>(skillPrefabPath.Value);
+        if (IsOwner)
+        {
+            Instantiate(effect,transform.position,Quaternion.identity);
+            AudioSource audioSource = GameObjectUtils.GetOrAddComponent<AudioSource>(this.gameObject);
+            audioSource.playOnAwake = false;
+            audioSource.clip = Resources.Load<AudioClip>("Audio/Die");
+            SoundManager.Instance.SFXPlay(audioSource.clip.name, audioSource.clip);
+        }
+    }
 }

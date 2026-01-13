@@ -241,7 +241,7 @@ public class GameManager : NetworkBehaviour
                 //플레이어 색상 할당
                 Image playerColor =  playerUI.GetComponentInChildren<Image>();
                 int playerColorIndex = player.GetPlayerColorIndex();
-                playerColor.color = ColorUtils.GetColorByIndex(playerColorIndex);
+                playerColor.color = AppearanceUtils.GetColorByIndex(playerColorIndex);
                 i++;
             }
             

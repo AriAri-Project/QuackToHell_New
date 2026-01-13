@@ -3,6 +3,7 @@ using UnityEngine.InputSystem;
 using Unity.Netcode;
 using System.Collections.Generic;
 using System;
+using Unity.Collections;
 using UnityEngine.PlayerLoop;
 
 /// <summary>
@@ -11,6 +12,8 @@ using UnityEngine.PlayerLoop;
 /// </summary>
 public class FarmerStrategy : NetworkBehaviour, IRoleStrategy
 {
+
+    
     public event Action OnKillSuccess;
     public event Action OnSavotageSuccess;
     public event Action OnKillCooldownReady;
@@ -50,6 +53,11 @@ public class FarmerStrategy : NetworkBehaviour, IRoleStrategy
     {
         get { return interatingVentNetworkId; }
     }
+
+    /// <summary>
+    /// Server전용 변수
+    /// </summary>
+    private NetworkVariable<FixedString128Bytes>  mySkillPath=new NetworkVariable<FixedString128Bytes>("Prefabs/FX_PF_Electricity_AreaExplosion_Blue");
     
 
     public void Initialize(PlayerModel playerModel, PlayerPresenter playerPresenter, PlayerInput playerInput)
@@ -103,11 +111,6 @@ public class FarmerStrategy : NetworkBehaviour, IRoleStrategy
             }
         }
         
-        //test 테스트로직
-        if (Input.GetKeyDown(KeyCode.K))
-        {
-            AllKillServerRpc();
-        }
     }
     
     // 0. 외부 인터페이스
@@ -221,6 +224,17 @@ public class FarmerStrategy : NetworkBehaviour, IRoleStrategy
         { 
             Send = new ClientRpcSendParams { TargetClientIds = new[] { requesterClientId } } 
         });
+        
+        //죽은 애에게 KilledClientRpc전송
+        PlayerDeadState playerDeadState = targetPlayerModel.GetComponent<PlayerDeadState>();
+        ClientRpcParams clientRpcParams = new ClientRpcParams()
+        {
+            Send = new ClientRpcSendParams
+            {
+                TargetClientIds = new[] { targetNetworkObjectId }
+            }
+        };
+        playerDeadState.KilledClientRpc(PlayerHelperManager.Instance.GetPlayerGameObjectByClientId(requesterClientId).GetComponent<FarmerStrategy>().mySkillPath.Value, clientRpcParams);
     }
     
     /// <summary>
@@ -256,6 +270,15 @@ public class FarmerStrategy : NetworkBehaviour, IRoleStrategy
         }
     }
     
+    //스킬지정
+    [ServerRpc]
+    public void ChangeSkillServerRpc(Int32 skillIndex,ServerRpcParams rpcParams = default)
+    {
+        ulong senderId= rpcParams.Receive.SenderClientId;
+        //스킬 저장
+        PlayerHelperManager.Instance.GetPlayerGameObjectByClientId(senderId).GetComponent<FarmerStrategy>().mySkillPath.Value = AppearanceUtils.GetSkillPathByIndex(skillIndex);
+    }
+    
     #region Ability 구현 (다형성)
     
 
@@ -275,6 +298,19 @@ public class FarmerStrategy : NetworkBehaviour, IRoleStrategy
             return;
         }
         _playerView?.RemoveDeadPlayerFromOverlappingPlayers(targetPlayer);
+        
+        //죽인 애 위치에서 스킬 재생
+        GameObject effect = Resources.Load<GameObject>(mySkillPath.Value.ToString());
+        if (IsOwner)
+        {
+            Instantiate(effect,targetPlayer.transform.position,Quaternion.identity);
+            AudioSource audioSource = GameObjectUtils.GetOrAddComponent<AudioSource>(this.gameObject);
+            audioSource.playOnAwake = false;
+            audioSource.clip = Resources.Load<AudioClip>("Audio/Die");
+            SoundManager.Instance.SFXPlay(audioSource.clip.name, audioSource.clip);
+        }
+        
+        
     }
 
     [ClientRpc]

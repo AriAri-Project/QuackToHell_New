@@ -544,7 +544,7 @@ public class PlayerView : NetworkBehaviour
         {
             if (spriteRenderer.gameObject.name.Contains("Body"))
             {
-                spriteRenderer.color = ColorUtils.GetColorByIndex(colorIndex);
+                spriteRenderer.color = AppearanceUtils.GetColorByIndex(colorIndex);
             }
 
             Color color = spriteRenderer.color;
