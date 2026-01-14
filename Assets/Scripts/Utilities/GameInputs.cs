@@ -24,5 +24,6 @@ public static class GameInputs
         public const string Vent = "Vent";      
         public const string Report = "Report";
         public const string Kill = "Kill";
+        public const string Close = "Close";
     }
 }

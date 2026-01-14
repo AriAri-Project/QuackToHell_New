@@ -345,6 +345,11 @@ public class PlayerView : NetworkBehaviour
         InputAction savotageAction = playerInput.actions[$"{GameInputs.ActionMaps.Farmer}/{GameInputs.Actions.Savotage}"];
         DebugUtils.AssertNotNull(savotageAction, "SavotageAction", this);
         savotageAction.performed += OnSavotageInput;
+        
+        //close 입력 추가(esc키)
+        InputAction escAction = playerInput.actions[$"{GameInputs.ActionMaps.Player}/{GameInputs.Actions.Close}"];
+        DebugUtils.AssertNotNull(escAction, "EscapeAction", this);
+        escAction.performed += OnESCInput;
 
     }
     
@@ -576,6 +581,16 @@ public class PlayerView : NetworkBehaviour
         if (!IsOwner) return;
         
         OnSavotageTryInput?.Invoke();
+    }
+
+    private void OnESCInput(InputAction.CallbackContext context)
+    {
+        if (!IsOwner) return;
+        //팝업창이 존재할 시 최상단 팝업창 닫기
+        if (UIManager.Instance.PopupStack.Count > 0)
+        {
+            UIManager.Instance.ClosePopupUI();
+        }
     }
 
     #region Interact (Input System) - 모든 사람 가능 (Ghost 제외)
