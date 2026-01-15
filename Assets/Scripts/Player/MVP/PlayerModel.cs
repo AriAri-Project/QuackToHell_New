@@ -28,7 +28,7 @@ public class PlayerModel : NetworkBehaviour
     private PlayerWalkState walkStateComponent;
     private PlayerDeadState deadStateComponent;
     private PlayerAliveState aliveStateComponent;
-    private PlayerVentEnterState ventEnterStateComponent;
+    private PlayerVentState _ventStateComponent;
     
     private RoleController _roleController;
 
@@ -53,7 +53,7 @@ public class PlayerModel : NetworkBehaviour
         walkStateComponent = GetComponent<PlayerWalkState>();
         aliveStateComponent = GetComponent<PlayerAliveState>();
         deadStateComponent = GetComponent<PlayerDeadState>();
-        ventEnterStateComponent = GetComponent<PlayerVentEnterState>();
+        _ventStateComponent = GetComponent<PlayerVentState>();
         
         //내가 owner가 아니면 light 2d component삭제
         if (!IsOwner)
@@ -174,6 +174,10 @@ public class PlayerModel : NetworkBehaviour
         }
     }
     
+    /// <summary>
+    /// Player view 의 SetIgnorePlayerMoveInputServerRpc전용 호출 함수.
+    /// Playerview의 해당 함수 외는 호출하지 말 것
+    /// </summary>
     [ServerRpc(RequireOwnership = false)]
     public void StopMovementServerRpc()
     {
@@ -259,7 +263,7 @@ public class PlayerModel : NetworkBehaviour
                 SetAnimationState(walkStateComponent);
                 break;
             case PlayerAnimationState.VentEnter:
-                SetAnimationState(ventEnterStateComponent);
+                SetAnimationState(_ventStateComponent);
                 break;
         }
     }

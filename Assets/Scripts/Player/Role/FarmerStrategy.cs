@@ -237,22 +237,7 @@ public class FarmerStrategy : NetworkBehaviour, IRoleStrategy
         playerDeadState.KilledClientRpc(PlayerHelperManager.Instance.GetPlayerGameObjectByClientId(requesterClientId).GetComponent<FarmerStrategy>().mySkillPath.Value, clientRpcParams);
     }
     
-    /// <summary>
-    /// 모든 Animal을 죽이는 함수: 사보타지에서 액션 취하지 않을 경우 모든 Animal 죽임
-    /// </summary>
-    [ServerRpc]
-    public void AllKillServerRpc(ServerRpcParams rpcParams = default)
-    {
-        PlayerModel[] allAnimalPlayers = PlayerHelperManager.Instance.GetAllPlayers<PlayerModel>();
-        foreach (PlayerModel playerModel in allAnimalPlayers)
-        {
-            if (playerModel.GetPlayerJob() != PlayerJob.Animal)
-            {
-                return;
-            }
-            playerModel.HandlePlayerDeathServerRpc();
-        }       
-    }
+
     
     
     
@@ -431,9 +416,8 @@ public class FarmerStrategy : NetworkBehaviour, IRoleStrategy
     [ClientRpc]
     private void VentEnterClientRpc(ulong targetNetworkObjectId,bool isEntering, ClientRpcParams rpcParams = default)
     {
-    
         // PlayerVentEnterState에 진입/탈출 정보 전달
-        PlayerVentEnterState ventState = GetComponent<PlayerVentEnterState>();
+        PlayerVentState ventState = GetComponent<PlayerVentState>();
         ventState?.SetVentAction(isEntering, targetNetworkObjectId, this);
         // 상태 전환
         PlayerModel playerModel = GetComponent<PlayerModel>();
@@ -453,15 +437,49 @@ public class FarmerStrategy : NetworkBehaviour, IRoleStrategy
     public void ExitVent()
     {
         if (interatingVentNetworkId == 0) return;
-
         isVentEntered = false;
         
-        // PlayerVentEnterState에 탈출 정보 전달
-        PlayerVentEnterState ventState = GetComponent<PlayerVentEnterState>();
-        ventState?.SetVentAction(false, interatingVentNetworkId, this);
+        
     
-        // 탈출 애니메이션 트리거
-        ventState?.TriggerExitAnimation();
+        // 탈출 로직 먼저 호출
+        NetworkObject interactObj = null;
+        if (NetworkManager.Singleton.SpawnManager.SpawnedObjects.TryGetValue(
+                interatingVentNetworkId, out NetworkObject obj))
+        {
+            interactObj = obj;
+        }
+
+        if (interactObj != null && interactObj.CompareTag(GameTags.Vent))
+        {
+            VentController vent = interactObj.GetComponent<VentController>();
+            if (vent != null)
+            {
+                GameObject player = this.gameObject;
+                vent.RequestToggleFromPlayer(player);
+            }
+        }
+    }
+    
+    [ClientRpc]
+    public void VentExitResultClientRpc(bool result, ClientRpcParams rpc = default)
+    {
+        if (result)
+        {
+            // 탈출 성공
+            Debug.Log("탈출 성공하여 탈출 애니메이션 작동!");
+            PlayerVentState ventState = GetComponent<PlayerVentState>();
+            ventState?.TriggerExitAnimation();
+            ventState?.SetVentAction(false, interatingVentNetworkId, this);
+        }
+        else
+        {
+            // 탈출 실패 - 상태 복구
+            Debug.Log("탈출 실패 - 상태 복구");
+            isVentEntered = true; // 다시 벤트 안에 있음
+            PlayerVentState ventState = GetComponent<PlayerVentState>();
+            ventState?.SetVentAction(true, interatingVentNetworkId, this);
+        }
+        
     }
 
     public void ReportCorpse(ulong corpseClientId)

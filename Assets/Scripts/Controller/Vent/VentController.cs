@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using Unity.Netcode;
 using UnityEngine;
 
@@ -209,7 +210,19 @@ public sealed class VentController : NetworkBehaviour, IInteractable
         }
         else
         {
-            if (_occupantNetId.Value != playerObj.NetworkObjectId) return;
+            GameObject playerObject = PlayerHelperManager.Instance.GetPlayerGameObjectByClientId(senderClientId);
+            FarmerStrategy senderFarmerStrategy = playerObject.GetComponent<FarmerStrategy>();
+            var target = new ClientRpcParams
+            {
+                Send = new ClientRpcSendParams { TargetClientIds = new ulong[] { senderClientId } }
+            };
+            
+            if (_occupantNetId.Value != playerObj.NetworkObjectId)
+            {
+                //탈출결과전송
+                senderFarmerStrategy.VentExitResultClientRpc(false,target);
+                return;
+            }
 
             _occupied.Value = false;
             _lastExitServerTime = NetworkManager.Singleton.ServerTime.Time;
@@ -219,8 +232,15 @@ public sealed class VentController : NetworkBehaviour, IInteractable
 
             playerObj.transform.position = _tr.position + (Vector3)exitOffset;
             PlayExitAnimation();
+          
+            //탈출 결과 전송
+            senderFarmerStrategy.VentExitResultClientRpc(true,target);
+            
+
         }
     }
+
+
 
     // (기존) 벤트간 이동은 occupant & sender로 검증하므로 유지
     public void RequestMoveToSelected()

@@ -341,6 +341,21 @@ public class PlayerPresenter : NetworkBehaviour
         {
             targetObjectId =  interactionObj.GetComponent<NetworkObject>().NetworkObjectId;
         }
+
+        if (targetObjTag == GameTags.Vent && playerModel.GetPlayerJob()==PlayerJob.Farmer )
+        {
+            playerView.SetIgnorePlayerMoveInputServerRpc(true);
+        }
+
+        if (targetObjTag == GameTags.ConvocationOfTrial)
+        {
+            //모든 플레이어의 움직임 멈춤
+            ulong localCliendId = NetworkManager.Singleton.LocalClientId;
+            PlayerView playerView = PlayerHelperManager.Instance.GetPlayerViewlByClientId(localCliendId);
+            playerView.SetIgnoreAllPlayerMoveInputServerRpc(true);
+        }
+         
+        
         roleController.CurrentStrategy?.Interact(targetObjTag,targetObjectId);
     }
 

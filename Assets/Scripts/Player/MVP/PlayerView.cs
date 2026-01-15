@@ -15,16 +15,7 @@ using System.Collections;
 /// </summary>
 public class PlayerView : NetworkBehaviour
 {
-    
-    public enum PlayerSFX
-    {
-        playerKillSFX,
-        
-    }
 
-    
-    [Header("SFX")]
-    [SerializeField] private AudioSource playerKillSFX;
 
     [Header("For Trigger Detect Colliders")]
     [Tooltip("this is for hide player behind shadow.")]
@@ -89,18 +80,10 @@ public class PlayerView : NetworkBehaviour
     [SerializeField] private PlayerInput playerInput;
 
 
-    
-    [ClientRpc]
-    public void PlaySFXClientRpc(PlayerSFX sfx, ClientRpcParams rpcParams = default )
-    {
-        switch (sfx)
-        {
-            case PlayerSFX.playerKillSFX:
-                SoundManager.Instance.SFXPlay(playerKillSFX.name,playerKillSFX.clip);
-                break;
-        }
-        
-    }
+    private const float INTERACT_COOLDOWN_MAX = 0.5f;
+    private float interactCooldownTimer = 0f;
+    private bool canInteract=false;
+
     protected void Awake()
     {
         if (playerInput == null)
@@ -318,8 +301,20 @@ public class PlayerView : NetworkBehaviour
         
         SetupInputSystem();
     }
+
+    private void Update()
+    {
+        if (interactCooldownTimer < INTERACT_COOLDOWN_MAX && !canInteract)
+        {
+            interactCooldownTimer += Time.deltaTime;
+        }
+        else
+        {
+            canInteract = true;
+        }
+    }
     
-    
+
     private void SetupInputSystem()
     {
         DebugUtils.AssertNotNull(playerInput, "PlayerInput", this);
@@ -387,7 +382,6 @@ public class PlayerView : NetworkBehaviour
                 killAction.performed -= OnKillInput;
             }
         }
-        
         base.OnDestroy();
     }
 
@@ -484,13 +478,23 @@ public class PlayerView : NetworkBehaviour
     private void OnMoveInput(InputAction.CallbackContext context)
     {
         if (!IsOwner) return;
+        
+        if (ignoreMoveInput.Value)
+        {
+            
+            OnMovementInput?.Invoke(this, new OnMovementInputEventArgs(0, 0));
+            
+
+            return;
+        }
         Vector2 moveInput = context.ReadValue<Vector2>();
         lastMoveInput = moveInput;
-        if (ignoreMoveInput.Value) return;
         // 정수로 변환하여 전송
         int xDirection = Mathf.RoundToInt(moveInput.x);
         int yDirection = Mathf.RoundToInt(moveInput.y);
         
+        
+    
         OnMovementInput?.Invoke(this, new OnMovementInputEventArgs(xDirection, yDirection));
     }
     
@@ -526,7 +530,9 @@ public class PlayerView : NetworkBehaviour
             if (playerModel != null)
             {
                 playerModel.StopMovementServerRpc();
+                playerModel.MovePlayerServerRpc(0,0);
             }
+            
         }
     }
 
@@ -600,6 +606,10 @@ public class PlayerView : NetworkBehaviour
     private void OnInteractInputHandler(InputAction.CallbackContext context)
     {
         if (!IsOwner) return;
+        if (!canInteract) return;
+
+        interactCooldownTimer = 0f;
+        canInteract = false;
         
         OnInteractInput?.Invoke();
     }
