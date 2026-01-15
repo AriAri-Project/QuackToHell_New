@@ -943,7 +943,10 @@ public class DeckManager : NetworkBehaviour
                 if (newState == CardItemState.Sold)
                 {
                     updatedCard.acquiredTicks = DateTime.Now.Ticks;
-                    AddCardToPlayerInventoryClientRpc(updatedCard, clientId);
+                    AddCardToPlayerInventoryClientRpc(updatedCard, clientId, new ClientRpcParams 
+                    { 
+                        Send = new ClientRpcSendParams { TargetClientIds = new[] { clientId } } 
+                    });
                 }
                 
                 _allCardsOnGameData[i] = updatedCard;
@@ -956,7 +959,7 @@ public class DeckManager : NetworkBehaviour
     }
 
     [ClientRpc]
-    private void AddCardToPlayerInventoryClientRpc(CardItemData card, ulong clientId)
+    private void AddCardToPlayerInventoryClientRpc(CardItemData card, ulong clientId, ClientRpcParams rpcParams = default)
     {
         // 해당 플레이어의 인벤토리에 카드 추가
         GameObject player = PlayerHelperManager.Instance.GetPlayerGameObjectByClientId(clientId);
