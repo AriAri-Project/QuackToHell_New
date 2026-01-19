@@ -153,7 +153,7 @@ public class PlayerView : NetworkBehaviour
             targetCorpseCache =  collision.gameObject;
             onCorpseDetected?.Invoke(targetCorpseCache);
         }
-        else
+        else if(collision.CompareTag(GameTags.MiniGame)||collision.CompareTag(GameTags.Vent)||collision.CompareTag(GameTags.ConvocationOfTrial))
         {
             interactObjCache = collision.gameObject;
             OnObjectEntered?.Invoke(detectedObject);
@@ -200,7 +200,7 @@ public class PlayerView : NetworkBehaviour
             targetCorpseCache =  null;
             onCorpseExited?.Invoke(targetCorpseCache);
         }
-        else
+        else if(collision.CompareTag(GameTags.MiniGame)||collision.CompareTag(GameTags.Vent)||collision.CompareTag(GameTags.ConvocationOfTrial))
         {
             interactObjCache = null;
             OnObjectExited?.Invoke(detectedObject);

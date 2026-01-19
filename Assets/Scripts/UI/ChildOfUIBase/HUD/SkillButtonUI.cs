@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
@@ -5,6 +6,11 @@ using Unity.Netcode;
 
 public class SkillButtonUI : UIHUD
 {
+    public Action onInteractButton;
+    public Action onKillButton;
+    public Action onSavotageButton;
+    public Action<ulong> onCorpseReportButton;
+    
     private Button Button_Savotage;
     private Button Button_Kill;
     private Button Button_Report;
@@ -12,13 +18,19 @@ public class SkillButtonUI : UIHUD
     
     private PlayerView playerView;
     private PlayerModel playerModel;
+    private PlayerPresenter  playerPresenter;
     private IRoleStrategy roleStrategy;
     private PlayerJob playerJob;
     private RoleController roleController;
     
+    
     private FarmerStrategy farmerStrategy;
     private GhostStrategy ghostStrategy;
+
     
+    private const float INTERACT_COOLDOWN_MAX = 0.5f;
+    private float interactCooldownTimer = 0f;
+    private bool canInteract=false;
     public enum Buttons
     {
         Button_Savotage,
@@ -58,6 +70,7 @@ public class SkillButtonUI : UIHUD
             farmerStrategy.OnSavotageSuccess += OnSavotageSuccessed;
             farmerStrategy.OnKillCooldownReady += HandleKillCooldownReady; 
             farmerStrategy.OnSavotageCooldownReady += HandleSavotageCooldownReady;
+            farmerStrategy.OnVentEnter += HandleVentEnter;
         }
         
         if (roleStrategy is GhostStrategy)
@@ -68,12 +81,22 @@ public class SkillButtonUI : UIHUD
 
         playerModel = PlayerHelperManager.Instance.GetPlayerModelByClientId(NetworkManager.Singleton.LocalClientId);
         playerJob = playerModel.GetPlayerJob();
+        playerPresenter = playerModel.GetComponent<PlayerPresenter>();
         
         SetUpButtons();
     }
 
     private void Update()
     {
+        if (interactCooldownTimer < INTERACT_COOLDOWN_MAX && !canInteract)
+        {
+            interactCooldownTimer += Time.deltaTime;
+        }
+        else
+        {
+            canInteract = true;
+        }
+        
         if (playerJob == PlayerJob.Farmer && farmerStrategy != null && playerView != null)
         {
             // 타겟이 있고 쿨타임이 준비되었으면 버튼 활성화
@@ -109,6 +132,12 @@ public class SkillButtonUI : UIHUD
         {
             EnableButton(Buttons.Button_Kill);
         }
+    }
+
+    private void HandleVentEnter()
+    {
+        EnableButton(Buttons.Button_Interaction);
+        farmerStrategy.IsVentEntered = true; 
     }
     private void HandleSavotageCooldownReady()
     {
@@ -189,6 +218,11 @@ public class SkillButtonUI : UIHUD
 
     private void HandleObjectExited(GameObject targetObject)
     {
+        if (farmerStrategy.IsVentEntered)
+        {
+            return;
+        }
+        
         if (targetObject.CompareTag(GameTags.PlayerCorpse))
         {
             DisableButton(Buttons.Button_Report);   
@@ -204,6 +238,7 @@ public class SkillButtonUI : UIHUD
         
         if(targetObject.CompareTag(GameTags.MiniGame))
         {
+            
             SetInteractionButtonDefault();
             DisableButton(Buttons.Button_Interaction);
             
@@ -362,20 +397,7 @@ public class SkillButtonUI : UIHUD
     
     //버튼입력 이벤트들
     public void OnKillButton(PointerEventData eventData){
-        if (playerView)
-        {
-            if (playerView.TargetPlayerCache)
-            {
-                if (playerView.TargetPlayerCache.GetComponent<PlayerModel>())
-                {
-                    ulong targetClinetId = playerView.TargetPlayerCache.GetComponent<PlayerModel>().ClientId;
-                    if (targetClinetId != null)
-                    {
-                        roleController.CurrentStrategy?.Kill(targetClinetId);
-                    }
-                }
-            }
-        }
+        onKillButton?.Invoke();
     }
 
     public void OnSavotageButton(PointerEventData eventData){
@@ -385,19 +407,15 @@ public class SkillButtonUI : UIHUD
     }
     
     public void OnDynamicInteractionButton(PointerEventData eventData){
-        if (playerModel.GetPlayerAliveState() == PlayerLivingState.Dead) return;
-        string targetObjTag= playerView.InteractObjCache?.tag;
-        ulong targetObjectId=0;
-        if (playerView.InteractObjCache.GetComponent<NetworkObject>() != null)
-        {
-            targetObjectId =  playerView.InteractObjCache.GetComponent<NetworkObject>().NetworkObjectId;
-        }
-        roleController.CurrentStrategy?.Interact(targetObjTag,targetObjectId);
+        if (!canInteract) return;
+        interactCooldownTimer = 0f;
+        canInteract = false;
+        onInteractButton?.Invoke();;
     }
     
-    public void OnCorpseReportButton(PointerEventData eventData){
-        if (playerModel.GetPlayerAliveState() == PlayerLivingState.Dead) return;
+    public void OnCorpseReportButton(PointerEventData eventData)
+    { 
         ulong targetCorpseId = playerView.TargetCorpseCache.GetComponent<PlayerCorpse>().ClientId;
-        roleController.CurrentStrategy?.ReportCorpse(targetCorpseId);
+       onCorpseReportButton?.Invoke(targetCorpseId);
     }
 }

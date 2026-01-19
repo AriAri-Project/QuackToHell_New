@@ -30,6 +30,7 @@ public class PlayerPresenter : NetworkBehaviour
     private RoleController roleController;
     private PlayerInput playerInput;
     private FarmerStrategy farmerStrategy;
+    private SkillButtonUI skillButtonUI;
     
     [Header("")]
     [SerializeField]    
@@ -51,12 +52,13 @@ public class PlayerPresenter : NetworkBehaviour
         
         // 초기 설정
         SetupInitialState();
+        
     }
 
     public override void OnNetworkSpawn()
     {
         base.OnNetworkSpawn();
-        OnSceneLoaded();
+        
         if (!IsOwner)
         {
             //내 오너캐릭터만 입력받기
@@ -125,10 +127,13 @@ public class PlayerPresenter : NetworkBehaviour
     private void BindEvents()
     {
         
+        
         NetworkManager.Singleton.OnClientConnectedCallback += OnClientConnected;
         NetworkManager.Singleton.OnClientDisconnectCallback += OnClientDisconnected;
-        
 
+        //씬로드 이벤트 구독
+        SceneManager.sceneLoaded += OnSceneLoaded;
+        
         // View -> Presenter -> Model
         playerView.OnMovementInput += HandleMovementInput;
         
@@ -155,20 +160,37 @@ public class PlayerPresenter : NetworkBehaviour
         playerModel.PlayerTag.OnValueChanged += HandleTagChanged;
     }
 
-    private void OnSceneLoaded()
+    private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
         if (!IsOwner)
         {
             return;
         }
-        chatTestView = FindAnyObjectByType<ChatTestView>();
-        if(chatTestView==null)
+        //스킬버튼
+        if (scene.name == GameScenes.Village)
         {
-            StartCoroutine(WaitForSecondsAndBindChatFocusUnFocusEvent(0.5f));
-            return;
+            skillButtonUI = FindAnyObjectByType<SkillButtonUI>();
+            if (skillButtonUI != null)
+            {
+                skillButtonUI.onKillButton += HandleKillInput;
+                skillButtonUI.onInteractButton += HandleInteractInput;
+                skillButtonUI.onCorpseReportButton += HandleCorpseReported;
+            }
         }
-        chatTestView.OnFocusInputField += OnInputFieldFocused;
-        chatTestView.OnUnFocusInputField += OnInputFieldUnfocused;
+        
+                    
+        //챗
+        if (scene.name == GameScenes.Lobby || scene.name == GameScenes.Court)
+        {
+            chatTestView = FindAnyObjectByType<ChatTestView>();
+            if(chatTestView==null)
+            {
+                StartCoroutine(WaitForSecondsAndBindChatFocusUnFocusEvent(0.5f));
+                return;
+            }
+            chatTestView.OnFocusInputField += OnInputFieldFocused;
+            chatTestView.OnUnFocusInputField += OnInputFieldUnfocused;
+        }
         
     }
 

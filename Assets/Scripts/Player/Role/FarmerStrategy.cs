@@ -18,6 +18,7 @@ public class FarmerStrategy : NetworkBehaviour, IRoleStrategy
     public event Action OnSavotageSuccess;
     public event Action OnKillCooldownReady;
     public event Action OnSavotageCooldownReady;
+    public event Action OnVentEnter;
     
     private PlayerPresenter _playerPresenter;
     private PlayerModel _playerModel;
@@ -45,6 +46,7 @@ public class FarmerStrategy : NetworkBehaviour, IRoleStrategy
 
     public bool IsVentEntered
     {
+        set {isVentEntered = value;}
         get { return isVentEntered; }
     }
     private ulong interatingVentNetworkId=0;
@@ -416,6 +418,8 @@ public class FarmerStrategy : NetworkBehaviour, IRoleStrategy
     [ClientRpc]
     private void VentEnterClientRpc(ulong targetNetworkObjectId,bool isEntering, ClientRpcParams rpcParams = default)
     {
+        // SkillButton enable하기
+        OnVentEnter?.Invoke();
         // PlayerVentEnterState에 진입/탈출 정보 전달
         PlayerVentState ventState = GetComponent<PlayerVentState>();
         ventState?.SetVentAction(isEntering, targetNetworkObjectId, this);
