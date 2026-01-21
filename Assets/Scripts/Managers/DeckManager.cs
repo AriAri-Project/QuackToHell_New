@@ -145,7 +145,7 @@ public struct CardStatusSummary
 public struct CardDef : INetworkSerializable, IEquatable<CardDef>
 {
     public int cardID;
-    public FixedString64Bytes cardNameKey;
+    public FixedString64Bytes cardName;
     public TierEnum tier;      // enum
     public TypeEnum type;      // enum
     public SubTypeEnum subType;        // 사용 안 하면 0
@@ -157,14 +157,15 @@ public struct CardDef : INetworkSerializable, IEquatable<CardDef>
     public int mapRestriction;  // 2bit
     public int basePrice;
     // public int baseCost;
-    public FixedString64Bytes descriptionKey;
-    public FixedString64Bytes imagePathKey;
+    public FixedString64Bytes description;
+    public FixedString64Bytes cardIImagePath;
     public int amountOfCardItem;
+    public FixedString128Bytes cardIconResourcePath;
 
     public void NetworkSerialize<T>(BufferSerializer<T> serializer) where T : IReaderWriter
     {
         serializer.SerializeValue(ref cardID);
-        serializer.SerializeValue(ref cardNameKey);
+        serializer.SerializeValue(ref cardName);
         serializer.SerializeValue(ref tier);
         serializer.SerializeValue(ref type);
         serializer.SerializeValue(ref subType);
@@ -176,15 +177,16 @@ public struct CardDef : INetworkSerializable, IEquatable<CardDef>
         serializer.SerializeValue(ref mapRestriction);
         serializer.SerializeValue(ref basePrice);
         // serializer.SerializeValue(ref baseCost);
-        serializer.SerializeValue(ref descriptionKey);
-        serializer.SerializeValue(ref imagePathKey);
+        serializer.SerializeValue(ref description);
+        serializer.SerializeValue(ref cardIImagePath);
         serializer.SerializeValue(ref amountOfCardItem);
+        serializer.SerializeValue(ref cardIconResourcePath);
     }
 
     public bool Equals(CardDef other)
     {
         return cardID == other.cardID && 
-               cardNameKey.Equals(other.cardNameKey) && 
+               cardName.Equals(other.cardName) && 
                tier == other.tier && 
                type == other.type && 
                subType == other.subType && 
@@ -196,9 +198,10 @@ public struct CardDef : INetworkSerializable, IEquatable<CardDef>
                mapRestriction == other.mapRestriction && 
                basePrice == other.basePrice && 
                // baseCost == other.baseCost && 
-               descriptionKey.Equals(other.descriptionKey) && 
-               imagePathKey.Equals(other.imagePathKey) && 
-               amountOfCardItem == other.amountOfCardItem;
+               description.Equals(other.description) &&
+               cardIImagePath.Equals(other.cardIImagePath) && 
+               amountOfCardItem == other.amountOfCardItem &&
+               cardIconResourcePath.Equals(other.cardIconResourcePath);
     }
 
     public override bool Equals(object obj)
@@ -210,7 +213,7 @@ public struct CardDef : INetworkSerializable, IEquatable<CardDef>
     {
         HashCode hash = new HashCode();
         hash.Add(cardID);
-        hash.Add(cardNameKey);
+        hash.Add(cardName);
         hash.Add(tier);
         hash.Add(type);
         hash.Add(subType);
@@ -222,9 +225,10 @@ public struct CardDef : INetworkSerializable, IEquatable<CardDef>
         hash.Add(mapRestriction);
         hash.Add(basePrice);
         // hash.Add(baseCost);
-        hash.Add(descriptionKey);
-        hash.Add(imagePathKey);
+        hash.Add(description);
+        hash.Add(cardIImagePath);
         hash.Add(amountOfCardItem);
+        hash.Add(cardIconResourcePath);
         return hash.ToHashCode();
     }
 }
@@ -281,7 +285,8 @@ public struct CardDisplay
     [FormerlySerializedAs("CardID")] public int cardID;
     [FormerlySerializedAs("Name")] public string name;
     [FormerlySerializedAs("Description")] public string description;
-    [FormerlySerializedAs("ImagePath")] public string imagePath;
+    [FormerlySerializedAs("CardIImagePath")] public string cardIImagePath;
+    [FormerlySerializedAs("CardIconResourcePath")] public string cardIconResourcePath;
     [FormerlySerializedAs("Tier")] public TierEnum tier;
     [FormerlySerializedAs("Type")] public TypeEnum type;
     [FormerlySerializedAs("BasePrice")] public int basePrice;
@@ -438,9 +443,10 @@ public class DeckManager : NetworkBehaviour
         disp = new CardDisplay
         {
             cardID = cardDefinition.cardID,
-            name = Localize(cardDefinition.cardNameKey.ToString(), locale),
-            description = Localize(cardDefinition.descriptionKey.ToString(), locale),
-            imagePath = ResolvePath(cardDefinition.imagePathKey.ToString()),
+            name = Localize(cardDefinition.cardName.ToString(), locale),
+            description = Localize(cardDefinition.description.ToString(), locale),
+            cardIImagePath = ResolvePath(cardDefinition.cardIImagePath.ToString()),
+            cardIconResourcePath = cardDefinition.cardIconResourcePath.ToString(),
             tier = cardDefinition.tier,
             type = cardDefinition.type,
             basePrice = cardDefinition.basePrice,
@@ -1125,14 +1131,14 @@ public class DeckManager : NetworkBehaviour
         List<string> headers = SplitCols(rows[0]);
         int Idx(string name) { for (int headerIndex = 0; headerIndex < headers.Count; headerIndex++) if (headers[headerIndex].Trim().Equals(name, StringComparison.OrdinalIgnoreCase)) return headerIndex; return -1; }
 
-        int iID = Idx("CardID"), iName = Idx("CardNameKey"), iTier = Idx("Tier"), iType = Idx("Type"),
+        int iID = Idx("CardID"), iName = Idx("CardName"), iTier = Idx("Tier"), iType = Idx("Type"),
             iSub = (Idx("SubType") >= 0 ? Idx("SubType") : Idx("SubType (사용X)")),
             iUni = Idx("IsUniqueCard"), iSell = Idx("IsSellableCard"), iBuyClass = Idx("BuyableClass"),
             iClass = Idx("UsableClass"), iMap = Idx("Map_Restriction"),
             iPrice = Idx("BasePrice"), // iCost = Idx("BaseCost"),
-            iDesc = Idx("DescriptionKey"), iImg = Idx("ImagePathKey"),
+            iDesc = Idx("Description"), iImg = Idx("CardIImagePath"),
             iAmount = Idx("AmountOfCardItem"),
-            iValue = Idx("Value");
+            iValue = Idx("Value"), iIcon = Idx("CardIconResourcePath");
 
         string S(List<string> columns, int i) => (i >= 0 && i < columns.Count) ? (columns[i]?.Trim() ?? "") : "";
 
@@ -1155,7 +1161,7 @@ public class DeckManager : NetworkBehaviour
                 list.Add(new CardDef
                 {
                     cardID = ToInt(S(columns, iID)),
-                    cardNameKey = S(columns, iName),
+                    cardName = S(columns, iName),
                     tier = ToTier(S(columns, iTier)),
                     type = ToType(S(columns, iType)),
                     subType = ToSubType(S(columns, iSub)),
@@ -1167,8 +1173,9 @@ public class DeckManager : NetworkBehaviour
                     mapRestriction = ToInt(S(columns, iMap)),
                     basePrice = ToInt(S(columns, iPrice)),
                     // baseCost = ToInt(S(columns, iCost)),
-                    descriptionKey = S(columns, iDesc),
-                    imagePathKey = S(columns, iImg),
+                    description = S(columns, iDesc),
+                    cardIImagePath = S(columns, iImg),
+                    cardIconResourcePath = S(columns, iIcon),
                     amountOfCardItem = ToInt(S(columns, iAmount)),
                 });
             }
@@ -1221,7 +1228,7 @@ public class DeckManager : NetworkBehaviour
                     if (headers[i].Trim().Equals(name, StringComparison.OrdinalIgnoreCase)) return i;
             return -1;
         }
-        int iKey = Idx("Key", "ResID", "ImagePathKey"), iPath = Idx("Path", "ResourcePath", "SpritePath");
+        int iKey = Idx("Key", "ResID", "CardIImagePath"), iPath = Idx("Path", "ResourcePath", "SpritePath");
 
         for (int rowIndex = 1; rowIndex < rows.Count; rowIndex++)
         {

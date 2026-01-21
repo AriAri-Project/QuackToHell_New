@@ -65,8 +65,8 @@ namespace CardItem.MVP
             CardStatusData statusData = cardData.cardItemStatusData;
             
             // 로컬라이제이션 처리
-            string localizedName = cardDef.cardNameKey.ToString();
-            string localizedDescription = cardDef.descriptionKey.ToString();
+            string localizedName = cardDef.cardName.ToString();
+            string localizedDescription = cardDef.description.ToString();
             
             if (DeckManager.Instance != null && DeckManager.Instance.CardDefinitionCount > 0)
             {
