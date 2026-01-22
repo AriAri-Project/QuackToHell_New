@@ -68,6 +68,7 @@ public class PlayerPresenter : NetworkBehaviour
                 playerInput.enabled = false;
             }
         }
+        OnSceneLoaded();
     }
 
     public override void OnNetworkDespawn()
@@ -130,9 +131,7 @@ public class PlayerPresenter : NetworkBehaviour
         
         NetworkManager.Singleton.OnClientConnectedCallback += OnClientConnected;
         NetworkManager.Singleton.OnClientDisconnectCallback += OnClientDisconnected;
-
-        //씬로드 이벤트 구독
-        SceneManager.sceneLoaded += OnSceneLoaded;
+        
         
         // View -> Presenter -> Model
         playerView.OnMovementInput += HandleMovementInput;
@@ -160,14 +159,14 @@ public class PlayerPresenter : NetworkBehaviour
         playerModel.PlayerTag.OnValueChanged += HandleTagChanged;
     }
 
-    private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+    private void OnSceneLoaded()
     {
         if (!IsOwner)
         {
             return;
         }
         //스킬버튼
-        if (scene.name == GameScenes.Village)
+        if (SceneManager.GetActiveScene().name == GameScenes.Village)
         {
             skillButtonUI = FindAnyObjectByType<SkillButtonUI>();
             if (skillButtonUI != null)
@@ -181,7 +180,7 @@ public class PlayerPresenter : NetworkBehaviour
         
                     
         //챗
-        if (scene.name == GameScenes.Lobby || scene.name == GameScenes.Court)
+        if (SceneManager.GetActiveScene().name == GameScenes.Lobby || SceneManager.GetActiveScene().name == GameScenes.Court)
         {
             chatTestView = FindAnyObjectByType<ChatTestView>();
             if(chatTestView==null)
@@ -213,12 +212,31 @@ public class PlayerPresenter : NetworkBehaviour
         {
             return;
         }
-
-        if (chatTestView != null)
+        //스킬버튼
+        if (SceneManager.GetActiveScene().name == GameScenes.Village)
         {
+            skillButtonUI = FindAnyObjectByType<SkillButtonUI>();
+            if (skillButtonUI != null)
+            {
+                skillButtonUI.onKillButton -= HandleKillInput;
+                skillButtonUI.onInteractButton -= HandleInteractInput;
+                skillButtonUI.onCorpseReportButton -= HandleCorpseReported;
+                skillButtonUI.onSavotageButton -= HandleSavotageInput;
+            }
+        }
+        
+                    
+        //챗
+        if (SceneManager.GetActiveScene().name == GameScenes.Lobby || SceneManager.GetActiveScene().name == GameScenes.Court)
+        {
+            chatTestView = FindAnyObjectByType<ChatTestView>();
+            if(chatTestView==null)
+            {
+                StartCoroutine(WaitForSecondsAndBindChatFocusUnFocusEvent(0.5f));
+                return;
+            }
             chatTestView.OnFocusInputField -= OnInputFieldFocused;
             chatTestView.OnUnFocusInputField -= OnInputFieldUnfocused;
-            chatTestView = null;
         }
     }
 
