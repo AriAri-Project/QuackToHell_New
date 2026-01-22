@@ -1,8 +1,14 @@
-using Unity.Netcode;
-using UnityEngine.SceneManagement;
-using UnityEngine;
-using TMPro;
+using System;
 using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
+using System.Threading.Tasks;
+using TMPro;
+using Unity.Multiplayer.Playmode;
+using Unity.Netcode;
+using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using System;
 using System.Collections.Generic;
@@ -321,4 +327,264 @@ public class GameManager : NetworkBehaviour
             playerModel.HandlePlayerDeathServerRpc();
         }
     }
+
+    #region 게임 결과 확인
+
+    // =========================
+    //  게임 종료 상태 관리
+    // =========================
+    private bool _gameEnded = false;
+
+    // 반란승(솔로승) 승자(서버에서만 세팅). 없으면 ulong.MaxValue
+    private ulong _rebelWinnerClientId = ulong.MaxValue;
+
+    /// <summary>
+    /// (서버) 반란승 성공한 플레이어를 기록해둠.
+    /// </summary>
+    public void NotifyRebelVictoryServer(ulong rebelClientId)
+    {
+        if (!IsServer) return;
+        _rebelWinnerClientId = rebelClientId;
+    }
+
+    /// <summary>
+    /// (서버) 승리 조건을 체크하고, 조건 만족 시 결과 UI를 전체 클라에 표시.
+    /// </summary>
+    public bool TryEndGameServer()
+    {
+        if (!IsServer) return false;
+        if (_gameEnded) return false;
+
+        // 1) 전체 플레이어 수집
+        PlayerModel[] players = PlayerHelperManager.Instance.GetAllPlayers<PlayerModel>();
+        if (players == null || players.Length == 0) return false;
+
+        // 2) 생존자 분류
+        var aliveFarmers = new List<PlayerModel>();
+        var aliveAnimals = new List<PlayerModel>();
+        var deadPlayers = new List<PlayerModel>();
+
+        foreach (var p in players)
+        {
+            if (p == null) continue;
+
+            bool isAlive = IsAliveGuess(p);
+            if (!isAlive)
+            {
+                deadPlayers.Add(p);
+                continue;
+            }
+
+            var job = p.GetPlayerJob();
+            if (job == PlayerJob.Farmer) aliveFarmers.Add(p);
+            else if (job == PlayerJob.Animal) aliveAnimals.Add(p);
+            else
+            {
+                // 직업이 더 늘어나면 여기서 시민/농장주 진영으로 분류 규칙 추가
+                // 일단 "시민측"으로 취급하고 싶으면 aliveFarmers에 넣는 방식도 가능
+                aliveFarmers.Add(p);
+            }
+        }
+
+        // 3) 승리 조건 체크 (우선순위: 반란승 > 진영 승)
+        if (_rebelWinnerClientId != ulong.MaxValue)
+        {
+            var rebel = FindByClientId(players, _rebelWinnerClientId);
+            if (rebel != null && IsAliveGuess(rebel))
+            {
+                _gameEnded = true;
+
+                var payload = BuildPayload(
+                    winType: EWinType.RebelSolo,
+                    winReason: "반란승 조건 달성",
+                    winners: new List<PlayerModel> { rebel },
+                    losers: players,
+                    winnerFilter: (pm) => pm == rebel
+                );
+
+                BroadcastResult(payload);
+                return true;
+            }
+        }
+
+        // 3-2) 농장주(=Farmer)만 남음 / 시민(=Animal)만 남음
+        if (aliveFarmers.Count > 0 && aliveAnimals.Count == 0)
+        {
+            _gameEnded = true;
+
+            var payload = BuildPayload(
+                winType: EWinType.Mafia,         
+                winReason: "농장주 진영 생존",
+                winners: aliveFarmers,
+                losers: players,
+                winnerFilter: (pm) => pm.GetPlayerJob() == PlayerJob.Farmer && IsAliveGuess(pm)
+            );
+
+            BroadcastResult(payload);
+            return true;
+        }
+
+        if (aliveAnimals.Count > 0 && aliveFarmers.Count == 0)
+        {
+            _gameEnded = true;
+
+            var payload = BuildPayload(
+                winType: EWinType.Citizens,
+                winReason: "시민 진영 생존",
+                winners: aliveAnimals,
+                losers: players,
+                winnerFilter: (pm) => pm.GetPlayerJob() == PlayerJob.Animal && IsAliveGuess(pm)
+            );
+
+            BroadcastResult(payload);
+            return true;
+        }
+
+        // 아직 게임 안 끝남
+        return false;
+    }
+
+    // =========================
+    //  내부 헬퍼들
+    // =========================
+
+    private void BroadcastResult(GameResultPayload payload)
+    {
+        // ResultBroadcaster는 씬에 있어야 함 (ResultScene이든 현재 씬이든)
+        var broadcaster = FindFirstObjectByType<ResultBroadcaster>(FindObjectsInactive.Include);
+        if (broadcaster == null)
+        {
+            Debug.LogError("[GameManager] ResultBroadcaster not found in scene!");
+            return;
+        }
+
+        broadcaster.EndGameAndShowResult(payload);
+    }
+
+    private static PlayerModel FindByClientId(PlayerModel[] players, ulong clientId)
+    {
+        foreach (var p in players)
+        {
+            if (p == null) continue;
+            var no = p.GetComponent<NetworkObject>();
+            if (no != null && no.OwnerClientId == clientId) return p;
+        }
+        return null;
+    }
+
+    /// <summary>
+    /// PlayerModel의 생존 여부를 "최대한 안전하게" 추정
+    /// - 프로젝트마다 필드명이 달라서, 흔한 이름(IsDead/IsAlive/isDead/isAlive)을 반사(reflection)로 탐색
+    /// - 못 찾으면 "일단 살아있다"로 처리
+    /// </summary>
+    private static bool IsAliveGuess(PlayerModel p)
+    {
+        if (p == null) return false;
+
+        // 1) public property 우선 탐색
+        var t = p.GetType();
+
+        // IsAlive
+        var propAlive = t.GetProperty("IsAlive", BindingFlags.Public | BindingFlags.Instance);
+        if (propAlive != null && propAlive.PropertyType == typeof(bool))
+            return (bool)propAlive.GetValue(p);
+
+        // IsDead
+        var propDead = t.GetProperty("IsDead", BindingFlags.Public | BindingFlags.Instance);
+        if (propDead != null && propDead.PropertyType == typeof(bool))
+            return !(bool)propDead.GetValue(p);
+
+        // 2) field 탐색
+        var fieldAlive = t.GetField("isAlive", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+        if (fieldAlive != null && fieldAlive.FieldType == typeof(bool))
+            return (bool)fieldAlive.GetValue(p);
+
+        var fieldDead = t.GetField("isDead", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+        if (fieldDead != null && fieldDead.FieldType == typeof(bool))
+            return !(bool)fieldDead.GetValue(p);
+
+        // 3) fallback
+        return true;
+    }
+
+    private static GameResultPayload BuildPayload(
+        EWinType winType,
+        string winReason,
+        List<PlayerModel> winners,
+        PlayerModel[] losers,
+        Func<PlayerModel, bool> winnerFilter
+    )
+    {
+        var payload = new GameResultPayload
+        {
+            WinType = winType,
+            WinReason = new Unity.Collections.FixedString128Bytes(winReason),
+        };
+
+        // winners 슬롯 채우기 (최대 4명까지)
+        var w = new List<PlayerModel>();
+        foreach (var p in winners)
+        {
+            if (p == null) continue;
+            if (!w.Contains(p)) w.Add(p);
+            if (w.Count >= 4) break;
+        }
+
+        SetWinnerSlot(ref payload, 0, w, 0);
+        SetWinnerSlot(ref payload, 1, w, 1);
+        SetWinnerSlot(ref payload, 2, w, 2);
+        SetWinnerSlot(ref payload, 3, w, 3);
+
+        // losers 슬롯 채우기: winnerFilter가 false인 사람 중 최대 4명
+        var l = new List<PlayerModel>();
+        foreach (var p in losers)
+        {
+            if (p == null) continue;
+            if (winnerFilter != null && winnerFilter(p)) continue;
+            l.Add(p);
+            if (l.Count >= 4) break;
+        }
+
+        SetLoserSlot(ref payload, 0, l, 0);
+        SetLoserSlot(ref payload, 1, l, 1);
+        SetLoserSlot(ref payload, 2, l, 2);
+        SetLoserSlot(ref payload, 3, l, 3);
+
+        return payload;
+    }
+
+    private static void SetWinnerSlot(ref GameResultPayload payload, int slot, List<PlayerModel> list, int idx)
+    {
+        bool has = idx < list.Count && list[idx] != null;
+        var info = has
+            ? new ResultPlayerInfo(list[idx].GetPlayerNickname(), list[idx].GetPlayerJob().ToString())
+            : default;
+
+        switch (slot)
+        {
+            case 0: payload.HasWinner0 = has; payload.Winner0 = info; break;
+            case 1: payload.HasWinner1 = has; payload.Winner1 = info; break;
+            case 2: payload.HasWinner2 = has; payload.Winner2 = info; break;
+            case 3: payload.HasWinner3 = has; payload.Winner3 = info; break;
+        }
+    }
+
+    private static void SetLoserSlot(ref GameResultPayload payload, int slot, List<PlayerModel> list, int idx)
+    {
+        bool has = idx < list.Count && list[idx] != null;
+        var info = has
+            ? new ResultPlayerInfo(list[idx].GetPlayerNickname(), list[idx].GetPlayerJob().ToString())
+            : default;
+
+        switch (slot)
+        {
+            case 0: payload.HasLoser0 = has; payload.Loser0 = info; break;
+            case 1: payload.HasLoser1 = has; payload.Loser1 = info; break;
+            case 2: payload.HasLoser2 = has; payload.Loser2 = info; break;
+            case 3: payload.HasLoser3 = has; payload.Loser3 = info; break;
+        }
+    
+}
+    #endregion
+
 }
