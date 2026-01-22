@@ -198,8 +198,12 @@ public class PlayerPresenter : NetworkBehaviour
     {
         yield return new WaitForSeconds(waitTime);
         chatTestView = FindAnyObjectByType<ChatTestView>();
-        chatTestView.OnFocusInputField += OnInputFieldFocused;
-        chatTestView.OnUnFocusInputField += OnInputFieldUnfocused;
+        if (chatTestView != null)
+        {
+            chatTestView.OnFocusInputField += OnInputFieldFocused;
+            chatTestView.OnUnFocusInputField += OnInputFieldUnfocused;
+        }
+
     }
     
     private void OnSceneUnLoaded()
@@ -208,9 +212,13 @@ public class PlayerPresenter : NetworkBehaviour
         {
             return;
         }
-        chatTestView.OnFocusInputField -= OnInputFieldFocused;
-        chatTestView.OnUnFocusInputField -= OnInputFieldUnfocused;
-        chatTestView = null;
+
+        if (chatTestView != null)
+        {
+            chatTestView.OnFocusInputField -= OnInputFieldFocused;
+            chatTestView.OnUnFocusInputField -= OnInputFieldUnfocused;
+            chatTestView = null;
+        }
     }
 
     private void OnInputFieldFocused()
