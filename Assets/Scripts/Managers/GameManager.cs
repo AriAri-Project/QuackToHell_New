@@ -229,74 +229,94 @@ public class GameManager : NetworkBehaviour
                 showRoleText.color = Color.white;
                 break;
         }
-        //2-2. PlayerSlot에 PlayerUIPrefab 생성하기
-        //플레이어 수만큼 플레이어 프리팹 생성
+        //2-2. 플레이어 수만큼 프리팹 생성하기 (아래로 뾰족한 V자 배치)
         PlayerModel[] allPlayers = PlayerHelperManager.Instance.GetAllPlayers<PlayerModel>();
         List<PlayerModel> targetPlayers = allPlayers.ToList();
 
         // 내가 Farmer인 경우, 동료 Farmer만 보여줌
         if (myJob == PlayerJob.Farmer)
         {
-            foreach(PlayerModel player in allPlayers){
+            foreach(PlayerModel player in allPlayers)
+            {
                 if (player.GetPlayerJob() != PlayerJob.Farmer)
                 {
                     targetPlayers.Remove(player);    
                 }
             }
         }
-        
-     
 
         int count = targetPlayers.Count;
-        // 최소 5명 ~ 최대 16명 기준으로 현재 인원수의 비율(0.0 ~ 1.0)을 구함
-        // 5명이면 t = 0, 16명이면 t = 1, 10명이면 t = 0.45...
-        float t = Mathf.InverseLerp(roleAssignUIReferences.minPlayerNum, roleAssignUIReferences.maxPlayerNum, (float)count);
-        // 비율에 따라 반지름 결정 (Lerp: Linear Interpolation)
-        float currentRadius = Mathf.Lerp(roleAssignUIReferences.minArcRadius, roleAssignUIReferences.maxArcRadius, t);
-        float finalGap = roleAssignUIReferences.arcAngleGap; 
-        // 전체 각도가 100도를 넘지 않도록 제한 (100도면 화면에 예쁘게 찹니다)
-        float maxTotalAngle = 100f;
         
-        if (count > 1)
-        {
-            // 만약 "인원수 * 15도"가 100도를 넘어가면?
-            if ((count - 1) * finalGap > maxTotalAngle)
-            {
-                // 100도 안에 꽉 차게 구겨넣어라 (예: 16명이면 약 6.6도로 자동 축소됨)
-                finalGap = maxTotalAngle / (count - 1);
-            }
-        }
+        // 화면 크기 기준 (1920x1080 기준, 안전 영역)
+        float screenWidth = 1600f;
+        float screenHeight = 800f;
         
-        // 계산된 finalGap으로 전체 각도 다시 계산
-        float totalAngle = (count - 1) * finalGap;
-        float currentAngle = totalAngle / 2f;
+        // V자 배치에서 최대 깊이 (몇 층까지 내려가는지)
+        int maxDepth = (count - 1 + 1) / 2;
+        
+        // 동적 스케일 및 간격 계산
+        float baseXSpacing = 180f;
+        float baseYSpacing = 55f;
+        float nicknameYJitter = 30f;
+        
+        // 필요한 총 너비/높이 계산
+        float neededWidth = maxDepth * baseXSpacing * 2;
+        float neededHeight = maxDepth * baseYSpacing;
+        
+        // 화면에 맞추기 위한 스케일 계산
+        float widthScale = (neededWidth > 0) ? Mathf.Min(1f, screenWidth / neededWidth) : 1f;
+        float heightScale = (neededHeight > 0) ? Mathf.Min(1f, screenHeight / neededHeight) : 1f;
+        float scaleFactor = Mathf.Min(widthScale, heightScale);
+        scaleFactor = Mathf.Clamp(scaleFactor, 0.3f, 1f);
+        
+        float xSpacing = baseXSpacing * scaleFactor;
+        float ySpacing = baseYSpacing * scaleFactor;
+        float uiScale = scaleFactor;
+        
+        // 전체 배치의 시작 y 위치 (아래로 뾰족한 V자이므로 아래에서 시작)
+        float startYOffset = -250f * scaleFactor;
         
         for (int i = 0; i < count; i++)
         {
-            PlayerModel player = targetPlayers[i];
+            SpawnPlayerUIVShape(targetPlayers[i], i, xSpacing, ySpacing, uiScale, startYOffset, nicknameYJitter);
+        }
+        
+        void SpawnPlayerUIVShape(PlayerModel player, int index, float xSpace, float ySpace, float scale, float yOffset, float nickYJitter)
+        {
+            GameObject playerUI = Instantiate(playerUIPrefab, parent);
             
-            // 프리팹 생성
-            GameObject playerUI  = Instantiate(playerUIPrefab, parent);
+            float x, y;
             
-            // 각도를 라디안으로 변환
-            float rad = currentAngle * Mathf.Deg2Rad;
-            
-            // 위치 계산
-            float x = Mathf.Sin(rad) * currentRadius;
-            float y = (Mathf.Cos(rad) * currentRadius) - currentRadius;
+            if (index == 0)
+            {
+                // 맨 아래 중앙 (뾰족한 부분)
+                x = 0;
+                y = yOffset;
+            }
+            else
+            {
+                int pairIndex = (index - 1) / 2;
+                bool isLeft = (index - 1) % 2 == 0;
+                
+                x = (pairIndex + 1) * xSpace * (isLeft ? -1 : 1);
+                y = yOffset + (pairIndex + 1) * ySpace;
+            }
             
             RectTransform rect = playerUI.GetComponent<RectTransform>();
             rect.anchoredPosition = new Vector2(x, y);
+            rect.localScale = new Vector3(scale, scale, 1f);
             
-            // 데이터 세팅
-            playerUI.GetComponentInChildren<TextMeshProUGUI>().text = player.GetPlayerNickname();
+            TextMeshProUGUI nicknameText = playerUI.GetComponentInChildren<TextMeshProUGUI>();
+            nicknameText.text = player.GetPlayerNickname();
+            
+            // 닉네임 y 지그재그 (겹침 방지)
+            RectTransform nicknameRect = nicknameText.GetComponent<RectTransform>();
+            float baseNicknameY = nicknameRect.anchoredPosition.y;
+            float adjustedNicknameY = baseNicknameY + (index % 2 == 0 ? nickYJitter : -nickYJitter);
+            nicknameRect.anchoredPosition = new Vector2(nicknameRect.anchoredPosition.x, adjustedNicknameY);
+            
             Image playerColor = playerUI.GetComponentInChildren<Image>();
             playerColor.color = AppearanceUtils.GetColorByIndex(player.GetPlayerColorIndex());
-
-            // -----------------------------------------------------------
-            // [수정됨] 반드시 계산된 finalGap 하나만 빼야 합니다!
-            // -----------------------------------------------------------
-            currentAngle -= finalGap; 
         }
         
         //TODO: 시간 늘리기 (테스트용으로 짧게바꿈)

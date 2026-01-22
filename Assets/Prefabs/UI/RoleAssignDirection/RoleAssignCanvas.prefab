@@ -408,6 +408,7 @@ MonoBehaviour:
   spawnParent: {fileID: 2584214281857444341}
   maxPlayerNum: 16
   minPlayerNum: 5
+  testPlayerNum: 11
   minArcRadius: 500
   maxArcRadius: 1500
   arcAngleGap: 10
