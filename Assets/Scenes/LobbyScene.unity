@@ -514,21 +514,9 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
-    - target: {fileID: 1209749157230949294, guid: 69653b4f5f98779499faa858e544dc47, type: 3}
-      propertyPath: m_Color.a
-      value: 0
-      objectReference: {fileID: 0}
     - target: {fileID: 3519142538284461929, guid: 69653b4f5f98779499faa858e544dc47, type: 3}
       propertyPath: m_Name
       value: RoleAssignCanvas
-      objectReference: {fileID: 0}
-    - target: {fileID: 3519142538284461929, guid: 69653b4f5f98779499faa858e544dc47, type: 3}
-      propertyPath: m_IsActive
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 3667586199545497747, guid: 69653b4f5f98779499faa858e544dc47, type: 3}
-      propertyPath: m_Color.a
-      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6513517130898607813, guid: 69653b4f5f98779499faa858e544dc47, type: 3}
       propertyPath: m_Pivot.x
@@ -610,29 +598,17 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 8161340266818144225, guid: 69653b4f5f98779499faa858e544dc47, type: 3}
-      propertyPath: m_Color.a
-      value: 0
+    - target: {fileID: 7549164369718249265, guid: 69653b4f5f98779499faa858e544dc47, type: 3}
+      propertyPath: arcAngleGap
+      value: 15
       objectReference: {fileID: 0}
-    - target: {fileID: 8410366404709711753, guid: 69653b4f5f98779499faa858e544dc47, type: 3}
-      propertyPath: m_Color.a
-      value: 0
+    - target: {fileID: 7549164369718249265, guid: 69653b4f5f98779499faa858e544dc47, type: 3}
+      propertyPath: maxArcRadius
+      value: 900
       objectReference: {fileID: 0}
-    - target: {fileID: 8484642308769344877, guid: 69653b4f5f98779499faa858e544dc47, type: 3}
-      propertyPath: m_UiScaleMode
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 8484642308769344877, guid: 69653b4f5f98779499faa858e544dc47, type: 3}
-      propertyPath: m_ReferenceResolution.x
-      value: 1920
-      objectReference: {fileID: 0}
-    - target: {fileID: 8484642308769344877, guid: 69653b4f5f98779499faa858e544dc47, type: 3}
-      propertyPath: m_ReferenceResolution.y
-      value: 1080
-      objectReference: {fileID: 0}
-    - target: {fileID: 8484642308769344877, guid: 69653b4f5f98779499faa858e544dc47, type: 3}
-      propertyPath: m_ReferencePixelsPerUnit
-      value: 1
+    - target: {fileID: 7549164369718249265, guid: 69653b4f5f98779499faa858e544dc47, type: 3}
+      propertyPath: minArcRadius
+      value: 500
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

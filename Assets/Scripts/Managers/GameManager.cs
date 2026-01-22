@@ -5,6 +5,7 @@ using TMPro;
 using System.Collections;
 using UnityEngine.UI;
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Linq;
 using Unity.Multiplayer.Playmode;
@@ -40,7 +41,7 @@ public class GameManager : NetworkBehaviour
     private GameObject showRole;
     private TextMeshProUGUI showRoleText;
 
-    private GameObject[] playerSlot;
+    private Transform parent;
     [SerializeField]
     private GameObject playerUIPrefab;
 
@@ -154,7 +155,7 @@ public class GameManager : NetworkBehaviour
                 intro = roleAssignUIReferences.Intro;
                 showRole = roleAssignUIReferences.ShowRole;
                 showRoleText = roleAssignUIReferences.ShowRoleText;
-                playerSlot = roleAssignUIReferences.PlayerSlot;
+                parent = roleAssignUIReferences.spawnParent;
             }
             assignRoleCanvas.SetActive(false);
         }
@@ -204,47 +205,94 @@ public class GameManager : NetworkBehaviour
         intro.SetActive(false);
         //2. 역할 공개
         showRole.SetActive(true);
-            //2-1. 역할공개 text 세팅하기
-            //로컬플레이어 역할에 따라 텍스트 세팅
-            PlayerJob playerJob = PlayerHelperManager.Instance.GetPlayerModelByClientId(NetworkManager.Singleton.LocalClientId).GetPlayerJob();
-            TextMeshProUGUI showRoleText = this.showRoleText;
-            switch(playerJob){
-                case PlayerJob.Farmer:
-                    showRoleText.text = "Farmer";
-                    showRoleText.color = Color.red;
-                    break;
-                case PlayerJob.Animal:
-                    showRoleText.text = "Animal";
-                    showRoleText.color = Color.blue;
-                    break;
-                default:
-                    showRoleText.text = "UnknownRole";
-                    showRoleText.color = Color.white;
-                    break;
-            }
-            //2-2. PlayerSlot에 PlayerUIPrefab 생성하기
-            //플레이어 수만큼 플레이어 프리팹 생성
-            PlayerModel[] players = PlayerHelperManager.Instance.GetAllPlayers<PlayerModel>();
-            int i = 0;
-            foreach(PlayerModel player in players){
-                if (playerJob == PlayerJob.Farmer)
+        //2-1. 역할공개 text 세팅하기
+        //로컬플레이어 역할에 따라 텍스트 세팅
+        PlayerJob myJob = PlayerHelperManager.Instance.GetPlayerModelByClientId(NetworkManager.Singleton.LocalClientId).GetPlayerJob();
+        TextMeshProUGUI showRoleText = this.showRoleText;
+        switch(myJob){
+            case PlayerJob.Farmer:
+                showRoleText.text = "Farmer";
+                showRoleText.color = Color.red;
+                break;
+            case PlayerJob.Animal:
+                showRoleText.text = "Animal";
+                showRoleText.color = Color.blue;
+                break;
+            default:
+                showRoleText.text = "UnknownRole";
+                showRoleText.color = Color.white;
+                break;
+        }
+        //2-2. PlayerSlot에 PlayerUIPrefab 생성하기
+        //플레이어 수만큼 플레이어 프리팹 생성
+        PlayerModel[] allPlayers = PlayerHelperManager.Instance.GetAllPlayers<PlayerModel>();
+        List<PlayerModel> targetPlayers = allPlayers.ToList();
+
+        // 내가 Farmer인 경우, 동료 Farmer만 보여줌
+        if (myJob == PlayerJob.Farmer)
+        {
+            foreach(PlayerModel player in allPlayers){
+                if (player.GetPlayerJob() != PlayerJob.Farmer)
                 {
-                    if (playerJob != player.GetPlayerJob())
-                        continue;
+                    targetPlayers.Remove(player);    
                 }
-                GameObject playerUI = Instantiate(playerUIPrefab, playerSlot[i].transform);
-                playerUI.transform.position = playerSlot[i].transform.position;
-                playerUI.transform.rotation = playerSlot[i].transform.rotation;
-                playerUI.transform.localScale = playerSlot[i].transform.localScale;
-                //플레이어 닉네임 할당
-                playerUI.GetComponentInChildren<TextMeshProUGUI>().text = player.GetPlayerNickname();
-                //플레이어 색상 할당
-                Image playerColor =  playerUI.GetComponentInChildren<Image>();
-                int playerColorIndex = player.GetPlayerColorIndex();
-                playerColor.color = AppearanceUtils.GetColorByIndex(playerColorIndex);
-                i++;
             }
+        }
+        
+     
+
+        int count = targetPlayers.Count;
+        // 최소 5명 ~ 최대 16명 기준으로 현재 인원수의 비율(0.0 ~ 1.0)을 구함
+        // 5명이면 t = 0, 16명이면 t = 1, 10명이면 t = 0.45...
+        float t = Mathf.InverseLerp(roleAssignUIReferences.minPlayerNum, roleAssignUIReferences.maxPlayerNum, (float)count);
+        // 비율에 따라 반지름 결정 (Lerp: Linear Interpolation)
+        float currentRadius = Mathf.Lerp(roleAssignUIReferences.minArcRadius, roleAssignUIReferences.maxArcRadius, t);
+        float finalGap = roleAssignUIReferences.arcAngleGap; 
+        // 전체 각도가 100도를 넘지 않도록 제한 (100도면 화면에 예쁘게 찹니다)
+        float maxTotalAngle = 100f;
+        
+        if (count > 1)
+        {
+            // 만약 "인원수 * 15도"가 100도를 넘어가면?
+            if ((count - 1) * finalGap > maxTotalAngle)
+            {
+                // 100도 안에 꽉 차게 구겨넣어라 (예: 16명이면 약 6.6도로 자동 축소됨)
+                finalGap = maxTotalAngle / (count - 1);
+            }
+        }
+        
+        // 계산된 finalGap으로 전체 각도 다시 계산
+        float totalAngle = (count - 1) * finalGap;
+        float currentAngle = totalAngle / 2f;
+        
+        for (int i = 0; i < count; i++)
+        {
+            PlayerModel player = targetPlayers[i];
             
+            // 프리팹 생성
+            GameObject playerUI  = Instantiate(playerUIPrefab, parent);
+            
+            // 각도를 라디안으로 변환
+            float rad = currentAngle * Mathf.Deg2Rad;
+            
+            // 위치 계산
+            float x = Mathf.Sin(rad) * currentRadius;
+            float y = (Mathf.Cos(rad) * currentRadius) - currentRadius;
+            
+            RectTransform rect = playerUI.GetComponent<RectTransform>();
+            rect.anchoredPosition = new Vector2(x, y);
+            
+            // 데이터 세팅
+            playerUI.GetComponentInChildren<TextMeshProUGUI>().text = player.GetPlayerNickname();
+            Image playerColor = playerUI.GetComponentInChildren<Image>();
+            playerColor.color = AppearanceUtils.GetColorByIndex(player.GetPlayerColorIndex());
+
+            // -----------------------------------------------------------
+            // [수정됨] 반드시 계산된 finalGap 하나만 빼야 합니다!
+            // -----------------------------------------------------------
+            currentAngle -= finalGap; 
+        }
+        
         //TODO: 시간 늘리기 (테스트용으로 짧게바꿈)
         yield return new WaitForSeconds(2f);
         showRole.SetActive(false);
