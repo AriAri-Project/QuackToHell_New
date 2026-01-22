@@ -573,7 +573,11 @@ public class PlayerView : NetworkBehaviour
     private void OnKillInput(InputAction.CallbackContext context)
     {
         if (!IsOwner) return;
-
+        //village scene아니면 리턴
+        if (SceneManager.GetActiveScene().name != GameScenes.Village)
+        {
+            return;
+        }
         
         OnKillTryInput?.Invoke();
     }
@@ -584,7 +588,12 @@ public class PlayerView : NetworkBehaviour
 
     private void OnSavotageInput(InputAction.CallbackContext context)
     {
-        if (!IsOwner) return;
+        if (!IsOwner) return;        
+        //village scene아니면 리턴
+        if (SceneManager.GetActiveScene().name != GameScenes.Village)
+        {
+            return;
+        }
         
         OnSavotageTryInput?.Invoke();
     }
@@ -624,6 +633,11 @@ public class PlayerView : NetworkBehaviour
     private void OnCorpseReportInput(InputAction.CallbackContext context)
     {
         if (!IsOwner) return;
+        //village scene아니면 리턴
+        if (SceneManager.GetActiveScene().name != GameScenes.Village)
+        {
+            return;
+        }
         
         ulong targetCorpseId = targetCorpseCache.GetComponent<PlayerCorpse>().ClientId;
         OnCorpseReported?.Invoke(targetCorpseId);

@@ -180,7 +180,7 @@ MonoBehaviour:
       m_Calls: []
   m_text: Farmer
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: e978e4b0ab358574fab107d4d9e5088f, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
@@ -246,7 +246,7 @@ MonoBehaviour:
   m_margin: {x: 0, y: 0, z: -2.685791, w: 0}
   m_isUsingLegacyAnimationComponent: 0
   m_isVolumetricText: 0
-  m_hasFontAssetChanged: 0
+  m_hasFontAssetChanged: 1
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
 --- !u!1 &3232630861437770114
@@ -406,7 +406,10 @@ MonoBehaviour:
   ShowRole: {fileID: 3232630861437770114}
   ShowRoleText: {fileID: 4177109015623439010}
   spawnParent: {fileID: 2584214281857444341}
-  arcRadius: 1000
+  maxPlayerNum: 16
+  minPlayerNum: 5
+  minArcRadius: 500
+  maxArcRadius: 1500
   arcAngleGap: 10
 --- !u!1 &5372272487074908690
 GameObject:

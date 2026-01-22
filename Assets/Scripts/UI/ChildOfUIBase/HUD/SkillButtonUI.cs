@@ -218,10 +218,14 @@ public class SkillButtonUI : UIHUD
 
     private void HandleObjectExited(GameObject targetObject)
     {
-        if (farmerStrategy.IsVentEntered)
+        if(farmerStrategy!=null)
         {
-            return;
+            if (farmerStrategy.IsVentEntered)
+            {
+                return;
+            }
         }
+        
         
         if (targetObject.CompareTag(GameTags.PlayerCorpse))
         {
@@ -401,9 +405,8 @@ public class SkillButtonUI : UIHUD
     }
 
     public void OnSavotageButton(PointerEventData eventData){
-        if (playerModel.GetPlayerAliveState() == PlayerLivingState.Dead) return;
         
-        UIManager.Instance.ShowPopupUI<SabotagePopup>();
+        onSavotageButton?.Invoke();
     }
     
     public void OnDynamicInteractionButton(PointerEventData eventData){

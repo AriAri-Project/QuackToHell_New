@@ -67,6 +67,11 @@ public class TrialManager : NetworkBehaviour
 
         if (RebellionVictoryService.TryTriggerRebellion(reporterClientId))
             return;
+        
+        //모든 플레이어의 움직임 멈춤
+        ulong localCliendId = NetworkManager.Singleton.LocalClientId;
+        PlayerView playerView = PlayerHelperManager.Instance.GetPlayerViewlByClientId(localCliendId);
+        playerView.SetIgnoreAllPlayerMoveInputServerRpc(true);
 
         // 1. 서버에서 리포터 클라이언트 ID 검증
         if (!NetworkManager.Singleton.ConnectedClients.ContainsKey(reporterClientId))
