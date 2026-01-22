@@ -175,6 +175,7 @@ public class PlayerPresenter : NetworkBehaviour
                 skillButtonUI.onKillButton += HandleKillInput;
                 skillButtonUI.onInteractButton += HandleInteractInput;
                 skillButtonUI.onCorpseReportButton += HandleCorpseReported;
+                skillButtonUI.onSavotageButton += HandleSavotageInput;
             }
         }
         
@@ -379,10 +380,7 @@ public class PlayerPresenter : NetworkBehaviour
 
         if (targetObjTag == GameTags.ConvocationOfTrial)
         {
-            //모든 플레이어의 움직임 멈춤
-            ulong localCliendId = NetworkManager.Singleton.LocalClientId;
-            PlayerView playerView = PlayerHelperManager.Instance.GetPlayerViewlByClientId(localCliendId);
-            playerView.SetIgnoreAllPlayerMoveInputServerRpc(true);
+
         }
          
         
@@ -408,7 +406,7 @@ public class PlayerPresenter : NetworkBehaviour
     private void HandleSavotageInput()
     {
         if (playerModel.GetPlayerAliveState() == PlayerLivingState.Dead) return;
-
+        if (playerModel.GetPlayerJob() != PlayerJob.Farmer) return;
         UIManager.Instance.ShowPopupUI<SabotagePopup>();
     }
     

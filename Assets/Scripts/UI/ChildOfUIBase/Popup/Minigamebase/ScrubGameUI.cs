@@ -5,7 +5,7 @@ using UnityEngine.UI;
 using System.Collections.Generic;
 using UnityEngine.EventSystems;
 //TODO: 올릴 골드 세팅하고(인스펙터용 열기) 클리어 시 골드증가(server rpc)
-public class ScrubGameUI : UIPopup
+public class ScrubGameUI : MinigameBaseUI
 {
     /* 사용법: 
     /* Target은 10개있음.
@@ -52,13 +52,14 @@ public class ScrubGameUI : UIPopup
         Target9,
         Target10,
     }
-
-    private void Start()
+    
+    
+    private void Awake()
     {
         base.Init();
         Bind<Image>(typeof(Images));
         
-        //리스트 초기화
+        //리스트 초기화 (한 번만)
         targetRectTransforms = new List<RectTransform>();
         targetImages = new List<Image>();
         totalScrubDistances = new List<float>();
@@ -82,10 +83,35 @@ public class ScrubGameUI : UIPopup
             }
             targetRectTransforms.Add(Get<Image>((int)image).GetComponent<RectTransform>()); 
             targetImages.Add(Get<Image>((int)image).GetComponent<Image>());
+        }
+    }
+    
+    protected override void Initialize()
+    {
+        
+        //상태 변수 초기화
+        removeCount = 0;
+        isComplete = false;
+        completeDelayTimer = 0f;
+        
+        //데이터 초기화 및 타겟 복원
+        totalScrubDistances.Clear();
+        progress.Clear();
+        
+        for (int i = 0; i < targetImages.Count; i++)
+        {
+            //타겟 이미지 재활성화
+            targetImages[i].gameObject.SetActive(true);
+            
+            //색상 복원 (투명도가 변경되었을 수 있음)
+            Color color = targetImages[i].color;
+            color.a = 1f;
+            targetImages[i].color = color;
+            
+            //데이터 초기화
             totalScrubDistances.Add(0f);
             progress.Add(1f);
         }
-        
     }
 
     private void Update()
@@ -94,7 +120,7 @@ public class ScrubGameUI : UIPopup
         {
             completeDelayTimer += Time.deltaTime;
             if (completeDelayTimer < completeDelay) return;
-            OnGameComplete();
+            FinishGame();
         }
     }
 
@@ -184,14 +210,15 @@ public class ScrubGameUI : UIPopup
         color.a = progress[overlappedIndex];
         targetImages[overlappedIndex].color = color;
     }
-    
 
 
-    private void OnGameComplete()
+  
+
+    protected override void OnGameComplete()
     {
         Debug.Log("문지르기 성공!");
         isComplete = true;
-        gameObject.SetActive(false);
     }
-    
+
+   
 }

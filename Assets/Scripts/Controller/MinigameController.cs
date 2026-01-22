@@ -502,6 +502,36 @@ public class MinigameController : MonoBehaviour
                 g2.OnCleared.RemoveListener(BeginLocalCooldown);
                 g2.OnCleared.AddListener(BeginLocalCooldown);
             }
+            
+            var g3 = _spawnedLocalUi.GetComponentInChildren<SealScrubGameUI>(true);
+            if (g3 != null)
+            {
+                g3.OnCleared.RemoveListener(CloseUi);
+                g3.OnCanceled.RemoveListener(CloseUi);
+                g3.OnCleared.AddListener(CloseUi);
+                g3.OnCanceled.AddListener(CloseUi);
+
+                g3.OnCleared.RemoveListener(HandleMinigameClearedReward);
+                g3.OnCleared.AddListener(HandleMinigameClearedReward);
+
+                g3.OnCleared.RemoveListener(BeginLocalCooldown);
+                g3.OnCleared.AddListener(BeginLocalCooldown);
+            }
+            
+            var g4 = _spawnedLocalUi.GetComponentInChildren<BerralDragToTargetGameUI>(true);
+            if (g4 != null)
+            {
+                g4.OnCleared.RemoveListener(CloseUi);
+                g4.OnCanceled.RemoveListener(CloseUi);
+                g4.OnCleared.AddListener(CloseUi);
+                g4.OnCanceled.AddListener(CloseUi);
+
+                g4.OnCleared.RemoveListener(HandleMinigameClearedReward);
+                g4.OnCleared.AddListener(HandleMinigameClearedReward);
+
+                g4.OnCleared.RemoveListener(BeginLocalCooldown);
+                g4.OnCleared.AddListener(BeginLocalCooldown);
+            }
 
             _rewardGrantedThisRun = false;
         }

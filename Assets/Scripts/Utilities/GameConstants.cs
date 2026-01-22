@@ -65,8 +65,8 @@ public static class GameConstants
             public const int SavotageCooltime = 20;
             public const int KillCooltime = 20;
             public const bool IsShowKillerInfo = true;
-            public const int InnerEyesight = 1;
-            public const int OuterEyesight = 2;
+            public const int InnerEyesight = 29;
+            public const int OuterEyesight = 30;
         }
 
         public static class Max
