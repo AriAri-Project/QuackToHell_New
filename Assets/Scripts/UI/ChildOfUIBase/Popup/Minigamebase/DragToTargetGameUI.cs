@@ -6,7 +6,7 @@ using System.Text.RegularExpressions;
 using System.Collections.Generic;
 
 //TODO: 올릴 골드 세팅하고(인스펙터용 열기) 클리어 시 골드증가(server rpc)
-public class DragToTargetGameUI : UIPopup
+public class DragToTargetGameUI : MinigameBaseUI
 {
     [SerializeField]
     private bool whenFitTransparent = false;
@@ -21,6 +21,7 @@ public class DragToTargetGameUI : UIPopup
     [SerializeField] private RectTransform[] onDroppedFitPositions;
     
     private List<Vector3> _onDroppedFitPositions;
+    private List<Vector3> _initialDragItemPositions;
     private List<GameObject> dragItemGameObject;
 
     private int matchCount = 0;
@@ -51,16 +52,17 @@ public class DragToTargetGameUI : UIPopup
         DragItem8,
         DragItem9,
     }
-
     
-    private void Start()
+    
+    private void Awake()
     {
         base.Init();
+        Bind<Image>(typeof(Images));
         
         dragItemGameObject = new List<GameObject>();
         _onDroppedFitPositions = new List<Vector3>();
+        _initialDragItemPositions = new List<Vector3>();
         
-        Bind<Image>(typeof(Images));
         for (int i = 0; i < TOTAL_MATCH_COUNT; i++)
         {
             dragItemGameObject.Add(Get<Image>((int)Images.DragItem0 + i).gameObject);
@@ -68,21 +70,39 @@ public class DragToTargetGameUI : UIPopup
             BindEvent(dragItemGameObject[i],OnEndDrag, GameEvents.UIEvent.EndDrag);
             BindEvent(dragItemGameObject[i],OnDragging, GameEvents.UIEvent.Drag);
             
+            //초기 위치 저장
+            _initialDragItemPositions.Add(dragItemGameObject[i].transform.position);
             _onDroppedFitPositions.Add(dragItemGameObject[i].transform.position);
-        
+            
             GameObject dropZoneGameObject = Get<Image>((int)Images.DropZone0 + i).gameObject;
             BindEvent(dropZoneGameObject, OnDropped, GameEvents.UIEvent.Drop);
         }
-        
     }
 
+    protected override void Initialize()
+    {
+        
+        //상태 변수 초기화
+        matchCount = 0;
+        completeDelayTimer = 0f;
+        
+        //드래그 아이템 위치 복원
+        for (int i = 0; i < TOTAL_MATCH_COUNT; i++)
+        {
+            //초기 위치로 복원
+            dragItemGameObject[i].transform.position = _initialDragItemPositions[i];
+            _onDroppedFitPositions[i] = _initialDragItemPositions[i];
+            
+        }
+    }
+    
     private void Update()
     {
         if (matchCount == TOTAL_MATCH_COUNT)
         {
             completeDelayTimer += Time.deltaTime;
             if (completeDelayTimer < completeDelay) return;
-            OnGameComplete();
+            FinishGame();
         }
     }
 
@@ -162,11 +182,11 @@ public class DragToTargetGameUI : UIPopup
             dragItemGameObject[index].transform.position = data.position;
         }
     }
-    
-    private void OnGameComplete()
+
+
+
+    protected override void OnGameComplete()
     {
         Debug.Log("타겟 위치로 드래그하기 성공!");
-        gameObject.SetActive(false);
     }
-
 }
