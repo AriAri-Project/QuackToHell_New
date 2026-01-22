@@ -169,8 +169,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: player
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: e978e4b0ab358574fab107d4d9e5088f, type: 2}
+  m_sharedMaterial: {fileID: 858448650068664009, guid: e978e4b0ab358574fab107d4d9e5088f, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -194,13 +194,13 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 50.05
+  m_fontSize: 49.05
   m_fontSizeBase: 1
   m_fontWeight: 400
   m_enableAutoSizing: 1
   m_fontSizeMin: 18
   m_fontSizeMax: 72
-  m_fontStyle: 0
+  m_fontStyle: 1
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 512
   m_textAlignment: 65535
@@ -576,7 +576,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ShowTopMostFoldoutHeaderGroup: 1
-  playerKillSFX: {fileID: 0}
   forShadowCollider: {fileID: 6207190526624410842}
   playerInput: {fileID: 3855099441482742434}
   nicknameText: {fileID: 4710416165935099427}
@@ -799,7 +798,6 @@ MonoBehaviour:
   ShowTopMostFoldoutHeaderGroup: 1
   head: {fileID: 4383151116304303481}
   animator: {fileID: 5639819905214187387}
-  deathSFX: {fileID: 0}
   playerModel: {fileID: 5976661008460593693}
 --- !u!82 &8826910233088569411
 AudioSource:
@@ -1028,6 +1026,10 @@ MonoBehaviour:
       m_Calls: []
     m_ActionId: 3c0c47ef-db66-4fed-be77-c69453ecaf79
     m_ActionName: 'Farmer/Savotage[/Keyboard/e]'
+  - m_PersistentCalls:
+      m_Calls: []
+    m_ActionId: b4d9da4e-9587-4e1d-a959-352c5b5afeb6
+    m_ActionName: 'Player/Close[/Keyboard/escape]'
   m_NeverAutoSwitchControlSchemes: 0
   m_DefaultControlScheme: 
   m_DefaultActionMap: Player
