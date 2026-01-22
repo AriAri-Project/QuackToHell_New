@@ -143,7 +143,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Join
+  m_text: "\uCC38\uC5EC\uD558\uAE30"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: b0e8a1bf49b5eed4b8063e1ca89f44f8, type: 2}
   m_sharedMaterial: {fileID: 8951789017596739672, guid: b0e8a1bf49b5eed4b8063e1ca89f44f8, type: 2}
@@ -703,7 +703,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 8908344905376011712}
   m_Direction: 0
   m_Value: 0
-  m_Size: 0.20481661
+  m_Size: 0.23215052
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:

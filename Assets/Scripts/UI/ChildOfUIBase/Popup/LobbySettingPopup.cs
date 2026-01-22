@@ -115,13 +115,13 @@ public class LobbySettingPopup : UIPopup
         EyeSightInnerRangeSettingSlider =   Get<Slider>((int)Sliders.EyeSightInnerRangeSettingSlider);
         EyeSightInnerRangeSettingSlider.value = LobbyManager.Instance.LobbyData.innerEyesightValue;
         EyeSightInnerRangeSettingSlider.onValueChanged.AddListener((value) => {
-            EyeSightInnerRangeSettingValueText.text = $"Slider value: {value}";
+            EyeSightInnerRangeSettingValueText.text = $"값: {value}";
         });
         BindEvent(EyeSightInnerRangeSettingSlider.gameObject, OnEndDrag_EyeSightInnerRangeSettingSlider, GameEvents.UIEvent.EndDrag);
         EyeSightOuterRangeSettingSlider =    Get<Slider>((int)Sliders.EyeSightOuterRangeSettingSlider);
         EyeSightOuterRangeSettingSlider.value = LobbyManager.Instance.LobbyData.outerEyesightValue;
         EyeSightOuterRangeSettingSlider.onValueChanged.AddListener((value) => {
-            EyeSightOuterRangeSettingValueText.text = $"Slider value: {value}";
+            EyeSightOuterRangeSettingValueText.text = $"값: {value}";
         });
         BindEvent(EyeSightOuterRangeSettingSlider.gameObject, OnEndDrag_EyeSightOuterRangeSettingSlider, GameEvents.UIEvent.EndDrag);
         
@@ -145,21 +145,21 @@ public class LobbySettingPopup : UIPopup
         PrivateLobbySettingSwitcher.isOn = isPrivateLobby;
     
         MaximumNumberOfPlayersSettingSlider.value = maxPlayerNum;
-        MaximumNumberOfPlayersSettingSlderValueText.text = $"Slider value: {maxPlayerNum}";  
+        MaximumNumberOfPlayersSettingSlderValueText.text = $"값: {maxPlayerNum}";  
     
         MaximumNumberOfFarmersSettingSlider.value = FarmerNum;
-        MaximumNumberOfFarmersSettingSlderValueText.text = $"Slider value: {FarmerNum}";  
+        MaximumNumberOfFarmersSettingSlderValueText.text = $"값: {FarmerNum}";  
     
         SabotageCooltimeSettingSlider.value = savotageCooltime;
-        SabotageCooltimeSettingSlderValueText.text = $"Slider value: {savotageCooltime}"; 
+        SabotageCooltimeSettingSlderValueText.text = $"값: {savotageCooltime}"; 
     
         KillCooltimeSettingSlide.value = killCooltime;
-        KillCooltimeSettingSlderValueText.text = $"Slider value: {killCooltime}";  
+        KillCooltimeSettingSlderValueText.text = $"값: {killCooltime}";  
         
         EyeSightInnerRangeSettingSlider.value = innerEyesightValue;
         EyeSightOuterRangeSettingSlider.value = outerEyesightValue;
-        EyeSightInnerRangeSettingValueText.text = $"Slider value: {innerEyesightValue}";
-        EyeSightOuterRangeSettingValueText.text =  $"Slider value: {outerEyesightValue}";
+        EyeSightInnerRangeSettingValueText.text = $"값: {innerEyesightValue}";
+        EyeSightOuterRangeSettingValueText.text =  $"값: {outerEyesightValue}";
     
         DisplayExecutorInformationSettingSwitcher.isOn = isShowKillerInfo;
     
@@ -173,7 +173,7 @@ public class LobbySettingPopup : UIPopup
         lobbyData.maxPlayerNum = (int)value;
         LobbyManager.Instance.LobbyData = lobbyData;
         //text반영
-        MaximumNumberOfPlayersSettingSlderValueText.text = $"Slider value: {(int)value}";
+        MaximumNumberOfPlayersSettingSlderValueText.text = $"값: {(int)value}";
     }
         
     
@@ -184,7 +184,7 @@ public class LobbySettingPopup : UIPopup
         lobbyData.FarmerNum = (int)value;
         LobbyManager.Instance.LobbyData = lobbyData;
         //text반영
-        MaximumNumberOfFarmersSettingSlderValueText.text = $"Slider value: {(int)value}";
+        MaximumNumberOfFarmersSettingSlderValueText.text = $"값: {(int)value}";
     }
     private void OnValueChanged_SabotageCooltimeSettingSlider(float value)
     {
@@ -193,7 +193,7 @@ public class LobbySettingPopup : UIPopup
         lobbyData.savotageCooltime = (int)value;
         LobbyManager.Instance.LobbyData = lobbyData;
         //text반영
-        SabotageCooltimeSettingSlderValueText.text = $"Slider value: {(int)value}";
+        SabotageCooltimeSettingSlderValueText.text = $"값: {(int)value}";
     }
     private void OnValueChanged_KillCooltimeSettingSlide(float value)
     {
@@ -202,7 +202,7 @@ public class LobbySettingPopup : UIPopup
         lobbyData.killCooltime = (int)value;
         LobbyManager.Instance.LobbyData = lobbyData;
         //text반영
-        KillCooltimeSettingSlderValueText.text = $"Slider value: {(int)value}";
+        KillCooltimeSettingSlderValueText.text = $"값: {(int)value}";
     }
 
     private void OnEndDrag_EyeSightInnerRangeSettingSlider(PointerEventData eventData)

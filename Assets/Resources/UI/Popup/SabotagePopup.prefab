@@ -355,7 +355,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: LightsOff
+  m_text: "\uBD88\uB044\uAE30"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: b0e8a1bf49b5eed4b8063e1ca89f44f8, type: 2}
   m_sharedMaterial: {fileID: 8951789017596739672, guid: b0e8a1bf49b5eed4b8063e1ca89f44f8, type: 2}
@@ -627,7 +627,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: ForcedInteract
+  m_text: "\uC0C1\uD638\uC791\uC6A9 \uAC15\uC81C"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: b0e8a1bf49b5eed4b8063e1ca89f44f8, type: 2}
   m_sharedMaterial: {fileID: 8951789017596739672, guid: b0e8a1bf49b5eed4b8063e1ca89f44f8, type: 2}

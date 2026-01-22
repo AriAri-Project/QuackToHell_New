@@ -46,11 +46,11 @@ public class LobbyUI : UIHUD
 
         if (NetworkManager.Singleton != null && NetworkManager.Singleton.IsHost)
         {
-            Get<TextMeshProUGUI>((int)Texts.Text_Button_StartGame).text = "Game Start";
+            Get<TextMeshProUGUI>((int)Texts.Text_Button_StartGame).text = "게임 시작";
         }
         else
         {
-            Get<TextMeshProUGUI>((int)Texts.Text_Button_StartGame).text = "Ready";
+            Get<TextMeshProUGUI>((int)Texts.Text_Button_StartGame).text = "준비";
         }
         
         Bind<Button>(typeof(Buttons));
@@ -105,7 +105,8 @@ public class LobbyUI : UIHUD
             var obj= Get<TextMeshProUGUI>((int)Texts.Text_Button_StartGame);
             if (obj)
             {
-                obj.GetComponentInParent<Image>().color = new Color(0.4f, 0.4f, 0.4f, 1f);   
+                // #C8C8C8 (밝은 회색) 적용
+                obj.GetComponentInParent<Image>().color = new Color(0.7843f, 0.7843f, 0.7843f, 1f); 
             }
             
         }
@@ -113,7 +114,7 @@ public class LobbyUI : UIHUD
             var obj = Get<TextMeshProUGUI>((int)Texts.Text_Button_StartGame);
             if (obj)
             {
-                obj.GetComponentInParent<Image>().color = new Color(0.78f, 0.78f, 0.80f, 1f); 
+                obj.GetComponentInParent<Image>().color = new Color(1f, 1f, 1f, 1f); 
             }
             
         }
