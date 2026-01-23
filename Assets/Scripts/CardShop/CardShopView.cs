@@ -21,7 +21,6 @@ public class CardShopView : MonoBehaviour
     [SerializeField] private Button lockButton;
     [SerializeField] private Button rerollButton;
     [SerializeField] private GameObject cardShopPanel;
-    [SerializeField] private Animator cardShopPanelAnimator;
 
 
     public event Action OnClickLock;
@@ -37,10 +36,6 @@ public class CardShopView : MonoBehaviour
         rerollButton.onClick.AddListener(() => OnClickReRoll?.Invoke());
     }
 
-    private void Start()
-    {
-        cardShopPanelAnimator = cardShopPanel.GetComponent<Animator>();
-    }
 
     private void OnDestroy()
     {
@@ -63,10 +58,8 @@ public class CardShopView : MonoBehaviour
     public void ToggleCardShopUI(bool isActive)
     {
         DebugUtils.AssertNotNull(cardShopPanel, "cardShopPanel", this);
-        DebugUtils.AssertNotNull(cardShopPanelAnimator, "cardShopPanelAnimator", this);
 
         cardShopPanel.SetActive(isActive);
-        cardShopPanelAnimator.SetBool("Active", isActive);
     }
 
 
