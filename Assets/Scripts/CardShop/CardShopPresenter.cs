@@ -76,6 +76,11 @@ public class CardShopPresenter : NetworkBehaviour
         ulong clientId = inputClientId == 0UL ? OwnerClientId : inputClientId;
         DeckManager.Instance.TryPurchaseCardServerRpc(card, clientId);
     }
+    public void TrySellCard(CardItemData card, ulong inputClientId)
+    {
+        ulong clientId = inputClientId == 0UL ? OwnerClientId : inputClientId;
+        DeckManager.Instance.TrySellCardServerRpc(card, clientId);
+    }
 
     public void OnPurchaseResult(bool success)
     {
