@@ -46,7 +46,8 @@ public class GameManager : NetworkBehaviour
     private GameObject intro;
     private GameObject showRole;
     private TextMeshProUGUI showRoleText;
-
+    private TextMeshProUGUI RoleExplainText;
+    private Image FootholdImage;
     private Transform parent;
     [SerializeField]
     private GameObject playerUIPrefab;
@@ -141,6 +142,9 @@ public class GameManager : NetworkBehaviour
                 intro = roleAssignUIReferences.Intro;
                 showRole = roleAssignUIReferences.ShowRole;
                 showRoleText = roleAssignUIReferences.ShowRoleText;
+                RoleExplainText =  roleAssignUIReferences.RoleExplainText;
+                FootholdImage = roleAssignUIReferences.FootholdImage;
+                
                 parent = roleAssignUIReferences.spawnParent;
             }
             assignRoleCanvas.SetActive(false);
@@ -223,12 +227,16 @@ public class GameManager : NetworkBehaviour
         TextMeshProUGUI showRoleText = this.showRoleText;
         switch(myJob){
             case PlayerJob.Farmer:
-                showRoleText.text = "Farmer";
-                showRoleText.color = Color.red;
+                showRoleText.text = "당신은 농장주입니다";
+                RoleExplainText.text = "동물들을 처치하고 재판에서 끝까지 살아남아 당신의 농장을 되찾으세요.";
+                showRoleText.color = new Color(1f, 0.3608f, 0.3608f, 1f);
+                FootholdImage.sprite = Resources.Load<Sprite>("Sprites/AssignRole/FarmerFoothold");
                 break;
             case PlayerJob.Animal:
-                showRoleText.text = "Animal";
-                showRoleText.color = Color.blue;
+                showRoleText.text = "당신은 동물입니다";
+                RoleExplainText.text = "농장에 숨어든 농장주를 찾아내 재판에서 처형시켜 동물농장의 평화를 되찾으세요.";
+                showRoleText.color = new Color(0.3608f, 1f, 0.4039f, 1f);
+                FootholdImage.sprite = Resources.Load<Sprite>("Sprites/AssignRole/AnimalFoothold");
                 break;
             default:
                 showRoleText.text = "UnknownRole";
