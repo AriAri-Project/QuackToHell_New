@@ -19,6 +19,7 @@ namespace CardItem.MVP
         
         [Header("Events")]
         public Action<CardItemData, ulong> OnPurchaseRequested;
+        public Action<CardItemData, ulong> OnSellRequested;
 
         private void Awake()
         {
@@ -34,7 +35,8 @@ namespace CardItem.MVP
             
             //구매 클릭 이벤트 바인딩
             cardItemView.OnPurchaseClicked += CardItemView_OnPurchaseClicked;
-            
+            cardItemView.OnSellClicked += CardItemView_OnSellClicked;
+
             // 카드 데이터 변경 이벤트 바인딩
             cardItemModel.OnCardDataChanged += OnCardItemDataChanged;
 
@@ -47,6 +49,7 @@ namespace CardItem.MVP
             if (cardItemView != null)
             {
                 cardItemView.OnPurchaseClicked -= CardItemView_OnPurchaseClicked;
+                cardItemView.OnSellClicked -= CardItemView_OnSellClicked;
             }
     
             if (cardItemModel != null)
@@ -208,6 +211,14 @@ namespace CardItem.MVP
             */
             OnPurchaseRequested?.Invoke(myCardItemData, inputClientId);
         }
+
+        private void CardItemView_OnSellClicked(ulong inputClientId)
+        {
+            CardItemData myCardItemData = cardItemModel.CardItemData;
+            Debug.Log($"[CardItemPresenter] Sell requested cardItemID={myCardItemData.cardItemStatusData.cardItemID}");
+            OnSellRequested?.Invoke(myCardItemData, inputClientId);
+        }
+
 
         /// <summary>
         /// 카드 데이터 변경 시 호출되는 이벤트 핸들러

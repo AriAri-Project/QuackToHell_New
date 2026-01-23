@@ -77,6 +77,16 @@ public class CardInventoryView : MonoBehaviour
             GameObject cardItemForInventory = CardItemFactoryManager.Instance.CreateCardForInventory(card);
             //캔버스 부착: 인벤토리 오브젝트의 산하의 Content오브젝트 아래에 카드 부착
             cardItemForInventory.transform.SetParent(content.transform, false);
+
+            var itemPresenter = cardItemForInventory.GetComponent<CardItem.MVP.CardItemPresenter>();
+            if (itemPresenter != null)
+            {
+                var shopPresenter = FindFirstObjectByType<CardShopPresenter>(FindObjectsInactive.Include);
+                if (shopPresenter != null)
+                {
+                    itemPresenter.OnSellRequested += shopPresenter.TrySellCard;
+                }
+            }
         }
     }
 
