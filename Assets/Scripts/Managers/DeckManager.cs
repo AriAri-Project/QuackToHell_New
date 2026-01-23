@@ -245,7 +245,6 @@ public struct CardStatusData : INetworkSerializable, IEquatable<CardStatusData>
     public int cardItemID;
     public int cardID;
     public int price;
-    public int cost;
     public CardItemState state;
     
     // Property to access state (for compatibility with existing code)
@@ -256,13 +255,12 @@ public struct CardStatusData : INetworkSerializable, IEquatable<CardStatusData>
         serializer.SerializeValue(ref cardItemID);
         serializer.SerializeValue(ref cardID);
         serializer.SerializeValue(ref price);
-        serializer.SerializeValue(ref cost);
         serializer.SerializeValue(ref state);
     }
 
     public bool Equals(CardStatusData other)
     {
-        return cardItemID == other.cardItemID && cardID == other.cardID && price == other.price && cost == other.cost && state == other.state;
+        return cardItemID == other.cardItemID && cardID == other.cardID && price == other.price && state == other.state;
     }
 
     public override bool Equals(object obj)
@@ -272,7 +270,7 @@ public struct CardStatusData : INetworkSerializable, IEquatable<CardStatusData>
 
     public override int GetHashCode()
     {
-        return HashCode.Combine(cardItemID, cardID, price, cost, state);
+        return HashCode.Combine(cardItemID, cardID, price, state);
     }   
 }
 
@@ -523,7 +521,6 @@ public class DeckManager : NetworkBehaviour
                 displayingClientId = card.displayingClientId,
                 acquiredTime = card.acquiredTicks > 0 ? new DateTime(card.acquiredTicks).ToString("HH:mm:ss") : "N/A",
                 price = card.cardItemStatusData.price,
-                cost = card.cardItemStatusData.cost,
                 tier = card.cardDef.tier,
                 type = card.cardDef.type,
                 statusDescription = GetStatusDescription(card.cardItemStatusData.state, card.displayingClientId)

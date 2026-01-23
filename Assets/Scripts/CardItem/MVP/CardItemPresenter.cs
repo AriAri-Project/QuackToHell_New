@@ -76,15 +76,99 @@ namespace CardItem.MVP
                     localizedDescription = display.description;
                 }
             }
+
+            
             
             // 모든 외관 요소 한 번에 설정
-            cardItemView.SetCardItemNameAppearence(localizedName, cardDef.tier);
-            cardItemView.SetCardItemImageAppearence(cardDef.tier, cardDef.type);
-            cardItemView.SetCardTypeAppearence(cardDef.mapRestriction, cardDef.type);
-            cardItemView.SetCardDefinitionAppearence(localizedDescription);
-            cardItemView.SetCardCharacteristicAppearence(statusData.cost, cardDef.type, cardDef.mapRestriction);
-            cardItemView.SetCardForSaleAppearence(statusData.price);
-            cardItemView.SetCardItemIdAppearence(statusData.cardItemID);
+            //카드아이콘
+            cardItemView.SetCardIcon(cardData.cardDef.cardIconResourcePath.ToString());
+            //카드분류
+            //숫자면 숫자도 표시
+            if (cardData.cardDef.type == TypeEnum.Number) 
+            {
+                //숫자 값에 따라 다르게 색 부여
+                if (cardData.cardDef.Value.Equals(CardValue.V1) || cardData.cardDef.Value.Equals(CardValue.V2))
+                {
+                    cardItemView.SetCardName(cardData.cardDef.cardName.ToString(), new Color(0.788f, 0.655f, 0.518f, 1f));
+                    cardItemView.SetCardType("숫자", new Color(0.788f, 0.655f, 0.518f, 1f));
+                    cardItemView.SetCardNum(cardData.cardDef.Value.ToString().Substring(1), new Color(0.788f, 0.655f, 0.518f, 1f));
+                }
+                if (cardData.cardDef.Value.Equals(CardValue.V3) || cardData.cardDef.Value.Equals(CardValue.V4))
+                {
+                    cardItemView.SetCardName(cardData.cardDef.cardName.ToString(), new Color(0.941f, 0.941f, 0.941f, 1f));
+                    cardItemView.SetCardType("숫자",new Color(0.941f, 0.941f, 0.941f, 1f) );
+                    cardItemView.SetCardNum(cardData.cardDef.Value.ToString().Substring(1),new Color(0.941f, 0.941f, 0.941f, 1f));
+                }
+                if (cardData.cardDef.Value.Equals(CardValue.V5) || cardData.cardDef.Value.Equals(CardValue.V6)|| cardData.cardDef.Value.Equals(CardValue.V0))
+                {
+                    cardItemView.SetCardName(cardData.cardDef.cardName.ToString(), new Color(1f, 0.765f, 0f, 1f) );
+                    cardItemView.SetCardType("숫자",new Color(1f, 0.765f, 0f, 1f) );
+                    cardItemView.SetCardNum(cardData.cardDef.Value.ToString().Substring(1),new Color(1f, 0.765f, 0f, 1f));
+                }
+                //미지숫자
+                if (cardData.cardDef.Value.Equals(CardValue.N))
+                {
+                    cardItemView.SetCardName(cardData.cardDef.cardName.ToString(), new Color(0.988f, 0.835f, 1f, 1f));
+                    cardItemView.SetCardType("미지 숫자",new Color(0.988f, 0.835f, 1f, 1f) );
+                    cardItemView.SetCardNum(cardData.cardDef.Value.ToString(),new Color(0.988f, 0.835f, 1f, 1f));
+                }
+            }
+            //기호
+            if (cardData.cardDef.type == TypeEnum.Operator)
+            {
+                //금
+                if (cardData.cardDef.tier == TierEnum.Special)
+                {
+                    cardItemView.SetCardName(cardData.cardDef.cardName.ToString(), new Color(1f, 0.765f, 0f, 1f));
+                    cardItemView.SetCardType("기호",new Color(1f, 0.765f, 0f, 1f) );
+                }
+                
+                //은
+                if (cardData.cardDef.tier == TierEnum.Rare)
+                {
+                    cardItemView.SetCardName(cardData.cardDef.cardName.ToString(), Color.white);
+                    cardItemView.SetCardType("기호",Color.white );
+                }
+               
+                //동
+                if (cardData.cardDef.tier == TierEnum.Common)
+                {
+                    cardItemView.SetCardName(cardData.cardDef.cardName.ToString(), new Color(0.788f, 0.655f, 0.518f, 1f));
+                    cardItemView.SetCardType("기호",new Color(0.788f, 0.655f, 0.518f, 1f));
+                }
+               
+            } 
+            //반란
+            if (cardData.cardDef.type == TypeEnum.Special)
+            {
+                cardItemView.SetCardName(cardData.cardDef.cardName.ToString(), new Color(1f, 0.608f, 0.157f, 1f));
+                cardItemView.SetCardType("반란",new Color(1f, 0.608f, 0.157f, 1f));
+            }
+            //직업
+            if (cardData.cardDef.type == TypeEnum.Roll)
+            {
+                //마피아
+                if (cardData.cardDef.subType.Equals(SubTypeEnum.Farmer))
+                {
+                    cardItemView.SetCardName(cardData.cardDef.cardName.ToString(),new Color(1f, 0.361f, 0.361f, 1f));
+                    cardItemView.SetCardType("직업",new Color(1f, 0.361f, 0.361f, 1f));
+                }
+                
+                //시민
+                if (cardData.cardDef.subType.Equals(SubTypeEnum.Animal))
+                {
+                    cardItemView.SetCardName(cardData.cardDef.cardName.ToString(), new Color(0.361f, 1f, 0.404f, 1f));
+                    cardItemView.SetCardType("직업",new Color(0.361f, 1f, 0.404f, 1f));
+                }
+            }
+            //카드설명
+            cardItemView.SetCardExplain(cardData.cardDef.description.ToString());
+
+            //카드 일러스트
+            cardItemView.SetCardBG(cardData.cardDef.cardIImagePath.ToString());
+            
+            //가격
+            cardItemView.SetCardPrice(cardData.cardItemStatusData.price.ToString());
         }
 
 
