@@ -12,6 +12,7 @@ public static class GameLayers
     // 환경 관련 레이어
     public const string Ground = "Ground";
     public const string Wall = "Wall";
+    public const string ShadowWall = "ShadowWall";
     public const string Interactable = "Interactable";
     
     // UI 관련 레이어

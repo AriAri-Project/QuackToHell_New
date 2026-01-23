@@ -28,8 +28,8 @@ public class ShadowHider : NetworkBehaviour
         playerView = GetComponentInParent<PlayerView>();
         //플레이어모델
         playerModel = playerView.GetComponent<PlayerModel>();
-        //레이캐스트로 감지할 레이어: 벽
-        detectionLayer.value = GameLayers.GetLayerMask(GameLayers.Wall);
+        //레이캐스트로 감지할 레이어: 그림자 벽
+        detectionLayer.value = GameLayers.GetLayerMask(GameLayers.ShadowWall);
         //로비세팅된대로 시야범위 세팅
         light2D = GetComponent<Light2D>();
         if (light2D != null)
