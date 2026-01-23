@@ -38,7 +38,7 @@ public class CardInventoryModel : NetworkBehaviour
         ownedCards.Add(card);
     }
 
-    [ServerRpc]
+    [ServerRpc(RequireOwnership = false)]
     public void RemoveOwnedCardServerRpc(CardItemData card)
     {
         for (int i = 0; i < ownedCards.Count; i++)
@@ -102,6 +102,21 @@ public class CardInventoryModel : NetworkBehaviour
         foreach (CardItemData card in ownedCards)
         {
             if (card.cardItemStatusData.cardItemID == cardId)
+                return true;
+        }
+        return false;
+    }
+
+    /// <summary>
+    /// 카드 아이템 ID 기준 소유 여부 확인 (판매용)
+    /// </summary>
+    public bool HasOwnedCard(int cardItemId)
+    {
+        if (ownedCards == null) return false;
+
+        foreach (CardItemData card in ownedCards)
+        {
+            if (card.cardItemStatusData.cardItemID == cardItemId)
                 return true;
         }
         return false;

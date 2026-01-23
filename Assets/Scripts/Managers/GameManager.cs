@@ -193,7 +193,33 @@ public class GameManager : NetworkBehaviour
         currentStatus.gold -= amount;
         player.PlayerStatusData.Value = currentStatus;
     }
-    
+
+    /// <summary>
+    /// 서버에서 특정 클라이언트의 골드를 증가시키는 RPC (판매용)
+    /// </summary>
+    /// <param name="clientId">골드를 증가시킬 클라이언트 ID</param>
+    /// <param name="amount">증가할 골드 양</param>
+    [ServerRpc(RequireOwnership = false)]
+    public void AddPlayerGoldServerRpc(ulong clientId, int amount, ServerRpcParams rpcParams = default)
+    {
+        ulong requesterClientId = rpcParams.Receive.SenderClientId;
+
+        // 서버 권위 검증
+        if (clientId != requesterClientId)
+        {
+            Debug.LogError($"Server: Unauthorized gold add attempt. Requested: {clientId}, Actual: {requesterClientId}");
+            return;
+        }
+
+        PlayerModel player = PlayerHelperManager.Instance.GetPlayerModelByClientId(clientId);
+        DebugUtils.AssertNotNull(player, "PlayerModel", this);
+
+        PlayerStatusData currentStatus = player.PlayerStatusData.Value;
+        currentStatus.gold += amount;
+        player.PlayerStatusData.Value = currentStatus;
+    }
+
+
     /// <summary>
     /// 역할 공개 시퀀스 시작
     /// </summary>

@@ -823,13 +823,7 @@ public class DeckManager : NetworkBehaviour
             Debug.LogError($"Server: Unauthorized card purchase attempt. Requested: {clientId}, Actual: {requesterClientId}");
             PlaySFXClientRpc(DeckSFX.soldFailSFX, clientRpcParams);
             return;
-        }
-        
-        // note cba0898: cardShopPresenter 체크는 왜...? 이 함수에서 쓰이지 않아서 체크를 안해도 될 것 같아요
-        /*
-        if (!DebugUtils.AssertNotNull(cardShopPresenter, "CardShopPresenter", this))
-            return;
-        */
+        }   
         
        
         
@@ -891,6 +885,42 @@ public class DeckManager : NetworkBehaviour
 
     }
 
+    // 카드 판매 처리
+    [ServerRpc(RequireOwnership = false)]
+    public void TrySellCardServerRpc(CardItemData card, ulong clientId, ServerRpcParams rpcParams = default)
+    {
+        ulong requesterClientId = rpcParams.Receive.SenderClientId;
+        if (clientId != requesterClientId)
+            return;
+
+        int cardItemId = card.cardItemStatusData.cardItemID;
+
+        if (!IsValidCardItemIdKey(cardItemId))
+            return;
+
+        if (!card.cardDef.isSellableCard)
+            return;
+
+        GameObject player = PlayerHelperManager.Instance.GetPlayerGameObjectByClientId(clientId);
+        if (player == null) return;
+
+        CardInventoryModel inv = player.GetComponent<CardInventoryModel>();
+        if (inv == null) return;
+
+        if (!inv.HasCard(cardItemId))
+            return;
+
+        int sellPrice = Mathf.FloorToInt(card.cardItemStatusData.price * 0.5f);
+
+        // 골드 지급
+        GameManager.Instance.AddPlayerGoldServerRpc(clientId, sellPrice);
+
+        inv.RemoveOwnedCardServerRpc(card);
+
+        // 카드 상태 복귀
+        RequestUpdateCardStateServerRpc(cardItemId, CardItemState.None, clientId);
+    }
+
     [ClientRpc]
     private void PlaySFXClientRpc(DeckSFX sfx, ClientRpcParams rpcParams = default )
     {
@@ -941,7 +971,13 @@ public class DeckManager : NetworkBehaviour
             {
                 CardItemData updatedCard = card;
                 updatedCard.cardItemStatusData.state = newState;
-                
+
+                // None으로 복귀 시 진열 정보도 초기화
+                if (newState == CardItemState.None)
+                {
+                    updatedCard.displayingClientId = GameConstants.Card.NOT_DISPLAYING_CLIENT_ID;
+                }
+
                 // Sold 상태일 때만 AcquiredTicks 설정 및 인벤토리에 추가
                 if (newState == CardItemState.Sold)
                 {
