@@ -16,7 +16,7 @@ public class SabotageVisualController : MonoBehaviour
 
     [Header("설정 값")]
     public float fadeDuration = 1f;
-    public float targetAlpha = 0.9f;
+    public float targetAlpha = 1.0f;
     public float startMaskScale = 2.0f;
     public float endMaskScale = 0.8f;
 

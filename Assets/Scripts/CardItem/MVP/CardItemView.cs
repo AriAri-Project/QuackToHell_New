@@ -14,7 +14,6 @@ namespace CardItem.MVP
         #region 외향
         [Header("Card For Sale 외향용 참조")]
         [SerializeField] private Image cardIcon;
-        [SerializeField] private TextMeshProUGUI cardNumText;
         [SerializeField] private TextMeshProUGUI cardNameText;
         [SerializeField] private TextMeshProUGUI cardTypeText;
         [SerializeField] private TextMeshProUGUI cardExplainText;
@@ -25,12 +24,6 @@ namespace CardItem.MVP
         public void SetCardIcon(string cardIconResourcePath)
         {
             cardIcon.sprite = Resources.Load<Sprite>(cardIconResourcePath);
-        }
-
-        public void SetCardNum(string cardNum, Color textColor)
-        {
-            cardNumText.text = cardNum;
-            cardNumText.color = textColor;
         }
 
         public void SetCardName(string cardName, Color textColor)

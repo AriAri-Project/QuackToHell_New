@@ -206,6 +206,8 @@ public sealed class VentController : NetworkBehaviour, IInteractable
             SetPlayerHiddenClientRpc(_occupantNetId.Value, true);
 
             SpawnArrowsClientRpc(NetworkObjectId, BuildTargetIds(), TargetClient(senderClientId));
+            NotifyPlayerCurrentVentClientRpc(playerObj.NetworkObjectId, this.NetworkObjectId, TargetClient(senderClientId));
+
             PlayEnterAnimation();
         }
         else
@@ -232,7 +234,9 @@ public sealed class VentController : NetworkBehaviour, IInteractable
 
             playerObj.transform.position = _tr.position + (Vector3)exitOffset;
             PlayExitAnimation();
-          
+
+            NotifyPlayerCurrentVentClientRpc(playerObj.NetworkObjectId, 0UL, target);
+
             //탈출 결과 전송
             senderFarmerStrategy.VentExitResultClientRpc(true,target);
             
@@ -285,6 +289,8 @@ public sealed class VentController : NetworkBehaviour, IInteractable
         var onlySender = new ClientRpcParams { Send = new ClientRpcSendParams { TargetClientIds = new[] { sender } } };
         DespawnArrowsClientRpc(onlySender);
         targetVent.SpawnArrowsClientRpc(targetVent.NetworkObjectId, targetVent.BuildTargetIds(), onlySender);
+        targetVent.NotifyPlayerCurrentVentClientRpc(playerObj.NetworkObjectId, targetVent.NetworkObjectId, onlySender);
+
     }
 
     private void TeleportPlayerServer(NetworkObject playerObj, Vector3 pos)
@@ -317,6 +323,19 @@ public sealed class VentController : NetworkBehaviour, IInteractable
         if (!vent) return;
 
         vent.LocalSpawnArrowsByNetworkIds(linkedVentIds);
+    }
+
+    [ClientRpc]
+    private void NotifyPlayerCurrentVentClientRpc(ulong playerNetId, ulong currentVentNetId, ClientRpcParams target = default)
+    {
+        if (!IsClient) return;
+
+        if (!NetworkManager.SpawnManager.SpawnedObjects.TryGetValue(playerNetId, out var pNo)) return;
+
+        var fs = pNo.GetComponent<FarmerStrategy>();
+        if (fs == null) return;
+
+        fs.SetCurrentVentByNetId(currentVentNetId);
     }
 
     [ClientRpc]

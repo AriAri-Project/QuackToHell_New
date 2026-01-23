@@ -91,21 +91,18 @@ namespace CardItem.MVP
                 {
                     cardItemView.SetCardName(cardData.cardDef.cardName.ToString(), new Color(0.788f, 0.655f, 0.518f, 1f));
                     cardItemView.SetCardType("숫자", new Color(0.788f, 0.655f, 0.518f, 1f));
-                    cardItemView.SetCardNum(cardData.cardDef.Value.ToString().Substring(1), new Color(0.788f, 0.655f, 0.518f, 1f));
                     cardItemView.SetIconText(cardData.cardDef.Value.ToString().Substring(1));
                 }
                 if (cardData.cardDef.Value.Equals(CardValue.V3) || cardData.cardDef.Value.Equals(CardValue.V4))
                 {
                     cardItemView.SetCardName(cardData.cardDef.cardName.ToString(), new Color(0.941f, 0.941f, 0.941f, 1f));
                     cardItemView.SetCardType("숫자",new Color(0.941f, 0.941f, 0.941f, 1f) );
-                    cardItemView.SetCardNum(cardData.cardDef.Value.ToString().Substring(1),new Color(0.941f, 0.941f, 0.941f, 1f));
                     cardItemView.SetIconText(cardData.cardDef.Value.ToString().Substring(1));
                 }
                 if (cardData.cardDef.Value.Equals(CardValue.V5) || cardData.cardDef.Value.Equals(CardValue.V6)|| cardData.cardDef.Value.Equals(CardValue.V0))
                 {
                     cardItemView.SetCardName(cardData.cardDef.cardName.ToString(), new Color(1f, 0.765f, 0f, 1f) );
                     cardItemView.SetCardType("숫자",new Color(1f, 0.765f, 0f, 1f) );
-                    cardItemView.SetCardNum(cardData.cardDef.Value.ToString().Substring(1),new Color(1f, 0.765f, 0f, 1f));
                     cardItemView.SetIconText(cardData.cardDef.Value.ToString().Substring(1));
                 }
                 //미지숫자
@@ -113,7 +110,6 @@ namespace CardItem.MVP
                 {
                     cardItemView.SetCardName(cardData.cardDef.cardName.ToString(), new Color(0.988f, 0.835f, 1f, 1f));
                     cardItemView.SetCardType("미지 숫자",new Color(0.988f, 0.835f, 1f, 1f) );
-                    cardItemView.SetCardNum(cardData.cardDef.Value.ToString(),new Color(0.988f, 0.835f, 1f, 1f));
                     cardItemView.SetIconText("N");
                 }
             }
