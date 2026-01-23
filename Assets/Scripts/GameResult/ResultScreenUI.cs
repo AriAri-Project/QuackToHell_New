@@ -1,65 +1,130 @@
+using System.Linq;
+using System.Reflection;
 using System.Text;
-using UnityEngine;
 using TMPro;
+using UnityEngine;
 
-public class ResultScreenUI : MonoBehaviour
+public sealed class ResultScreenUI : MonoBehaviour
 {
-    [Header("Root")]
-    [SerializeField] private GameObject root; // ResultPanel
-
-    [Header("Texts")]
-    [SerializeField] private TextMeshProUGUI winnersText;
-    [SerializeField] private TextMeshProUGUI losersText;
-    [SerializeField] private TextMeshProUGUI reasonText;
+    [Header("Auto-find by name if null")]
+    [SerializeField] private TMP_Text winnersText;
+    [SerializeField] private TMP_Text losersText;
+    [SerializeField] private TMP_Text reasonText;
 
     private void Awake()
     {
-        if (root != null)
-            root.SetActive(false);
+        if (winnersText == null) winnersText = FindTMP("WinnersText");
+        if (losersText == null) losersText = FindTMP("LosersText");
+        if (reasonText == null) reasonText = FindTMP("ReasonText");
     }
 
     public void Open(GameResultPayload payload)
     {
-        if (root != null)
-            root.SetActive(true);
-
-        winnersText.text = BuildWinners(payload);
-        losersText.text = BuildLosers(payload);
-        reasonText.text = BuildReason(payload);
+        Render(payload);
     }
 
-    private string BuildWinners(GameResultPayload p)
+    private void Start()
+    {
+        // 혹시 씬 로드 이벤트보다 Start가 먼저 찍혀도 안전하게 표시
+        if (ResultBroadcaster.Instance != null && ResultBroadcaster.Instance.HasPayload)
+            Render(ResultBroadcaster.Instance.LastPayload);
+    }
+
+    private void Render(GameResultPayload payload)
+    {
+        if (reasonText != null)
+            reasonText.text = payload.WinReason.ToString();
+
+        if (winnersText != null)
+            winnersText.text = BuildPlayersText("승리", payload, true);
+
+        if (losersText != null)
+            losersText.text = BuildPlayersText("패배", payload, false);
+    }
+
+    private static string BuildPlayersText(string title, GameResultPayload p, bool isWinner)
     {
         var sb = new StringBuilder();
-        sb.AppendLine("승리자 (이름 / 직업)");
+        sb.AppendLine($"[{title}]");
 
-        int count = 0;
-        if (p.HasWinner0) { sb.AppendLine($"- {p.Winner0.Name} / {p.Winner0.Job}"); count++; }
-        if (p.HasWinner1) { sb.AppendLine($"- {p.Winner1.Name} / {p.Winner1.Job}"); count++; }
-        if (p.HasWinner2) { sb.AppendLine($"- {p.Winner2.Name} / {p.Winner2.Job}"); count++; }
-        if (p.HasWinner3) { sb.AppendLine($"- {p.Winner3.Name} / {p.Winner3.Job}"); count++; }
+        if (isWinner)
+        {
+            AppendIf(sb, p.HasWinner0, p.Winner0);
+            AppendIf(sb, p.HasWinner1, p.Winner1);
+            AppendIf(sb, p.HasWinner2, p.Winner2);
+            AppendIf(sb, p.HasWinner3, p.Winner3);
+        }
+        else
+        {
+            AppendIf(sb, p.HasLoser0, p.Loser0);
+            AppendIf(sb, p.HasLoser1, p.Loser1);
+            AppendIf(sb, p.HasLoser2, p.Loser2);
+            AppendIf(sb, p.HasLoser3, p.Loser3);
+        }
 
-        if (count == 0) sb.AppendLine("- (없음)");
         return sb.ToString();
     }
 
-    private string BuildLosers(GameResultPayload p)
+    private static void AppendIf(StringBuilder sb, bool has, ResultPlayerInfo info)
     {
-        var sb = new StringBuilder();
-        sb.AppendLine("패배자 (이름 / 직업)");
+        if (!has) return;
 
-        int count = 0;
-        if (p.HasLoser0) { sb.AppendLine($"- {p.Loser0.Name} / {p.Loser0.Job}"); count++; }
-        if (p.HasLoser1) { sb.AppendLine($"- {p.Loser1.Name} / {p.Loser1.Job}"); count++; }
-        if (p.HasLoser2) { sb.AppendLine($"- {p.Loser2.Name} / {p.Loser2.Job}"); count++; }
-        if (p.HasLoser3) { sb.AppendLine($"- {p.Loser3.Name} / {p.Loser3.Job}"); count++; }
+        ExtractTwoStrings(info, out var name, out var job);
+        if (string.IsNullOrWhiteSpace(name)) name = "Unknown";
+        if (string.IsNullOrWhiteSpace(job)) job = "Unknown";
 
-        if (count == 0) sb.AppendLine("- (없음)");
-        return sb.ToString();
+        sb.AppendLine($"- {name} ({job})");
     }
 
-    private string BuildReason(GameResultPayload p)
+    // ResultPlayerInfo 멤버명이 뭐든 string 2개를 뽑아서 표시
+    private static void ExtractTwoStrings(ResultPlayerInfo info, out string a, out string b)
     {
-        return $"승리 요인\n- {p.WinReason}";
+        a = null; b = null;
+        var t = typeof(ResultPlayerInfo);
+
+        a = GetStringMember(info, t, "Nickname", "Name", "PlayerName", "nick", "nickname");
+        b = GetStringMember(info, t, "JobName", "Job", "Role", "job", "jobName", "role");
+
+        if (!string.IsNullOrEmpty(a) && !string.IsNullOrEmpty(b))
+            return;
+
+        var strings =
+            t.GetMembers(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
+             .Where(m =>
+                 (m is FieldInfo fi && fi.FieldType == typeof(string)) ||
+                 (m is PropertyInfo pi && pi.PropertyType == typeof(string) && pi.GetIndexParameters().Length == 0))
+             .OrderBy(m => m.MetadataToken)
+             .ToArray();
+
+        if (string.IsNullOrEmpty(a) && strings.Length >= 1) a = ReadString(info, strings[0]);
+        if (string.IsNullOrEmpty(b) && strings.Length >= 2) b = ReadString(info, strings[1]);
+    }
+
+    private static string GetStringMember(ResultPlayerInfo info, System.Type t, params string[] names)
+    {
+        foreach (var n in names)
+        {
+            var p = t.GetProperty(n, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+            if (p != null && p.PropertyType == typeof(string) && p.GetIndexParameters().Length == 0)
+                return (string)p.GetValue(info);
+
+            var f = t.GetField(n, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+            if (f != null && f.FieldType == typeof(string))
+                return (string)f.GetValue(info);
+        }
+        return null;
+    }
+
+    private static string ReadString(ResultPlayerInfo info, MemberInfo m)
+    {
+        if (m is FieldInfo fi) return (string)fi.GetValue(info);
+        if (m is PropertyInfo pi) return (string)pi.GetValue(info);
+        return null;
+    }
+
+    private static TMP_Text FindTMP(string goName)
+    {
+        var go = GameObject.Find(goName);
+        return go ? go.GetComponent<TMP_Text>() : null;
     }
 }

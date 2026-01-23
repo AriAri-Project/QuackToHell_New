@@ -1,48 +1,87 @@
 using Unity.Netcode;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
-public class ResultBroadcaster : NetworkBehaviour
+public sealed class ResultBroadcaster : NetworkBehaviour
 {
-    [SerializeField] private ResultScreenUI resultScreenUI;
+    public static ResultBroadcaster Instance { get; private set; }
+
+    [Header("Scene")]
+    [SerializeField] private string resultSceneName = "ResultScene";
+
+    public bool HasPayload { get; private set; }
+    public GameResultPayload LastPayload { get; private set; }
 
     private void Awake()
     {
-        // UI는 씬에 존재한다고 가정 (ResultPanel 같은 것)
-        if (resultScreenUI == null)
-            resultScreenUI = FindFirstObjectByType<ResultScreenUI>(FindObjectsInactive.Include);
+        // Singleton + Persist
+        if (Instance != null && Instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
+        Instance = this;
+        DontDestroyOnLoad(gameObject);
+
+        SceneManager.sceneLoaded += OnSceneLoaded;
     }
 
-    public override void OnNetworkSpawn()
+    private void OnDestroy()
     {
-        // 클라에서만 UI를 띄우면 되니까, 여기서는 특별히 할 거 없음.
-        // (필요하면 여기서 다시 UI 찾기)
-        if (IsClient && resultScreenUI == null)
-            resultScreenUI = FindFirstObjectByType<ResultScreenUI>(FindObjectsInactive.Include);
+        if (Instance == this) Instance = null;
+        SceneManager.sceneLoaded -= OnSceneLoaded;
     }
 
     /// <summary>
-    /// 서버에서 게임 종료 확정 시 호출
+    /// 서버에서만 호출: payload 전파 + ResultScene 이동
     /// </summary>
     public void EndGameAndShowResult(GameResultPayload payload)
     {
         if (!IsServer)
         {
-            Debug.LogWarning("[ResultBroadcaster] EndGameAndShowResult called on client!");
+            Debug.LogWarning("[ResultBroadcaster] EndGameAndShowResult called on non-server.");
             return;
         }
 
-        ShowResultClientRpc(payload);
+        // 서버도 동일하게 캐시
+        CachePayload(payload);
+
+        // 모든 클라에 payload 캐시 시킴
+        CachePayloadClientRpc(payload);
+
+        // 네트워크 씬 로드 (모든 클라 동기화)
+        if (NetworkManager.Singleton != null && NetworkManager.Singleton.SceneManager != null)
+        {
+            NetworkManager.Singleton.SceneManager.LoadScene(resultSceneName, LoadSceneMode.Single);
+        }
+        else
+        {
+            Debug.LogError("[ResultBroadcaster] NetworkManager/SceneManager missing. Cannot load ResultScene.");
+        }
     }
 
     [ClientRpc]
-    private void ShowResultClientRpc(GameResultPayload payload)
+    private void CachePayloadClientRpc(GameResultPayload payload)
     {
-        if (resultScreenUI == null)
-            resultScreenUI = FindFirstObjectByType<ResultScreenUI>(FindObjectsInactive.Include);
+        CachePayload(payload);
+    }
 
-        if (resultScreenUI != null)
-            resultScreenUI.Open(payload);
+    private void CachePayload(GameResultPayload payload)
+    {
+        LastPayload = payload;
+        HasPayload = true;
+    }
+
+    private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+    {
+        if (!HasPayload) return;
+        if (!scene.name.Equals(resultSceneName)) return;
+
+        // ResultScene 로드가 끝났으면 UI 찾아서 렌더
+        var ui = FindFirstObjectByType<ResultScreenUI>(FindObjectsInactive.Include);
+        if (ui != null)
+            ui.Open(LastPayload);
         else
-            Debug.LogError("[ResultBroadcaster] ResultScreenUI not found in scene!");
+            Debug.LogError("[ResultBroadcaster] ResultScreenUI not found in ResultScene.");
     }
 }

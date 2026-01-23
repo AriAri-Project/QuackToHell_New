@@ -485,7 +485,11 @@ public class GameManager : NetworkBehaviour
     private void BroadcastResult(GameResultPayload payload)
     {
         // ResultBroadcaster는 씬에 있어야 함 (ResultScene이든 현재 씬이든)
-        var broadcaster = FindFirstObjectByType<ResultBroadcaster>(FindObjectsInactive.Include);
+        var broadcaster = ResultBroadcaster.Instance;
+        if (broadcaster == null)
+        {
+            broadcaster = FindFirstObjectByType<ResultBroadcaster>(FindObjectsInactive.Include);
+        }
         if (broadcaster == null)
         {
             Debug.LogError("[GameManager] ResultBroadcaster not found in scene!");
@@ -617,8 +621,8 @@ public class GameManager : NetworkBehaviour
             case 2: payload.HasLoser2 = has; payload.Loser2 = info; break;
             case 3: payload.HasLoser3 = has; payload.Loser3 = info; break;
         }
-    
-}
+    }
+
     #endregion
 
 }
