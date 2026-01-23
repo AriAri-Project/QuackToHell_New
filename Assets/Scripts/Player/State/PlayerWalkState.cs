@@ -36,6 +36,13 @@ public class PlayerWalkState : NetworkStateBase
         head.gameObject.SetActive(false);
         TriggerWalkAnimation();
         walkSFX.loop = true;
+        
+        if (walkSFX.clip != null)
+        {
+            float volume = SoundVolumeSettings.Instance.GetVolume(walkSFX.clip);
+            walkSFX.volume = volume;
+        }
+        
         walkSFX.Play();
     }
 

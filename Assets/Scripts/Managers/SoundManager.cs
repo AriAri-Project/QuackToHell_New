@@ -44,6 +44,10 @@ public class SoundManager : MonoBehaviour
         AudioSource audioSource = go.AddComponent<AudioSource>();
         audioSource.outputAudioMixerGroup = mixer.FindMatchingGroups("SFX")[0];
         audioSource.clip = clip;
+        
+        float volume = SoundVolumeSettings.Instance.GetVolume(clip);
+        audioSource.volume = volume;
+        
         audioSource.Play();
 
         Destroy(go, clip.length);
@@ -82,6 +86,10 @@ public class SoundManager : MonoBehaviour
         bgSound.clip = clip;
         bgSound.loop = true;
         bgSound.volume = 0.1f;
+        
+        float volume = SoundVolumeSettings.Instance.GetVolume(clip);
+        bgSound.volume = volume;
+        
         bgSound.Play();
 
         

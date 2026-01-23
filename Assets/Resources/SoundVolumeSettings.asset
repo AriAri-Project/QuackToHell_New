@@ -1,0 +1,99 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e444649419bf6274b8fd0aee89ffd327, type: 3}
+  m_Name: SoundVolumeSettings
+  m_EditorClassIdentifier: 
+  volumeEntries:
+  - clipGuid: 6dd5738814b6d6d4092dbd57a8f787ff
+    clipName: CourtScene
+    clipPath: Assets/Audio/Music/CourtScene.mp3
+    volume: 0.1
+  - clipGuid: 0bf50384fe7178d4a9db341d168f75b4
+    clipName: VillageScene
+    clipPath: Assets/Audio/Music/VillageScene.mp3
+    volume: 0.1
+  - clipGuid: 347d2a123c87ec545892e31991b98b55
+    clipName: Assign_Role_Mafia
+    clipPath: Assets/Audio/SFX/Assign_Role_Mafia.wav
+    volume: 0.5
+  - clipGuid: 75dca70d425c6e34bb981fa7a64f9524
+    clipName: Button_Click
+    clipPath: Assets/Audio/SFX/Button_Click.wav
+    volume: 0.5
+  - clipGuid: e5976179c44415c45af38d028ae5c51c
+    clipName: Buy_Card_Fail
+    clipPath: Assets/Audio/SFX/Buy_Card_Fail.mp3
+    volume: 0.5
+  - clipGuid: 1cc93d09a967fcb4ea17038880748e5b
+    clipName: Buy_Card_Succeed
+    clipPath: Assets/Audio/SFX/Buy_Card_Succeed.wav
+    volume: 0.5
+  - clipGuid: f002252ecfd7f7e43bc52268174d9f5e
+    clipName: Checkbox_Click
+    clipPath: Assets/Audio/SFX/Checkbox_Click.wav
+    volume: 0.5
+  - clipGuid: 95a1e775fe82d1c4ba6d29a61c424cb9
+    clipName: Minigame_Click
+    clipPath: Assets/Audio/SFX/Minigame_Click.mp3
+    volume: 0.5
+  - clipGuid: 12d9a9b65e88bbf4fa2fef93b93e9c17
+    clipName: On_Mouse_Card
+    clipPath: Assets/Audio/SFX/On_Mouse_Card.mp3
+    volume: 0.5
+  - clipGuid: 6f15935a4582bc34695f6eb4ecf7322f
+    clipName: Open_Close_Minimap
+    clipPath: Assets/Audio/SFX/Open_Close_Minimap.wav
+    volume: 0.5
+  - clipGuid: c23fb1e7bb482de409d13bd26d1ca3d1
+    clipName: Player_FootStep
+    clipPath: Assets/Audio/SFX/Player_FootStep.mp3
+    volume: 0.5
+  - clipGuid: 47282e9e721d6e442863c3cb7de5a86e
+    clipName: Role_Assign_Citizen
+    clipPath: Assets/Audio/SFX/Role_Assign_Citizen.mp3
+    volume: 0.5
+  - clipGuid: 039fb95b8945c1042bfc444853fe86ad
+    clipName: Checkbox_Click
+    clipPath: Assets/Checkbox_Click.wav
+    volume: 0.5
+  - clipGuid: ff5062a5c4123704eb260d0f28ac62c6
+    clipName: Die
+    clipPath: Assets/Resources/Audio/Die.mp3
+    volume: 0.5
+  - clipGuid: fd8d9b83dd6bc654492f9d145002ede8
+    clipName: Kill
+    clipPath: Assets/Resources/Audio/Kill.mp3
+    volume: 0.5
+  - clipGuid: 3da6df63989ac684fb87d1202016873c
+    clipName: click-a
+    clipPath: Assets/Temporary/Art/UI/kenney_ui-pack/Sounds/click-a.ogg
+    volume: 0.5
+  - clipGuid: 08730cc3146ddf44aad7d5d84f561fe8
+    clipName: click-b
+    clipPath: Assets/Temporary/Art/UI/kenney_ui-pack/Sounds/click-b.ogg
+    volume: 0.5
+  - clipGuid: caff113a92b77514bb22144c10d5bb37
+    clipName: switch-a
+    clipPath: Assets/Temporary/Art/UI/kenney_ui-pack/Sounds/switch-a.ogg
+    volume: 0.5
+  - clipGuid: c20e6092aa444934fb6e675437598ee9
+    clipName: switch-b
+    clipPath: Assets/Temporary/Art/UI/kenney_ui-pack/Sounds/switch-b.ogg
+    volume: 0.5
+  - clipGuid: 33fe418a211d77b42b061d54c255e5b3
+    clipName: tap-a
+    clipPath: Assets/Temporary/Art/UI/kenney_ui-pack/Sounds/tap-a.ogg
+    volume: 0.5
+  - clipGuid: 64011923613e45e47a2797f54e6c7ca0
+    clipName: tap-b
+    clipPath: Assets/Temporary/Art/UI/kenney_ui-pack/Sounds/tap-b.ogg
+    volume: 0.5
