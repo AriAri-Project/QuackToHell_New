@@ -17,6 +17,9 @@ public static class GameLayers
     // UI 관련 레이어
     public const string UI = "UI";
     
+    //ClickableWorldObj레이어
+    public const string ClickableWorldObj = "ClickableWorldObj";
+    
     /// <summary>
     /// 레이어 이름으로 레이어 인덱스 반환
     /// </summary>

@@ -378,8 +378,15 @@ public class PlayerPresenter : NetworkBehaviour
         //옷장 상호작용
         if(interactionObj.CompareTag(GameTags.Closet))
         {
-            //TODO: 옷장 팝업 띄우기
             UIManager.Instance.ShowPopupUI<LobbyClosetPopup>();
+            //로비씬이므로 리턴.(아직 역할배정 전)
+            return;
+        }
+        
+        //키보드 상호작용
+        if(interactionObj.CompareTag(GameTags.Keyboard))
+        {
+            UIManager.Instance.ShowPopupUI<LobbySettingPopup>();
             //로비씬이므로 리턴.(아직 역할배정 전)
             return;
         }

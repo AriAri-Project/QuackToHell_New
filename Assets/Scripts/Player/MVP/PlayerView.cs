@@ -153,7 +153,7 @@ public class PlayerView : NetworkBehaviour
             targetCorpseCache =  collision.gameObject;
             onCorpseDetected?.Invoke(targetCorpseCache);
         }
-        else if(collision.CompareTag(GameTags.MiniGame)||collision.CompareTag(GameTags.Vent)||collision.CompareTag(GameTags.ConvocationOfTrial)||collision.CompareTag(GameTags.Closet))
+        else if(collision.CompareTag(GameTags.MiniGame)||collision.CompareTag(GameTags.Vent)||collision.CompareTag(GameTags.ConvocationOfTrial)||collision.CompareTag(GameTags.Closet)||collision.CompareTag(GameTags.Keyboard))
         {
             interactObjCache = collision.gameObject;
             OnObjectEntered?.Invoke(detectedObject);
@@ -200,7 +200,7 @@ public class PlayerView : NetworkBehaviour
             targetCorpseCache =  null;
             onCorpseExited?.Invoke(targetCorpseCache);
         }
-        else if(collision.CompareTag(GameTags.MiniGame)||collision.CompareTag(GameTags.Vent)||collision.CompareTag(GameTags.ConvocationOfTrial)||collision.CompareTag(GameTags.Closet))
+        else if(collision.CompareTag(GameTags.MiniGame)||collision.CompareTag(GameTags.Vent)||collision.CompareTag(GameTags.ConvocationOfTrial)||collision.CompareTag(GameTags.Closet)||collision.CompareTag(GameTags.Keyboard))
         {
             interactObjCache = null;
             OnObjectExited?.Invoke(detectedObject);
@@ -430,6 +430,9 @@ public class PlayerView : NetworkBehaviour
         {
             canvas.worldCamera = localCamera;
         }
+        
+        //월드 마우스 상호작용용 스크립트 부착
+        localCamera.gameObject.AddComponent<WorldMouseInteractionController>();
     }
     #endregion
 

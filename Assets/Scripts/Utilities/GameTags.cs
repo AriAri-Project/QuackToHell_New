@@ -32,5 +32,6 @@ public static class GameTags
     public const string MiniGame = "MiniGame";            // 미니게임
     public const string ConvocationOfTrial = "ConvocationOfTrial";  // 재판 소집 (기존과 동일)
     public const string Closet = "Closet"; //로비의 옷장설정
+    public const string Keyboard = "Keyboard"; //로비의 키보드(로비설정)설정
 
 }

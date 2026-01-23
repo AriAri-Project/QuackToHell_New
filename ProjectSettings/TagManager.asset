@@ -25,6 +25,7 @@ TagManager:
   - task-wire
   - MainCanvas
   - Closet
+  - Keyboard
   layers:
   - Default
   - TransparentFX
@@ -36,7 +37,7 @@ TagManager:
   - BackGround
   - PlayerGhost
   - PlayerCorps
-  - 
+  - ClickableWorldObj
   - 
   - 
   - 
