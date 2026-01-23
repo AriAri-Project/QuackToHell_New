@@ -146,15 +146,29 @@ public class SkillButtonUI : UIHUD
 
     private void OnDestroy()
     {
+        // 1. FarmerStrategy 관련 이벤트 해제
         if (farmerStrategy != null)
         {
+            farmerStrategy.OnKillSuccess -= OnKillSuccessed;
             farmerStrategy.OnKillCooldownReady -= HandleKillCooldownReady;
+            farmerStrategy.OnSavotageSuccess -= OnSavotageSuccessed;
+            farmerStrategy.OnSavotageCooldownReady -= HandleSavotageCooldownReady;
+            farmerStrategy.OnVentEnter -= HandleVentEnter;
+        }
+
+        // 2. GhostStrategy 관련 이벤트 해제 
+        if (ghostStrategy != null)
+        {
+            ghostStrategy.onDead -= ShowGhostUI;
         }
         
+        // 3. PlayerView 관련 이벤트 해제
         if (playerView != null)
         {
             playerView.OnObjectEntered -= HandleObjectEntered;
             playerView.OnObjectExited -= HandleObjectExited;
+            playerView.onCorpseDetected -= OnCorpseDetected; 
+            playerView.onCorpseExited -= OnCorpseExited;    
         }
     }
 
