@@ -3,8 +3,8 @@ guid: d3aa8a816b2f813429239188bdcc0650
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 4636631199408157601
-    second: "\u1107\u1166\u11AB\u1110\u1173_0"
+      213: -6776555184801724037
+    second: InteractionButtonVent_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -100,13 +100,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: "\u1107\u1166\u11AB\u1110\u1173_0"
+      name: InteractionButtonVent_0
       rect:
         serializedVersion: 2
-        x: 24
-        y: 13
-        width: 348
-        height: 372
+        x: 78
+        y: 52
+        width: 1109
+        height: 1179
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -115,8 +115,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 1a3773b828f985040800000000000000
-      internalID: 4636631199408157601
+      spriteID: b79cf0196f6d4f1a0800000000000000
+      internalID: -6776555184801724037
       vertices: []
       indices: 
       edges: []
@@ -135,7 +135,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      "\u1107\u1166\u11AB\u1110\u1173_0": 4636631199408157601
+      InteractionButtonVent_0: -6776555184801724037
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

@@ -3,8 +3,8 @@ guid: d1b28de485d010a42ad4cbc584c66393
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -6562734631870017891
-    second: "\u1109\u1161\u1107\u1169\u1110\u1161\u110C\u1175_0"
+      213: -6271337215045569286
+    second: HUD_Savotage_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -37,7 +37,7 @@ TextureImporter:
   maxTextureSize: 2048
   textureSettings:
     serializedVersion: 2
-    filterMode: 0
+    filterMode: 1
     aniso: 1
     mipBias: 0
     wrapU: 1
@@ -46,7 +46,7 @@ TextureImporter:
   nPOTScale: 0
   lightmap: 0
   compressionQuality: 50
-  spriteMode: 1
+  spriteMode: 2
   spriteExtrude: 1
   spriteMeshType: 1
   alignment: 0
@@ -75,7 +75,7 @@ TextureImporter:
     maxTextureSize: 2048
     resizeAlgorithm: 0
     textureFormat: -1
-    textureCompression: 0
+    textureCompression: 1
     compressionQuality: 50
     crunchedCompression: 0
     allowsAlphaSplitting: 0
@@ -100,13 +100,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: "\u1109\u1161\u1107\u1169\u1110\u1161\u110C\u1175_0"
+      name: HUD_Savotage_0
       rect:
         serializedVersion: 2
-        x: 24
-        y: 13
-        width: 348
-        height: 372
+        x: 78
+        y: 52
+        width: 1109
+        height: 1179
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -115,8 +115,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: d9ecb388f9b7ce4a0800000000000000
-      internalID: -6562734631870017891
+      spriteID: af47586a70cb7f8a0800000000000000
+      internalID: -6271337215045569286
       vertices: []
       indices: 
       edges: []
@@ -125,7 +125,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: 5e97eb03825dee720800000000000000
+    spriteID: 
     internalID: 0
     vertices: []
     indices: 
@@ -135,7 +135,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      "\u1109\u1161\u1107\u1169\u1110\u1161\u110C\u1175_0": -6562734631870017891
+      HUD_Savotage_0: -6271337215045569286
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

@@ -3,8 +3,8 @@ guid: b8be405fe1ffdae44868f8b42a54753c
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -3023343810777510517
-    second: kill_0
+      213: -2269537806230508292
+    second: HUD_kill_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -100,13 +100,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: kill_0
+      name: HUD_kill_0
       rect:
         serializedVersion: 2
-        x: 24
-        y: 13
-        width: 348
-        height: 372
+        x: 78
+        y: 52
+        width: 1109
+        height: 1179
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -115,8 +115,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: b8d0bbc82dcea06d0800000000000000
-      internalID: -3023343810777510517
+      spriteID: cfcaf47c36bf080e0800000000000000
+      internalID: -2269537806230508292
       vertices: []
       indices: 
       edges: []
@@ -135,7 +135,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      kill_0: -3023343810777510517
+      HUD_kill_0: -2269537806230508292
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
