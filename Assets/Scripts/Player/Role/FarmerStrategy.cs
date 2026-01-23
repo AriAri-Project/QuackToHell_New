@@ -26,8 +26,9 @@ public class FarmerStrategy : NetworkBehaviour, IRoleStrategy
     private PlayerInput _playerInput;
     private InputActionMap _farmerActionMap;
     private InputActionMap _commonActionMap;
-    
-    
+
+    private VentController _currentVent;
+
     private float killCooltimeMax;
     private float killCooltimer = 0f;
     private bool canKill = false;
@@ -238,11 +239,19 @@ public class FarmerStrategy : NetworkBehaviour, IRoleStrategy
         };
         playerDeadState.KilledClientRpc(PlayerHelperManager.Instance.GetPlayerGameObjectByClientId(requesterClientId).GetComponent<FarmerStrategy>().mySkillPath.Value, clientRpcParams);
     }
-    
 
-    
-    
-    
+    public void SetCurrentVentByNetId(ulong ventNetId)
+    {
+        if (ventNetId == 0UL)
+        {
+            _currentVent = null;
+            return;
+        }
+
+        if (NetworkManager.SpawnManager.SpawnedObjects.TryGetValue(ventNetId, out var no))
+            _currentVent = no.GetComponent<VentController>();
+    }
+
     public void Cleanup()
     {
         // 입력 이벤트 구독 해제
@@ -440,11 +449,9 @@ public class FarmerStrategy : NetworkBehaviour, IRoleStrategy
 
     public void ExitVent()
     {
-        if (interatingVentNetworkId == 0) return;
-        isVentEntered = false;
-        
-        
-    
+        if (_currentVent == null) return;
+        _currentVent.RequestToggleFromPlayer(gameObject);
+
         // 탈출 로직 먼저 호출
         NetworkObject interactObj = null;
         if (NetworkManager.Singleton.SpawnManager.SpawnedObjects.TryGetValue(
