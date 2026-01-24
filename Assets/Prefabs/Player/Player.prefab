@@ -674,9 +674,9 @@ CapsuleCollider2D:
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: -0.009773254, y: 0.26388335}
-  m_Size: {x: 1.0668602, y: 2.4660163}
-  m_Direction: 0
+  m_Offset: {x: 0.011097327, y: -0.89068264}
+  m_Size: {x: 1.7114742, y: 0.26758105}
+  m_Direction: 1
 --- !u!50 &-7064969181952296292
 Rigidbody2D:
   serializedVersion: 5
@@ -1180,7 +1180,7 @@ SpriteRenderer:
   m_SortingLayerID: -1096241079
   m_SortingLayer: 2
   m_SortingOrder: 0
-  m_Sprite: {fileID: 4557909006454064320, guid: c9209cd08b7c02b4ebf7fb320ad2b51d, type: 3}
+  m_Sprite: {fileID: -4377325458658652272, guid: 9b6ec6c1cc90d4b4bb4cd7bfb1abc9f7, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0

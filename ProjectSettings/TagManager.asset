@@ -26,6 +26,7 @@ TagManager:
   - MainCanvas
   - Closet
   - Keyboard
+  - CardShop
   layers:
   - Default
   - TransparentFX
@@ -38,7 +39,7 @@ TagManager:
   - PlayerGhost
   - PlayerCorps
   - ClickableWorldObj
-  - ShadowWall
+  - 
   - 
   - 
   - 
