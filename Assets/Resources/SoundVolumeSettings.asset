@@ -24,7 +24,7 @@ MonoBehaviour:
   - clipGuid: 347d2a123c87ec545892e31991b98b55
     clipName: Assign_Role_Mafia
     clipPath: Assets/Audio/SFX/Assign_Role_Mafia.wav
-    volume: 0.5
+    volume: 0.3
   - clipGuid: 75dca70d425c6e34bb981fa7a64f9524
     clipName: Button_Click
     clipPath: Assets/Audio/SFX/Button_Click.wav
@@ -32,11 +32,11 @@ MonoBehaviour:
   - clipGuid: e5976179c44415c45af38d028ae5c51c
     clipName: Buy_Card_Fail
     clipPath: Assets/Audio/SFX/Buy_Card_Fail.mp3
-    volume: 0.5
+    volume: 0.3
   - clipGuid: 1cc93d09a967fcb4ea17038880748e5b
     clipName: Buy_Card_Succeed
     clipPath: Assets/Audio/SFX/Buy_Card_Succeed.wav
-    volume: 0.5
+    volume: 0.3
   - clipGuid: f002252ecfd7f7e43bc52268174d9f5e
     clipName: Checkbox_Click
     clipPath: Assets/Audio/SFX/Checkbox_Click.wav
