@@ -550,7 +550,6 @@ public class PlayerView : NetworkBehaviour
     {
         int colorIndex = playerAppearanceData.ColorIndex;
         float alphaValue = playerAppearanceData.AlphaValue;
-        int orderInLayer = playerAppearanceData.orderInLayer;
         
         //색 바꾸기
         SpriteRenderer[] spriteRenderers = gameObject.GetComponentsInChildren<SpriteRenderer>();
@@ -564,8 +563,6 @@ public class PlayerView : NetworkBehaviour
             Color color = spriteRenderer.color;
             color.a = alphaValue;
             spriteRenderer.color =  color;
-            //order in layer
-            spriteRenderer.sortingOrder = orderInLayer;
         }
     }
 

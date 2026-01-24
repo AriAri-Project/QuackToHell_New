@@ -5,22 +5,32 @@ using UnityEngine;
 using UnityEngine.Rendering.Universal;
 using UnityEngine.SceneManagement;
 
+/// <summary>
+/// 특정 오브젝트가 그림자에 가려질경우 안보이게 처리하는 클래스
+/// </summary>
+///
+/// 구현아이디어
+/// 광원(Light)에서 플레이어에게 레이저(Ray)를 쐈을 때, 벽(ShadowCaster)에 먼저 막히면 플레이어는 그림자 속에 있는 것
 public class ShadowHider : NetworkBehaviour
 {
     private PlayerView playerView;
     private PlayerModel playerModel;
     private LayerMask detectionLayer;
+    private float innerEyesight;
+    private float outerEyesight;
     private Light2D light2D;
     
-    // 오프셋 설정 변수 (Y -1)
-    [SerializeField] private Vector2 rayOffset = new Vector2(0, -1f); 
-
+    List<GameObject> detectionObjects;
+    
     private void Start()
     {
+        //내 플레이어 뷰 가져오기
         playerView = GetComponentInParent<PlayerView>();
+        //플레이어모델
         playerModel = playerView.GetComponent<PlayerModel>();
-        detectionLayer.value = GameLayers.GetLayerMask(GameLayers.Wall);
-        
+        //레이캐스트로 감지할 레이어: 그림자 벽
+        detectionLayer.value = GameLayers.GetLayerMask(GameLayers.ShadowWall);
+        //로비세팅된대로 시야범위 세팅
         light2D = GetComponent<Light2D>();
         if (light2D != null)
         {
@@ -31,79 +41,77 @@ public class ShadowHider : NetworkBehaviour
 
     private void Update()
     {
-        if (!IsOwner) return;
-        if (playerModel.GetPlayerJob() == PlayerJob.Ghost) return;
+        //오너만 체크해야함
+        if (!IsOwner)
+        {
+            return;
+        }
+        //죽은애는 다 보이게
+        if (playerModel.GetPlayerJob() == PlayerJob.Ghost)
+        {
+            return;
+        }
         
+        //시야범위세팅
         if (SceneManager.GetActiveScene().name == GameScenes.Lobby)
         {
             light2D.pointLightInnerRadius =  LobbyManager.Instance.LobbyData.innerEyesightValue;
             light2D.pointLightOuterRadius = LobbyManager.Instance.LobbyData.outerEyesightValue;
         }
 
-        // 레이 시작 지점을 계산 (현재 위치 + 오프셋)
-        Vector2 rayStartPos = (Vector2)transform.position + rayOffset;
-
+        
         foreach (var target in playerView.OverlappingPlayers)
         {
             if (target == null) continue;
             
-            // 1. 시체 처리
+            // 시체인지 확인
             PlayerCorpse corpse = target.GetComponent<PlayerCorpse>();
             if (corpse != null)
             {
-                // transform.position 대신 rayStartPos 사용
-                float _distance = Vector2.Distance(rayStartPos, target.transform.position);
-                Vector2 _direction = ((Vector2)target.transform.position - rayStartPos).normalized;
-                
-                RaycastHit2D _hit = Physics2D.Raycast(rayStartPos, _direction, _distance, detectionLayer);
+                // 시체 처리 로직
+                float _distance = Vector2.Distance(transform.position, target.transform.position);
+                Vector2 _direction = (target.transform.position - transform.position).normalized;
+                RaycastHit2D _hit = Physics2D.Raycast(transform.position, _direction, _distance, detectionLayer);
         
-                bool isVisible = _hit.collider == null;
-                corpse.SetVisibility(isVisible); 
-
-                if (isVisible)
-                    Debug.DrawRay(rayStartPos, _direction * _distance, Color.green);
-                else
-                    Debug.DrawRay(rayStartPos, _direction * _hit.distance, Color.red);
+                corpse.SetVisibility(_hit.collider == null); // 벽에 안 막히면 보이게
                 continue;
             }
             
-            // 2. 유령 스킵
+            // 유령(Ghost) 플레이어는 ShadowHider에서 처리하지 않음
             PlayerModel targetModel = target.GetComponent<PlayerModel>();
             if (targetModel != null && targetModel.GetPlayerAliveState() == PlayerLivingState.Dead)
             {
-                continue; 
+                continue; // 유령은 스킵
             }
             
-            // 3. 플레이어 처리
-            // transform.position 대신 rayStartPos 사용
-            float distance = Vector2.Distance(rayStartPos, target.transform.position);
-            Vector2 direction = ((Vector2)target.transform.position - rayStartPos).normalized;
+            //광원과 상대 플레이어간의 벡터 계산
+            float distance = Vector2.Distance(transform.position, target.transform.position);
+            Vector2 direction = (target.transform.position - transform.position).normalized;
             
-            RaycastHit2D hit = Physics2D.Raycast(rayStartPos, direction, distance, detectionLayer);
+            //광원에서 플레이어쪽으로 레이 발사
+            RaycastHit2D hit = Physics2D.Raycast(transform.position, direction, distance,detectionLayer);
             
-            if (hit.collider != null)
+            //레이에 벽이 부딪혔는지 확인
+            if (hit.collider != null)//벽에부딪힘 = 타겟 플레이어를 가려야 함
             {
                 target.GetComponent<PlayerView>().SetPlayerVisibility(false);
-                Debug.DrawRay(rayStartPos, direction * hit.distance, Color.red);
             }
-            else
+            else//벽에 안 부딪힘 = 타겟플레이어가 보여져야 함
             {
                 target.GetComponent<PlayerView>().SetPlayerVisibility(true);
-                Debug.DrawRay(rayStartPos, direction * distance, Color.green);
             }
         }
+        
     }
     
     public bool IsTargetHiddenByShadow(GameObject target)
     {
         if (target == null) return false;
-        
-        Vector2 rayStartPos = (Vector2)transform.position + rayOffset;
-
-        float distance = Vector2.Distance(rayStartPos, target.transform.position);
-        Vector2 direction = ((Vector2)target.transform.position - rayStartPos).normalized;
     
-        RaycastHit2D hit = Physics2D.Raycast(rayStartPos, direction, distance, detectionLayer);
+        float distance = Vector2.Distance(transform.position, target.transform.position);
+        Vector2 direction = (target.transform.position - transform.position).normalized;
+    
+        RaycastHit2D hit = Physics2D.Raycast(transform.position, direction, distance, detectionLayer);
         return hit.collider != null;
     }
 }

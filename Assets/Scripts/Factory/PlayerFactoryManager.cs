@@ -80,7 +80,6 @@ public class PlayerFactoryManager : NetworkBehaviour
         {
             ColorIndex = 0,
             AlphaValue = 1,
-            orderInLayer = (int)playerModel.ClientId
         };
 
         playerModel.PlayerStateData.Value = new PlayerStateData

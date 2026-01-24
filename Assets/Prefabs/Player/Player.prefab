@@ -36,7 +36,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -0.061, y: 1.66}
+  m_AnchoredPosition: {x: -0.061, y: 2.99}
   m_SizeDelta: {x: 300, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!223 &8965178133225482836
@@ -674,8 +674,8 @@ CapsuleCollider2D:
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: 0.011097327, y: -0.89068264}
-  m_Size: {x: 1.7114742, y: 0.26758105}
+  m_Offset: {x: 0, y: 0.17}
+  m_Size: {x: 1.7114744, y: 0.305347}
   m_Direction: 1
 --- !u!50 &-7064969181952296292
 Rigidbody2D:
@@ -1114,6 +1114,7 @@ GameObject:
   - component: {fileID: 2696677760322620458}
   - component: {fileID: 5639819905214187387}
   - component: {fileID: 7840908720677706911}
+  - component: {fileID: 7602485520696914611}
   m_Layer: 0
   m_Name: Body
   m_TagString: Untagged
@@ -1190,7 +1191,7 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
-  m_SpriteSortPoint: 0
+  m_SpriteSortPoint: 1
 --- !u!95 &5639819905214187387
 Animator:
   serializedVersion: 7
@@ -1225,3 +1226,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c959b69f8f78ea249adcdeed8e6f4fa5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!210 &7602485520696914611
+SortingGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9157300098359662370}
+  m_Enabled: 1
+  m_SortingLayerID: -1096241079
+  m_SortingLayer: 2
+  m_SortingOrder: 0
+  m_SortAtRoot: 0
