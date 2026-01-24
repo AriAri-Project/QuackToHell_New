@@ -16,6 +16,7 @@ GameObject:
   - component: {fileID: 3351631488483816034}
   - component: {fileID: 4089401801416695911}
   - component: {fileID: 3377290141252231197}
+  - component: {fileID: 2102339855312783938}
   m_Layer: 0
   m_Name: Vent
   m_TagString: Vent
@@ -208,6 +209,7 @@ MonoBehaviour:
   enterAnimation: {fileID: 0}
   exitAnimation: {fileID: 0}
   animator: {fileID: 0}
+  enableSelfInput: 0
   enableSpacebar: 1
   interactionRadius: 1.5
   cooldownSec: 0.5
@@ -218,6 +220,7 @@ MonoBehaviour:
   arrowNormalOffset: 0
   disableWhileInside: []
   freezeRigidbody2D: 1
+  ventAnimator: {fileID: 2102339855312783938}
   arrowPrefab: {fileID: 2116766531400907591, guid: de685615eaba1cd418d490fb3a047a46, type: 3}
 --- !u!114 &3377290141252231197
 MonoBehaviour:
@@ -234,6 +237,28 @@ MonoBehaviour:
   highlightObject: {fileID: 7454422285264786865}
   interactable: {fileID: 4089401801416695911}
   playerTransform: {fileID: 0}
+--- !u!95 &2102339855312783938
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5605374587913941141}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: 69f810e6d410ba04992a97f1e14dda8d, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
 --- !u!1 &7454422285264786865
 GameObject:
   m_ObjectHideFlags: 0

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using Unity.Netcode;
@@ -34,7 +35,9 @@ public sealed class VentController : NetworkBehaviour, IInteractable
     [Header("Player Handling While Inside (Optional Local Only)")]
     [SerializeField] private List<Behaviour> disableWhileInside = new();
     [SerializeField] private bool freezeRigidbody2D = true;
-
+    
+    [Header("Vent Animator")]
+    [SerializeField] private Animator ventAnimator;
     // 서버 권한 상태
     private readonly NetworkVariable<bool> _occupied =
         new(false, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
@@ -61,6 +64,25 @@ public sealed class VentController : NetworkBehaviour, IInteractable
         name = $"Vent_{ventId}";
     }
 
+    private void Start()
+    {
+        //애니메이션 이벤트 구독
+        _occupied.OnValueChanged += HandleOccupiedChanged;
+    }
+
+    private void HandleOccupiedChanged(bool previousValue, bool newValue)
+    {
+        //애니메이션 바꾸기
+        if (newValue)
+        {
+            ventAnimator.SetBool("occupied",true);
+        }
+        else
+        {
+            ventAnimator.SetBool("occupied",false);
+        }
+    }
+    
     // =========================
     // IInteractable (Player가 넘겨주는 player를 사용!)
     // =========================
