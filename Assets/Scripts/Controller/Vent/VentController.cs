@@ -325,8 +325,17 @@ public sealed class VentController : NetworkBehaviour, IInteractable
     {
         if (!NetworkManager.SpawnManager.SpawnedObjects.TryGetValue(playerNetId, out NetworkObject networkObject)) return;
 
-        foreach (Renderer renderer in networkObject.GetComponentsInChildren<Renderer>(true)) renderer.enabled = !hidden;
-        foreach (Collider2D collider in networkObject.GetComponentsInChildren<Collider2D>(true)) collider.enabled = !hidden;
+        // 1) 시각만 숨김
+        foreach (Renderer renderer in networkObject.GetComponentsInChildren<Renderer>(true))
+            renderer.enabled = !hidden;
+
+        // 2) 트리거 콜라이더 유지
+        foreach (Collider2D col in networkObject.GetComponentsInChildren<Collider2D>(true))
+        {
+            // 상호작용/감지용
+            if (col.isTrigger) continue;
+            col.enabled = !hidden;
+        }
 
         try
         {
