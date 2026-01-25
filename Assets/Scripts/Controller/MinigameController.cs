@@ -218,7 +218,7 @@ public class MinigameController : MonoBehaviour
         if (eligible) EnableHighlight(); else DisableHighlight();
     }
 
-    private void EnableHighlight()
+    private void EnableHighlight() 
     {
         foreach (var r in highlightRenderers)
         {

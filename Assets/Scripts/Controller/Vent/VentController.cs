@@ -225,6 +225,7 @@ public sealed class VentController : NetworkBehaviour, IInteractable
             _occupantNetId.Value = playerObj.NetworkObjectId;
 
             TeleportPlayerServer(playerObj, _tr.position);
+            TeleportPlayerClientRpc(playerObj.NetworkObjectId, _tr.position, TargetClient(senderClientId));
             SetPlayerHiddenClientRpc(_occupantNetId.Value, true);
 
             SpawnArrowsClientRpc(NetworkObjectId, BuildTargetIds(), TargetClient(senderClientId));
@@ -254,7 +255,11 @@ public sealed class VentController : NetworkBehaviour, IInteractable
             SetPlayerHiddenClientRpc(_occupantNetId.Value, false);
             DespawnArrowsClientRpc(TargetClient(senderClientId));
 
-            playerObj.transform.position = _tr.position + (Vector3)exitOffset;
+            var exitPos = _tr.position + (Vector3)exitOffset;
+
+            TeleportPlayerServer(playerObj, exitPos);
+            TeleportPlayerClientRpc(playerObj.NetworkObjectId, exitPos, TargetClient(senderClientId));
+
             PlayExitAnimation();
 
             NotifyPlayerCurrentVentClientRpc(playerObj.NetworkObjectId, 0UL, target);
@@ -303,15 +308,17 @@ public sealed class VentController : NetworkBehaviour, IInteractable
         if (targetVent == null) return;
 
         _occupied.Value = false;
+        _occupantNetId.Value = 0UL; // 이전 벤트에서 점유자 정보 제거
+
         targetVent._occupied.Value = true;
         targetVent._occupantNetId.Value = playerObj.NetworkObjectId;
 
         TeleportPlayerServer(playerObj, targetVent.transform.position);
+        TeleportPlayerClientRpc(playerObj.NetworkObjectId, targetVent.transform.position, TargetClient(sender));
 
-        var onlySender = new ClientRpcParams { Send = new ClientRpcSendParams { TargetClientIds = new[] { sender } } };
-        DespawnArrowsClientRpc(onlySender);
-        targetVent.SpawnArrowsClientRpc(targetVent.NetworkObjectId, targetVent.BuildTargetIds(), onlySender);
-        targetVent.NotifyPlayerCurrentVentClientRpc(playerObj.NetworkObjectId, targetVent.NetworkObjectId, onlySender);
+        DespawnArrowsClientRpc(TargetClient(sender));
+        targetVent.SpawnArrowsClientRpc(targetVent.NetworkObjectId, targetVent.BuildTargetIds(), TargetClient(sender));
+        targetVent.NotifyPlayerCurrentVentClientRpc(playerObj.NetworkObjectId, targetVent.NetworkObjectId, TargetClient(sender));
 
     }
 
@@ -344,6 +351,16 @@ public sealed class VentController : NetworkBehaviour, IInteractable
             if (playerView != null) playerView.SetNicknameVisibility(!hidden);
         }
         catch { }
+    }
+
+    [ClientRpc]
+    private void TeleportPlayerClientRpc(ulong playerNetId, Vector3 pos, ClientRpcParams target = default)
+    {
+        if (!NetworkManager.SpawnManager.SpawnedObjects.TryGetValue(playerNetId, out var pNo)) return;
+        pNo.transform.position = pos;
+
+        // 트리거/콜라이더 갱신 강제
+        Physics2D.SyncTransforms();
     }
 
     [ClientRpc]
