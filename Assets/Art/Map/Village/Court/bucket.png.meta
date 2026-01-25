@@ -1,16 +1,10 @@
 fileFormatVersion: 2
-guid: 8acc3e98eacf92c4295a5ac12ca1520c
+guid: 38fb7ab9ed084f646acf4f46f12a1ac3
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -7507346387024113568
-    second: bed2_0
-  - first:
-      213: 6453232521896111657
-    second: bed2_1
-  - first:
-      213: -559614853725434194
-    second: bed2_2
+      213: -4696760917660491729
+    second: bucket_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -106,13 +100,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: bed2_0
+      name: bucket_0
       rect:
         serializedVersion: 2
-        x: 19
-        y: 486
-        width: 400
-        height: 148
+        x: 3
+        y: 2
+        width: 148
+        height: 171
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -121,52 +115,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 0609d939c3c80d790800000000000000
-      internalID: -7507346387024113568
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: bed2_1
-      rect:
-        serializedVersion: 2
-        x: 616
-        y: 483
-        width: 397
-        height: 105
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: 92ead98b9cc7e8950800000000000000
-      internalID: 6453232521896111657
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: bed2_2
-      rect:
-        serializedVersion: 2
-        x: 503
-        y: 223
-        width: 108
-        height: 88
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: eaec9a86149db38f0800000000000000
-      internalID: -559614853725434194
+      spriteID: f20a8e374d0c1deb0800000000000000
+      internalID: -4696760917660491729
       vertices: []
       indices: 
       edges: []
@@ -185,9 +135,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      bed2_0: -7507346387024113568
-      bed2_1: 6453232521896111657
-      bed2_2: -559614853725434194
+      bucket_0: -4696760917660491729
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

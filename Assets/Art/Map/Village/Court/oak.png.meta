@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: cecc2892dcc360d45aade9c316d3d7e8
+guid: 523013de832958847ad07e3cfbcfb40e
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 6332379192113502151
-    second: court_maindesk_0
+      213: 7973152461106865416
+    second: oak_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -100,13 +100,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: court_maindesk_0
+      name: oak_0
       rect:
         serializedVersion: 2
-        x: 9
-        y: 17
-        width: 1372
-        height: 1092
+        x: 4
+        y: 1
+        width: 509
+        height: 433
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -115,8 +115,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 7c71009235121e750800000000000000
-      internalID: 6332379192113502151
+      spriteID: 8056e487be356ae60800000000000000
+      internalID: 7973152461106865416
       vertices: []
       indices: 
       edges: []
@@ -135,7 +135,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      court_maindesk_0: 6332379192113502151
+      oak_0: 7973152461106865416
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
