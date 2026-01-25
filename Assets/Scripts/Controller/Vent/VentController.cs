@@ -197,8 +197,8 @@ public sealed class VentController : NetworkBehaviour, IInteractable
         bool iAmOccupant = (_occupantNetId.Value != 0UL) &&
                            (_occupantNetId.Value == localPlayerObj.NetworkObjectId);
 
-        if (_occupied.Value && iAmOccupant)
-            localPlayerObj.transform.position = _tr.position;
+        // if (_occupied.Value && iAmOccupant)
+            // localPlayerObj.transform.position = _tr.position;
     }
 
     // =========================

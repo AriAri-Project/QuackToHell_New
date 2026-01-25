@@ -460,15 +460,7 @@ public class FarmerStrategy : NetworkBehaviour, IRoleStrategy
             interactObj = obj;
         }
 
-        if (interactObj != null && interactObj.CompareTag(GameTags.Vent))
-        {
-            VentController vent = interactObj.GetComponent<VentController>();
-            if (vent != null)
-            {
-                GameObject player = this.gameObject;
-                vent.RequestToggleFromPlayer(player);
-            }
-        }
+        
     }
     
     [ClientRpc]
