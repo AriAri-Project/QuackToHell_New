@@ -238,7 +238,7 @@ public class MinigameController : MonoBehaviour
             go.transform.localPosition = Vector3.zero;
             go.transform.localRotation = Quaternion.identity;
 
-            go.transform.localScale = Vector3.one * 1.09f;
+            go.transform.localScale = Vector3.one * 1.15f;
 
             var sr2 = go.AddComponent<SpriteRenderer>();
             sr2.sprite = sr.sprite;
@@ -256,7 +256,7 @@ public class MinigameController : MonoBehaviour
                 sr2.material = new Material(shader); 
             }
 
-            sr2.color = new Color(1f, 1f, 1f, 0.85f);
+            sr2.color = new Color(0.2f, 1.0f, 0.2f, 1f);
 
             _outlineClones.Add(go);
         }
