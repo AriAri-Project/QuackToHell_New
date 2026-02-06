@@ -1,13 +1,19 @@
 fileFormatVersion: 2
-guid: 9ec3aa48040f3184cb47a1c4026912ca
+guid: ebc68f70007fdc349a45019af536ba3a
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -8110555014337242811
-    second: ob1_0
+      213: 6752263731568525964
+    second: "ob\uC0C9 (1)_0"
   - first:
-      213: -3321537483420825869
-    second: ob1_1
+      213: -4687258620370726035
+    second: "ob\uC0C9 (1)_1"
+  - first:
+      213: 8878396765308961166
+    second: "ob\uC0C9 (1)_2"
+  - first:
+      213: 7029675199340700862
+    second: "ob\uC0C9 (1)_3"
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -75,7 +81,7 @@ TextureImporter:
   platformSettings:
   - serializedVersion: 4
     buildTarget: DefaultTexturePlatform
-    maxTextureSize: 1024
+    maxTextureSize: 2048
     resizeAlgorithm: 0
     textureFormat: -1
     textureCompression: 0
@@ -103,13 +109,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: ob1_0
+      name: "ob\uC0C9 (1)_0"
       rect:
         serializedVersion: 2
-        x: 4
-        y: 17
-        width: 780
-        height: 482
+        x: 2
+        y: 172
+        width: 92
+        height: 341
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -118,20 +124,20 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 5495a2f9f25817f80800000000000000
-      internalID: -8110555014337242811
+      spriteID: c8245edb61cd4bd50800000000000000
+      internalID: 6752263731568525964
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: ob1_1
+      name: "ob\uC0C9 (1)_1"
       rect:
         serializedVersion: 2
-        x: 425
-        y: 0
-        width: 72
-        height: 60
+        x: 76
+        y: 181
+        width: 69
+        height: 226
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -140,8 +146,52 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 3f68e80d14787e1d0800000000000000
-      internalID: -3321537483420825869
+      spriteID: d635a627e1383feb0800000000000000
+      internalID: -4687258620370726035
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "ob\uC0C9 (1)_2"
+      rect:
+        serializedVersion: 2
+        x: 135
+        y: 22
+        width: 807
+        height: 483
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e81c73b71d6663b70800000000000000
+      internalID: 8878396765308961166
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "ob\uC0C9 (1)_3"
+      rect:
+        serializedVersion: 2
+        x: 556
+        y: 2
+        width: 72
+        height: 64
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: eb46317595c6e8160800000000000000
+      internalID: 7029675199340700862
       vertices: []
       indices: 
       edges: []
@@ -160,8 +210,10 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      ob1_0: -8110555014337242811
-      ob1_1: -3321537483420825869
+      "ob\uC0C9 (1)_0": 6752263731568525964
+      "ob\uC0C9 (1)_1": -4687258620370726035
+      "ob\uC0C9 (1)_2": 8878396765308961166
+      "ob\uC0C9 (1)_3": 7029675199340700862
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

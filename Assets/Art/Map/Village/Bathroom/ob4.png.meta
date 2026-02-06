@@ -1,13 +1,10 @@
 fileFormatVersion: 2
-guid: d76f69a8b33d5bd4facdf3511617cca8
+guid: 6ba00db1afa89f041a005f246df45163
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 5005593412499619600
-    second: ob4_0
-  - first:
-      213: -6693571803834269509
-    second: ob4_1
+      213: -3609369601966906357
+    second: "\uC7A5\uC2E4ob\uC0C9 (4)_0"
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -75,7 +72,7 @@ TextureImporter:
   platformSettings:
   - serializedVersion: 4
     buildTarget: DefaultTexturePlatform
-    maxTextureSize: 1024
+    maxTextureSize: 2048
     resizeAlgorithm: 0
     textureFormat: -1
     textureCompression: 0
@@ -103,35 +100,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: ob4_0
+      name: "\uC7A5\uC2E4ob\uC0C9 (4)_0"
       rect:
         serializedVersion: 2
-        x: 0
-        y: 136
-        width: 601
-        height: 119
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: 01f331a10b0777540800000000000000
-      internalID: 5005593412499619600
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: ob4_1
-      rect:
-        serializedVersion: 2
-        x: 277
-        y: 9
+        x: 4
+        y: 12
         width: 263
-        height: 123
+        height: 124
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -140,8 +115,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: bb043e198e7ab13a0800000000000000
-      internalID: -6693571803834269509
+      spriteID: b046ba36871f8edc0800000000000000
+      internalID: -3609369601966906357
       vertices: []
       indices: 
       edges: []
@@ -160,8 +135,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      ob4_0: 5005593412499619600
-      ob4_1: -6693571803834269509
+      "\uC7A5\uC2E4ob\uC0C9 (4)_0": -3609369601966906357
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

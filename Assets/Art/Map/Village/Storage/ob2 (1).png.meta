@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: dab56276432404b4f96deb32a85c503a
+guid: 76bfa368d57ff7841b927519731f6863
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -2068158211908566235
-    second: ob2 (1)_0
+      213: 5174123036465934235
+    second: "ob\uC0C9_0"
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -72,7 +72,7 @@ TextureImporter:
   platformSettings:
   - serializedVersion: 4
     buildTarget: DefaultTexturePlatform
-    maxTextureSize: 512
+    maxTextureSize: 2048
     resizeAlgorithm: 0
     textureFormat: -1
     textureCompression: 0
@@ -100,13 +100,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: ob2 (1)_0
+      name: "ob\uC0C9_0"
       rect:
         serializedVersion: 2
-        x: 24
-        y: 18
+        x: 12
+        y: 0
         width: 328
-        height: 386
+        height: 385
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -115,8 +115,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 52302e7501d6c43e0800000000000000
-      internalID: -2068158211908566235
+      spriteID: b9fa7bcec7d2ec740800000000000000
+      internalID: 5174123036465934235
       vertices: []
       indices: 
       edges: []
@@ -135,7 +135,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      ob2 (1)_0: -2068158211908566235
+      "ob\uC0C9_0": 5174123036465934235
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

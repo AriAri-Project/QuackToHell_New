@@ -1,13 +1,13 @@
 fileFormatVersion: 2
-guid: 20d3aa275cec734408c8d7a9f028a8d7
+guid: a8c2e43710327cb408ae74908b5d8f19
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 8715720668138857436
-    second: ob3_0
+      213: -918267647384557059
+    second: "ob\uC0C9 (2)_0"
   - first:
-      213: -6272868489508491562
-    second: ob3_1
+      213: -7022737729238197332
+    second: "ob\uC0C9 (2)_1"
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -75,7 +75,7 @@ TextureImporter:
   platformSettings:
   - serializedVersion: 4
     buildTarget: DefaultTexturePlatform
-    maxTextureSize: 1024
+    maxTextureSize: 2048
     resizeAlgorithm: 0
     textureFormat: -1
     textureCompression: 0
@@ -103,13 +103,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: ob3_0
+      name: "ob\uC0C9 (2)_0"
       rect:
         serializedVersion: 2
-        x: 10
-        y: 32
-        width: 283
-        height: 298
+        x: 0
+        y: 1
+        width: 279
+        height: 299
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -118,20 +118,20 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: cd362f115c574f870800000000000000
-      internalID: 8715720668138857436
+      spriteID: df9e8ec9078a143f0800000000000000
+      internalID: -918267647384557059
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: ob3_1
+      name: "ob\uC0C9 (2)_1"
       rect:
         serializedVersion: 2
-        x: 143
-        y: 32
+        x: 129
+        y: 1
         width: 454
-        height: 321
+        height: 322
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -140,8 +140,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 6deea18085b42f8a0800000000000000
-      internalID: -6272868489508491562
+      spriteID: cab160a4e393a8e90800000000000000
+      internalID: -7022737729238197332
       vertices: []
       indices: 
       edges: []
@@ -160,8 +160,8 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      ob3_0: 8715720668138857436
-      ob3_1: -6272868489508491562
+      "ob\uC0C9 (2)_0": -918267647384557059
+      "ob\uC0C9 (2)_1": -7022737729238197332
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
