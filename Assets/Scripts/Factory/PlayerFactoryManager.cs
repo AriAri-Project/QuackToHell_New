@@ -87,25 +87,7 @@ public class PlayerFactoryManager : NetworkBehaviour
             animationState = PlayerAnimationState.Idle
         };
         
-        //플레이어의 capsuleCollider2D끼리는 충돌무시
-        //문서: https://docs.unity3d.com/ScriptReference/Physics2D.IgnoreCollision.html
-        CapsuleCollider2D myPlayerCapsule = player.GetComponent<CapsuleCollider2D>();
-        if(myPlayerCapsule != null)
-        {
-            CapsuleCollider2D[] allPlayers = PlayerHelperManager.Instance.GetAllPlayers<CapsuleCollider2D>();
-            foreach (CapsuleCollider2D playerCapsuleCollider2D in allPlayers)
-            {
-                if (playerCapsuleCollider2D == myPlayerCapsule)
-                {
-                    continue;
-                }
-                Physics2D.IgnoreCollision(myPlayerCapsule, playerCapsuleCollider2D,true);
-            }
-        }
-        else
-        {
-            Debug.LogError("플레이어에 capsuleColluder2D가 부착되지 않았습니다!");
-        }
+        
         DontDestroyOnLoad(player);
         SpawnPlayerResultClientRpc(true);
     }
