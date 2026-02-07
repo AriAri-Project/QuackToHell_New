@@ -34,9 +34,11 @@ public class PlayerModel : NetworkBehaviour
 
     private ulong clientId;
     //충돌범위 레이
-    private float yRay = 0.47f;
+    private float upRay = 0.47f;
+    private float downRay = 0.05f;
     private float xRay = 0.17f;
     private int wallLayerMask;
+    private float rayOffset = 0.1f; 
 
     public ulong ClientId
     {
@@ -139,70 +141,85 @@ public class PlayerModel : NetworkBehaviour
     }
 
     private void FixedUpdate()
+{
+    if (direction == null) return;
+
+    // 이동량
+    Vector2 moveInput = direction.Value;
+    float speed = _playerStatusData.Value.moveSpeed * Time.fixedDeltaTime;
+    Vector2 moveAmount = moveInput * speed;
+    Vector2 origin = transform.position;
+    
+
+    // 위아래
+    if (moveInput.y != 0)
     {
-        if (direction == null)
+        // 아래
+        if (moveInput.y < 0)
         {
-            return;
-        }
+            Vector2 rayOrigin = origin + (Vector2.down * rayOffset);
+            float finalRayLength = downRay + rayOffset;
 
+            RaycastHit2D hit = Physics2D.Raycast(rayOrigin, Vector2.down, finalRayLength, wallLayerMask);
+            Debug.DrawRay(rayOrigin, Vector2.down * finalRayLength, hit.collider != null ? Color.red : Color.green);
 
-        //현 위치
-        Vector2 origin = transform.position;
-        
-        //디렉션 쪽으로 쏴서 벽이면 못 가게
-        if (direction.Value.y != 0)
-        {
-            //아래
-            if (direction.Value.y < 0)
+            if (hit.collider != null)
             {
-                RaycastHit2D raycastHit2D = Physics2D.Raycast(origin,Vector2.down,yRay,wallLayerMask);
-                Debug.DrawRay(origin, (Vector3)(Vector2.down * yRay), raycastHit2D.collider != null ? Color.red : Color.green, 0.5f);
-                if (raycastHit2D.collider != null)
-                {
-                    return;
-                }
-            }
-            //위
-            if (direction.Value.y > 0)
-            {
-                RaycastHit2D raycastHit2D = Physics2D.Raycast(origin,Vector2.up,yRay,wallLayerMask);
-                Debug.DrawRay(origin, (Vector3)(Vector2.up * yRay), raycastHit2D.collider != null ? Color.red : Color.green, 0.5f);
-                if (raycastHit2D.collider != null)
-                {
-                    return;
-                }
+                moveAmount.y = 0; 
             }
         }
-
-        if (direction.Value.x != 0)
+        // 위
+        else if (moveInput.y > 0)
         {
-            //왼
-            if (direction.Value.x < 0)
+            Vector2 rayOrigin = origin + (Vector2.up * rayOffset);
+            float finalRayLength = upRay + rayOffset;
+
+            RaycastHit2D hit = Physics2D.Raycast(rayOrigin, Vector2.up, finalRayLength, wallLayerMask);
+            Debug.DrawRay(rayOrigin, Vector2.up * finalRayLength, hit.collider != null ? Color.red : Color.green);
+
+            if (hit.collider != null)
             {
-                RaycastHit2D raycastHit2D = Physics2D.Raycast(origin,Vector2.left,yRay,wallLayerMask);
-                Debug.DrawRay(origin, (Vector3)(Vector2.left * yRay), raycastHit2D.collider != null ? Color.red : Color.green, 0.5f);
-                if (raycastHit2D.collider != null)
-                {
-                    return;
-                }
-            }
-            //오
-            if (direction.Value.x > 0)
-            {
-                RaycastHit2D raycastHit2D = Physics2D.Raycast(origin,Vector2.right,yRay,wallLayerMask);
-                Debug.DrawRay(origin, (Vector3)(Vector2.right * yRay), raycastHit2D.collider != null ? Color.red : Color.green, 0.5f);
-                if (raycastHit2D.collider != null)
-                {
-                    return;
-                }
+                moveAmount.y = 0;
             }
         }
-        
-        //이동량
-        Vector2 moveAmount = direction.Value * (_playerStatusData.Value.moveSpeed * Time.fixedDeltaTime);
-        //이동
-        transform.Translate(moveAmount.x, moveAmount.y, 0);
     }
+
+    // 왼오
+    if (moveInput.x != 0)
+    {
+        // 왼
+        if (moveInput.x < 0)
+        {
+            Vector2 rayOrigin = origin + (Vector2.left * rayOffset);
+            float finalRayLength = xRay + rayOffset; 
+
+            RaycastHit2D hit = Physics2D.Raycast(rayOrigin, Vector2.left, finalRayLength, wallLayerMask);
+            Debug.DrawRay(rayOrigin, Vector2.left * finalRayLength, hit.collider != null ? Color.red : Color.green);
+
+            if (hit.collider != null)
+            {
+                moveAmount.x = 0;
+            }
+        }
+        // 오
+        else if (moveInput.x > 0)
+        {
+            Vector2 rayOrigin = origin + (Vector2.right * rayOffset);
+            float finalRayLength = xRay + rayOffset;
+
+            RaycastHit2D hit = Physics2D.Raycast(rayOrigin, Vector2.right, finalRayLength, wallLayerMask);
+            Debug.DrawRay(rayOrigin, Vector2.right * finalRayLength, hit.collider != null ? Color.red : Color.green);
+
+            if (hit.collider != null)
+            {
+                moveAmount.x = 0;
+            }
+        }
+    }
+
+    // 최종 이동
+    transform.Translate(moveAmount.x, moveAmount.y, 0);
+}
 
     /// <summary>
     /// 애니메이션 상태 변경 ServerRpc
