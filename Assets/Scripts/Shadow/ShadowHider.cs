@@ -89,16 +89,16 @@ public class ShadowHider : NetworkBehaviour
             Vector2 direction = (target.transform.position - transform.position).normalized;
             
             //광원에서 플레이어쪽으로 레이 발사
-            RaycastHit2D hit = Physics2D.Raycast(transform.position, direction, distance,detectionLayer);
+            RaycastHit2D hit = Physics2D.Raycast(transform.position, direction, distance, detectionLayer);
             
             //레이에 벽이 부딪혔는지 확인
             if (hit.collider != null)//벽에부딪힘 = 타겟 플레이어를 가려야 함
             {
-                target.GetComponent<PlayerView>().SetPlayerVisibility(false);
+                target?.GetComponent<PlayerView>()?.SetPlayerVisibility(false);
             }
             else//벽에 안 부딪힘 = 타겟플레이어가 보여져야 함
             {
-                target.GetComponent<PlayerView>().SetPlayerVisibility(true);
+                target?.GetComponent<PlayerView>()?.SetPlayerVisibility(true);
             }
         }
         

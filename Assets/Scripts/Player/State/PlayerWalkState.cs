@@ -12,14 +12,16 @@ public class PlayerWalkState : NetworkStateBase
     public AudioSource walkSFX;
     
     private NetworkVariable<bool> headFlipX = new NetworkVariable<bool>();
-    
+
+    private PlayerModel playerModel;
     private void Start()
     {
         // NetworkVariable 값 변경 이벤트 구독
         headFlipX.OnValueChanged += OnHeadFlipChanged;
         // 초기 값 적용
         OnHeadFlipChanged(false, headFlipX.Value);
-        
+        // 모델 가져오기
+        playerModel = PlayerHelperManager.Instance.GetPlayerModelByClientId(NetworkManager.Singleton.LocalClientId);
     }
 
     private void OnHeadFlipChanged(bool previousValue, bool newValue)
@@ -35,6 +37,12 @@ public class PlayerWalkState : NetworkStateBase
     {
         head.gameObject.SetActive(false);
         TriggerWalkAnimation();
+        //죽으면 walk사운드x
+        if (playerModel.PlayerStateData.Value.IsDead)
+        {
+            return;
+        }
+        
         walkSFX.loop = true;
         
         if (walkSFX.clip != null)
@@ -61,6 +69,12 @@ public class PlayerWalkState : NetworkStateBase
 
     public override void OnStateExit()
     {
+        //죽으면 walk사운드x
+        if (playerModel.PlayerStateData.Value.IsDead)
+        {
+            return;
+        }
+        
         walkSFX.loop = false;
         walkSFX.Stop();
     }

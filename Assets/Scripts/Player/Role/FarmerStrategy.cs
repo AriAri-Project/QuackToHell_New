@@ -192,6 +192,8 @@ public class FarmerStrategy : NetworkBehaviour, IRoleStrategy
         else
         {
             result = true;
+            requesterPlayerFarmerStrategy.killCooltimer = 0f;
+            requesterPlayerFarmerStrategy.canKill = false;
         }
     
         CanKillResultClientRpc(result, targetNetworkObjectId, new ClientRpcParams 
@@ -300,13 +302,10 @@ public class FarmerStrategy : NetworkBehaviour, IRoleStrategy
         if (IsOwner)
         {
             Instantiate(effect,targetPlayer.transform.position,Quaternion.identity);
-            AudioSource audioSource = GameObjectUtils.GetOrAddComponent<AudioSource>(this.gameObject);
-            audioSource.playOnAwake = false;
-            audioSource.clip = Resources.Load<AudioClip>("Audio/Die");
-            SoundManager.Instance.SFXPlay(audioSource.clip.name, audioSource.clip);
+            AudioClip clip = Resources.Load<AudioClip>("Audio/Die");
+            Debug.Log("Die 재생됨");
+            SoundManager.Instance.SFXPlay(clip.name, clip);
         }
-        
-        
     }
 
     [ClientRpc]

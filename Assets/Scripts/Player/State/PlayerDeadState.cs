@@ -21,6 +21,7 @@ public class PlayerDeadState : NetworkStateBase
         
         //모든플레이어의 가시성 업뎃
         UpdateVisibilityForAllPlayers();
+
     }
     
     /// <summary>
@@ -94,10 +95,9 @@ public class PlayerDeadState : NetworkStateBase
         if (IsOwner)
         {
             Instantiate(effect,transform.position,Quaternion.identity);
-            AudioSource audioSource = GameObjectUtils.GetOrAddComponent<AudioSource>(this.gameObject);
-            audioSource.playOnAwake = false;
-            audioSource.clip = Resources.Load<AudioClip>("Audio/Die");
-            SoundManager.Instance.SFXPlay(audioSource.clip.name, audioSource.clip);
+            AudioClip clip = Resources.Load<AudioClip>("Audio/Die");
+            Debug.Log("Die 재생됨");
+            SoundManager.Instance.SFXPlay(clip.name, clip);
         }
     }
 }

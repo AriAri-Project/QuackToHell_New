@@ -163,7 +163,7 @@ public class PlayerModel : NetworkBehaviour
             RaycastHit2D hit = Physics2D.Raycast(rayOrigin, Vector2.down, finalRayLength, wallLayerMask);
             Debug.DrawRay(rayOrigin, Vector2.down * finalRayLength, hit.collider != null ? Color.red : Color.green);
 
-            if (hit.collider != null)
+            if (hit.collider != null && _playerStatusData.Value.job!=PlayerJob.Ghost)
             {
                 moveAmount.y = 0; 
             }
@@ -177,7 +177,7 @@ public class PlayerModel : NetworkBehaviour
             RaycastHit2D hit = Physics2D.Raycast(rayOrigin, Vector2.up, finalRayLength, wallLayerMask);
             Debug.DrawRay(rayOrigin, Vector2.up * finalRayLength, hit.collider != null ? Color.red : Color.green);
 
-            if (hit.collider != null)
+            if (hit.collider != null&& _playerStatusData.Value.job!=PlayerJob.Ghost)
             {
                 moveAmount.y = 0;
             }
@@ -196,7 +196,7 @@ public class PlayerModel : NetworkBehaviour
             RaycastHit2D hit = Physics2D.Raycast(rayOrigin, Vector2.left, finalRayLength, wallLayerMask);
             Debug.DrawRay(rayOrigin, Vector2.left * finalRayLength, hit.collider != null ? Color.red : Color.green);
 
-            if (hit.collider != null)
+            if (hit.collider != null&& _playerStatusData.Value.job!=PlayerJob.Ghost)
             {
                 moveAmount.x = 0;
             }
@@ -210,7 +210,7 @@ public class PlayerModel : NetworkBehaviour
             RaycastHit2D hit = Physics2D.Raycast(rayOrigin, Vector2.right, finalRayLength, wallLayerMask);
             Debug.DrawRay(rayOrigin, Vector2.right * finalRayLength, hit.collider != null ? Color.red : Color.green);
 
-            if (hit.collider != null)
+            if (hit.collider != null&& _playerStatusData.Value.job!=PlayerJob.Ghost)
             {
                 moveAmount.x = 0;
             }
