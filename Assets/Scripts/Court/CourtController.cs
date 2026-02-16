@@ -16,6 +16,8 @@ namespace Court
 
         private float _timerAccumulator = 0f;
         private bool _isTimerRunning = false;
+        private bool _hasTrialEnded = false;
+
 
         private void Awake()
         {
@@ -74,8 +76,18 @@ namespace Court
 
         private void OnTimerFinished()
         {
+            if (_hasTrialEnded) return;
+
             _isTimerRunning = false;
+            TrialManager.Instance.EndTrial();
+
             Debug.Log("[Court] 시간이 종료되었습니다.");
+        }
+
+        public override void OnNetworkDespawn()
+        {
+            _isTimerRunning = false;
+            _hasTrialEnded = false;
         }
     }
 

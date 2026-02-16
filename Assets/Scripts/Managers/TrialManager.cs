@@ -16,6 +16,13 @@ public class TrialManager : NetworkBehaviour
     private Image reporterImage;
     private ulong reporterClientId; // 해당 정보는 서버에만 저장됨
 
+    [Header("Execution UI")]
+    [SerializeField] private GameObject executionCanvas;
+    [SerializeField] private Image executionPlayerImage;
+    [SerializeField] private TextMeshProUGUI executionText;
+
+    private ulong executedClientId;
+
     public ulong ReporterClientId
     {
         get => reporterClientId;
@@ -113,8 +120,32 @@ public class TrialManager : NetworkBehaviour
         //5초뒤 씬 이동
         Invoke("LoadCourtScene", 5f);
     }
-    
-    
+
+    [ClientRpc]
+    private void StartExecutionClientRpc(ulong targetClientId)
+    {
+        Debug.Log($"[Client] 처형 연출 시작: {targetClientId}");
+
+        if (executionCanvas != null)
+            executionCanvas.SetActive(true);
+
+        PlayerModel model = PlayerHelperManager.Instance.GetPlayerModelByClientId(targetClientId);
+
+        if (model != null)
+        {
+            string nickname = model.PlayerStatusData.Value.Nickname.ToString();
+
+            if (executionText != null)
+                executionText.text = $"{nickname}님이 처형되었습니다.";
+
+            if (executionPlayerImage != null)
+            {
+                int colorIndex = model.PlayerAppearanceData.Value.ColorIndex;
+                executionPlayerImage.color = ColorUtils.GetColorByIndex(colorIndex);
+            }
+        }
+    }
+
 
     private void LoadCourtScene()
     {
@@ -170,6 +201,43 @@ public class TrialManager : NetworkBehaviour
         }
     }
 
+    private void HandleAfterExecutionServer()
+    {
+        if (!IsServer) return;
+
+        Debug.Log("[TrialManager] 처형 이후 후처리 시작");
+
+        // 사망 처리
+        PlayerModel targetModel = PlayerHelperManager.Instance.GetPlayerModelByClientId(executedClientId);
+        if (targetModel != null)
+        {
+            targetModel.PlayerStateData.Value =
+                new PlayerStateData
+                {
+                    AliveState = PlayerLivingState.Dead
+                };
+
+            Debug.Log($"[TrialManager] {executedClientId} 사망 처리 완료");
+        }
+
+        // 임시 테스트 조건
+        bool endGame = Random.value > 0.5f;
+
+        if (endGame)
+        {
+            Debug.Log("[TrialManager] 게임 종료 테스트 이동");
+            NetworkManager.Singleton.SceneManager.LoadScene(GameScenes.Result, LoadSceneMode.Single);
+        }
+        else
+        {
+            Debug.Log("[TrialManager] 마을 복귀 테스트 이동");
+            NetworkManager.Singleton.SceneManager.LoadScene(GameScenes.Village, LoadSceneMode.Single);
+        }
+
+        // 다음 재판 대비 투표 리셋
+        VoteModel.Instance.ResetVotes();
+    }
+
     #region 재판 진입 후 관리 (서현)
 
     public PlayerTrialState LocalPlayer { get; private set; }
@@ -206,12 +274,31 @@ public class TrialManager : NetworkBehaviour
             EndTrial();
         }
     }
-    
-    private void EndTrial()
+
+    public void EndTrial()
     {
-        Debug.Log("<color=yellow>[TrialManager] 모든 플레이어 발언 종료! 처형 대상 선정 단계로 진입합니다.</color>");
-        // TODO: 처형 씬 전환 또는 투표 결과 집계 로직 호출
+        if (!IsServer) return;
+
+        Debug.Log("<color=yellow>[TrialManager] 모든 플레이어 발언 종료! 처형 대상 선정 시작</color>");
+
+        // 1. 최고 득표자 계산
+        if (!VoteModel.Instance.TryGetTopVoted(out ulong topClientId, out int topCount, out bool isTie))
+        {
+            Debug.LogError("[TrialManager] 투표 데이터 없음");
+            return;
+        }
+
+        executedClientId = topClientId;
+
+        Debug.Log($"[TrialManager] 처형 대상: {topClientId} / 득표수: {topCount} / 동점:{isTie}");
+
+        // 2. 전 클라이언트에게 처형 연출 시작 알림
+        StartExecutionClientRpc(topClientId);
+
+        // 3. 서버에서 4초 후 씬 이동 처리
+        Invoke(nameof(HandleAfterExecutionServer), 4f);
     }
+
 
     #endregion
 }

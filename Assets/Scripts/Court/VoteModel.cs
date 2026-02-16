@@ -108,5 +108,50 @@ namespace Court
             }
             return 0;
         }
+
+        public bool TryGetTopVoted(out ulong executedClientId, out int topCount, out bool isTie)
+        {
+            executedClientId = 0UL;
+            topCount = int.MinValue;
+            isTie = false;
+
+            if (VoteDataList == null || VoteDataList.Count == 0)
+                return false;
+
+            // 최고 득표수 찾기
+            for (int i = 0; i < VoteDataList.Count; i++)
+            {
+                var v = VoteDataList[i];
+                if (v.count > topCount)
+                {
+                    topCount = v.count;
+                    executedClientId = v.clientId;
+                    isTie = false;
+                }
+                else if (v.count == topCount)
+                {
+                    // 동점 발생
+                    isTie = true;
+
+                }
+            }
+
+            return true;
+        }
+
+        public void ResetVotes(int initialCount = 1)
+        {
+            if (!IsServer) return;
+
+            for (int i = 0; i < VoteDataList.Count; i++)
+            {
+                var data = VoteDataList[i];
+                data.count = initialCount;
+                VoteDataList[i] = data;
+            }
+
+            Debug.Log($"[VoteModel] ResetVotes 완료. initialCount={initialCount}");
+        }
+
     }
 }
