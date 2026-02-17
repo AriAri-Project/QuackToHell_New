@@ -412,10 +412,6 @@ public class PlayerPresenter : NetworkBehaviour
             playerView.SetIgnorePlayerMoveInputServerRpc(true);
         }
 
-        if (targetObjTag == GameTags.ConvocationOfTrial)
-        {
-
-        }
          
         
         roleController.CurrentStrategy?.Interact(targetObjTag,targetObjectId);

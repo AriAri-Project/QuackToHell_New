@@ -95,7 +95,7 @@ public class MinigameController : MonoBehaviour
 
     public bool TryOpenFromPlayer(Transform player)
     {
-        if (!CanInteract(player)) return false;
+        //if (!CanInteract(player)) return false;
 
         if (IsLocalOnCooldown(out var remain))
         {
@@ -531,6 +531,21 @@ public class MinigameController : MonoBehaviour
 
                 g4.OnCleared.RemoveListener(BeginLocalCooldown);
                 g4.OnCleared.AddListener(BeginLocalCooldown);
+            }
+            
+            var g5 = _spawnedLocalUi.GetComponentInChildren<FrameScrubGameUI>(true);
+            if (g5 != null)
+            {
+                g5.OnCleared.RemoveListener(CloseUi);
+                g5.OnCanceled.RemoveListener(CloseUi);
+                g5.OnCleared.AddListener(CloseUi);
+                g5.OnCanceled.AddListener(CloseUi);
+
+                g5.OnCleared.RemoveListener(HandleMinigameClearedReward);
+                g5.OnCleared.AddListener(HandleMinigameClearedReward);
+
+                g5.OnCleared.RemoveListener(BeginLocalCooldown);
+                g5.OnCleared.AddListener(BeginLocalCooldown);
             }
 
             _rewardGrantedThisRun = false;
