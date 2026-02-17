@@ -42,8 +42,9 @@ public class HomeUI : UIHUD
     //쿨타임 근거: https://unity3.tistory.com/14
     private const float refreshCooltime = 2f;
     private float refreshCooltimeTimer=0f;
-    
-    
+
+    //더블클릭방지
+    private bool isCreated = false;
     
     enum Buttons
     {
@@ -200,9 +201,16 @@ public class HomeUI : UIHUD
     
     private async void OnClicked_Button_Create(PointerEventData data)
     {
+        //더블클릭방지
+        if (isCreated)
+        {
+            return;
+        }
+        
         try{
             //사운드
             SoundManager.Instance.SFXPlay("UIClickSFX", buttonClickSFX.clip);
+            isCreated = true;
             await LobbyManager.Instance.CreateLobby(sessionName,isPrivate,maxPlayerNum);
             //로비씬으로 이동
             await SceneManager.LoadSceneAsync(GameScenes.Lobby, LoadSceneMode.Single);
@@ -212,6 +220,7 @@ public class HomeUI : UIHUD
         
         catch(Exception e){
             Debug.Log(e);
+            isCreated = false;
         }
     }
     private async void OnClicked_Button_EnterCodeConfirm(PointerEventData data)
