@@ -76,6 +76,12 @@ namespace Court
         {
             _isTimerRunning = false;
             Debug.Log("[Court] 시간이 종료되었습니다.");
+
+            if (IsServer)
+            {
+                // TrialManager가 DontDestroyOnLoad라서 Court 씬에서도 Instance 접근 가능
+                TrialManager.Instance.EndTrialServer();
+            }
         }
     }
 

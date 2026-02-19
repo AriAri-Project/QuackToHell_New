@@ -51,8 +51,7 @@ namespace Court
         {
             if (GetPlayerIndex(clientId) == -1)
             {
-                // ★ [수정 1] 접속 시 초기 점수 1점 부여
-                VoteDataList.Add(new VoteData { clientId = clientId, count = 1 });
+                VoteDataList.Add(new VoteData { clientId = clientId, count = 0 });
             }
         }
 
@@ -61,8 +60,7 @@ namespace Court
             VoteDataList.Clear();
             foreach (var client in NetworkManager.Singleton.ConnectedClientsList)
             {
-                // ★ [수정 2] 초기화 시 점수 1점 부여
-                VoteDataList.Add(new VoteData { clientId = client.ClientId, count = 1 });
+                VoteDataList.Add(new VoteData { clientId = client.ClientId, count = 0 });
             }
         }
 
