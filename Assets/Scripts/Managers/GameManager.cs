@@ -402,7 +402,7 @@ public class GameManager : NetworkBehaviour
         {
             if (p == null) continue;
 
-            bool isAlive = IsAliveGuess(p);
+            bool isAlive = (p.GetPlayerAliveState() == PlayerLivingState.Alive);
             if (!isAlive)
             {
                 deadPlayers.Add(p);

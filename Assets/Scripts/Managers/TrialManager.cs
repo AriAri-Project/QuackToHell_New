@@ -123,8 +123,6 @@ public class TrialManager : NetworkBehaviour
         //5초뒤 씬 이동
         Invoke("LoadCourtScene", 5f);
     }
-    
-    
 
     private void LoadCourtScene()
     {
@@ -180,6 +178,120 @@ public class TrialManager : NetworkBehaviour
         }
     }
 
+    #region 재판 결과 도출을 위한 조건 체크
+    private void HandleAfterExecutionServer(ulong executedClientId)
+    {
+        if (!IsServer) return;
+
+        PlayerModel executedModel =
+            PlayerHelperManager.Instance.GetPlayerModelByClientId(executedClientId);
+
+        if (executedModel == null)
+        {
+            Debug.LogError("[TrialResult] executedModel is null");
+            return;
+        }
+
+        executedModel.HandlePlayerDeathServerRpc();
+
+        bool executedIsMafia =
+            executedModel.GetPlayerJob() == PlayerJob.Farmer;
+
+        int aliveMafia = CountAliveMafia();
+        int aliveCitizen = CountAliveCitizen();
+
+        Debug.Log($"[TrialResult] executedIsMafia={executedIsMafia}, aliveMafia={aliveMafia}, aliveCitizen={aliveCitizen}");
+
+        bool shouldEndGame = false;
+
+        if (executedIsMafia)
+        {
+            // 농장주 처형
+            if (aliveMafia <= 0)
+            {
+                shouldEndGame = true; // 시민 승리
+            }
+        }
+        else
+        {
+            // 시민 처형
+            if (aliveCitizen <= aliveMafia)
+            {
+                shouldEndGame = true; // 마피아 승리
+            }
+        }
+
+        StartCoroutine(DelayedSceneMove(shouldEndGame));
+    }
+
+    private System.Collections.IEnumerator DelayedSceneMove(bool shouldEndGame)
+    {
+        yield return new WaitForSeconds(3f);
+
+        if (shouldEndGame)
+        {
+            Debug.Log("[TrialResult] Result 씬으로 이동");
+            NetworkManager.Singleton.SceneManager.LoadScene(GameScenes.Result, LoadSceneMode.Single);
+        }
+        else
+        {
+            Debug.Log("[TrialResult] Village 씬으로 복귀");
+            NetworkManager.Singleton.SceneManager.LoadScene(GameScenes.Village, LoadSceneMode.Single);
+        }
+    }
+
+    private bool IsMafia(ulong clientId)
+    {
+        PlayerModel model =
+            PlayerHelperManager.Instance.GetPlayerModelByClientId(clientId);
+
+        if (model == null) return false;
+
+        return model.GetPlayerJob() == PlayerJob.Farmer;
+    }
+
+    private int CountAliveMafia()
+    {
+        int count = 0;
+
+        foreach (var client in NetworkManager.Singleton.ConnectedClientsList)
+        {
+            PlayerModel model =
+                PlayerHelperManager.Instance.GetPlayerModelByClientId(client.ClientId);
+
+            if (model == null) continue;
+
+            if (model.GetPlayerAliveState() == PlayerLivingState.Alive &&
+                model.GetPlayerJob() == PlayerJob.Farmer)
+            {
+                count++;
+            }
+        }
+
+        return count;
+    }
+    private int CountAliveCitizen()
+    {
+        int count = 0;
+
+        foreach (var client in NetworkManager.Singleton.ConnectedClientsList)
+        {
+            PlayerModel model =
+                PlayerHelperManager.Instance.GetPlayerModelByClientId(client.ClientId);
+
+            if (model == null) continue;
+
+            if (model.GetPlayerAliveState() == PlayerLivingState.Alive &&
+                model.GetPlayerJob() == PlayerJob.Animal)
+            {
+                count++;
+            }
+        }
+
+        return count;
+    }
+    #endregion 
+
     [ClientRpc]
     public void RebellionVictoryClientRpc(ulong winnerClientId)
     {
@@ -194,6 +306,50 @@ public class TrialManager : NetworkBehaviour
         // if (NetworkManager.Singleton.IsHost)
         //     NetworkManager.Singleton.SceneManager.LoadScene(GameScenes.Result, LoadSceneMode.Single);
     }
+
+    [ClientRpc]
+    private void ShowExecutionClientRpc(ulong executedClientId)
+    {
+        PlayerModel model =
+            PlayerHelperManager.Instance.GetPlayerModelByClientId(executedClientId);
+
+        if (model == null)
+        {
+            Debug.LogError("[Execution] PlayerModel not found.");
+            return;
+        }
+
+        string nickname = model.GetPlayerNickname();
+
+        Debug.Log($"<color=red>[Execution]</color> {nickname}님이 처형되었습니다.");
+
+        // TODO: 여기서 중앙 연출 UI 붙이면 됨
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    public void TriggerRebelWinServerRpc(ulong winnerClientId, ServerRpcParams rpcParams = default)
+    {
+        if (!IsServer) return;
+
+        // 1) 반란 승자 기록 (GameManager가 보고 RebelSolo로 끝냄)
+        GameManager.Instance.NotifyRebelVictoryServer(winnerClientId);
+
+        // 2) 연출/이동잠금 클라RPC
+        RebellionVictoryClientRpc(winnerClientId);
+
+        // 3) 연출 시간 준 뒤 결과 처리 (ResultScene 이동은 TryEndGameServer 내부에서)
+        StartCoroutine(Co_EndGameAfterRebel());
+    }
+
+    private System.Collections.IEnumerator Co_EndGameAfterRebel()
+    {
+        yield return new WaitForSeconds(3f); // 연출 시간..
+
+        // TryEndGameServer()가 RebelSolo를 우선 처리해서 payload 만들고
+        // ResultBroadcaster.EndGameAndShowResult(payload)까지 호출해줌
+        GameManager.Instance.TryEndGameServer();
+    }
+
 
     #region 재판 진입 후 관리 (서현)
 
@@ -228,15 +384,71 @@ public class TrialManager : NetworkBehaviour
 
         if (isAllEnded)
         {
-            EndTrial();
+            EndTrialServer();
         }
     }
-    
+
+    /*
     private void EndTrial()
     {
         Debug.Log("<color=yellow>[TrialManager] 모든 플레이어 발언 종료! 처형 대상 선정 단계로 진입합니다.</color>");
         // TODO: 처형 씬 전환 또는 투표 결과 집계 로직 호출
     }
+    */
 
     #endregion
+
+    // [추가] 서버에서만 호출되는 재판 종료 진입점
+    public void EndTrialServer()
+    {
+        if (!IsServer) return;
+
+        Debug.Log("<color=yellow>[TrialManager] EndTrialServer() 호출됨. 투표 집계/처형/승리판정 진행</color>");
+
+        // 1) 처형 대상 선정
+        ulong executedClientId = GetHighestVotedClientId();
+
+        // 아무도 못 찾으면 그냥 리턴
+        if (executedClientId == ulong.MaxValue)
+        {
+            Debug.LogWarning("[TrialManager] 처형 대상을 찾지 못했습니다. (VoteDataList 비었거나 오류)");
+            return;
+        }
+
+        // 2) 모든 클라에 처형 연출 지시
+        ShowExecutionClientRpc(executedClientId);
+
+        // 3) 서버에서 승리 판정 + 씬 이동
+        HandleAfterExecutionServer(executedClientId);
+    }
+
+    // 최고 득표자 계산
+    private ulong GetHighestVotedClientId()
+    {
+        if (VoteModel.Instance == null)
+        {
+            Debug.LogError("[TrialManager] VoteModel.Instance가 null 입니다.");
+            return ulong.MaxValue;
+        }
+
+        ulong bestId = ulong.MaxValue;
+        int bestCount = int.MinValue;
+
+        var list = VoteModel.Instance.VoteDataList;
+
+        for (int i = 0; i < list.Count; i++)
+        {
+            var v = list[i];
+
+            if (v.count > bestCount)
+            {
+                bestCount = v.count;
+                bestId = v.clientId;
+            }
+        }
+
+        Debug.Log($"[TrialManager] 최고 득표자: {bestId}, 득표수: {bestCount}");
+        return bestId;
+    }
+
 }
