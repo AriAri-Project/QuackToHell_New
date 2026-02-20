@@ -56,7 +56,7 @@ MonoBehaviour:
   - clipGuid: c23fb1e7bb482de409d13bd26d1ca3d1
     clipName: Player_FootStep
     clipPath: Assets/Audio/SFX/Player_FootStep.mp3
-    volume: 0.5
+    volume: 0.4
   - clipGuid: 47282e9e721d6e442863c3cb7de5a86e
     clipName: Role_Assign_Citizen
     clipPath: Assets/Audio/SFX/Role_Assign_Citizen.mp3
