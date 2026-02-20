@@ -228,7 +228,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   uiBaseType: 0
-  uiName: PutBooksDragToTargetGameUI
+  uiName: FaucetDragToTargetGameUI
 --- !u!4 &1426219781
 Transform:
   m_ObjectHideFlags: 0
