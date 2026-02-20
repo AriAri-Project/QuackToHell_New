@@ -480,27 +480,31 @@ public class PlayerView : NetworkBehaviour
     // Input System을 사용한 이동 입력 처리
     private void OnMoveInput(InputAction.CallbackContext context)
     {
+        
+        Vector2 moveInput = context.ReadValue<Vector2>();
+        ProcessMoveInput(moveInput);
+        
+    }
+
+    public void ProcessMoveInput(Vector2 moveInput)
+    {
         if (!IsOwner) return;
         
         if (ignoreMoveInput.Value)
         {
             
             OnMovementInput?.Invoke(this, new OnMovementInputEventArgs(0, 0));
-            
-
             return;
         }
-        Vector2 moveInput = context.ReadValue<Vector2>();
+        
         lastMoveInput = moveInput;
         // 정수로 변환하여 전송
         int xDirection = Mathf.RoundToInt(moveInput.x);
         int yDirection = Mathf.RoundToInt(moveInput.y);
         
-        
     
         OnMovementInput?.Invoke(this, new OnMovementInputEventArgs(xDirection, yDirection));
     }
-    
     #endregion
     
     #region 움직임 제한

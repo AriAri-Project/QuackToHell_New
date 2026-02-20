@@ -238,6 +238,7 @@ public class PlayerModel : NetworkBehaviour
         NetworkVariableReadPermission.Everyone,
         NetworkVariableWritePermission.Server
     );
+    public Vector2 MoveDirection => direction.Value;
     
     [Rpc(SendTo.Server)]
     public void MovePlayerServerRpc(int inputXDirection, int inputYDirection)

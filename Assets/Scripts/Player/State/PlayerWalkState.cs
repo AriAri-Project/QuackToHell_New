@@ -21,8 +21,10 @@ public class PlayerWalkState : NetworkStateBase
         // 초기 값 적용
         OnHeadFlipChanged(false, headFlipX.Value);
         // 모델 가져오기
-        playerModel = PlayerHelperManager.Instance.GetPlayerModelByClientId(NetworkManager.Singleton.LocalClientId);
+        playerModel = GetComponent<PlayerModel>();
     }
+
+
 
     private void OnHeadFlipChanged(bool previousValue, bool newValue)
     {
@@ -37,6 +39,10 @@ public class PlayerWalkState : NetworkStateBase
     {
         head.gameObject.SetActive(false);
         TriggerWalkAnimation();
+        if (playerModel == null)
+        {
+            playerModel = GetComponent<PlayerModel>();
+        }
         //죽으면 walk사운드x
         if (playerModel.PlayerStateData.Value.IsDead)
         {
@@ -72,6 +78,11 @@ public class PlayerWalkState : NetworkStateBase
 
     public override void OnStateExit()
     {
+        if (playerModel == null)
+        {
+            playerModel = GetComponent<PlayerModel>();
+        }
+        
         //죽으면 walk사운드x
         if (playerModel.PlayerStateData.Value.IsDead)
         {
@@ -85,20 +96,19 @@ public class PlayerWalkState : NetworkStateBase
     {
         if(!GetComponent<NetworkObject>().IsOwner) return;
         
-        // Input System을 사용하여 키 감지
-        if (Keyboard.current != null)
+        if (playerModel == null)
         {
-            //*머리 default: 오른쪽 바라봄
-            //왼쪽 키 누르면 머리 플립
-            if (Keyboard.current.aKey.isPressed || Keyboard.current.leftArrowKey.isPressed)
-            {
-                FlipHeadServerRpc(true);
-            }
-            //오른쪽 키 누르면 머리 플립x
-            else if (Keyboard.current.dKey.isPressed || Keyboard.current.rightArrowKey.isPressed)
-            {
-                FlipHeadServerRpc(false);
-            }
+            playerModel = GetComponent<PlayerModel>();
+        }
+        
+        Vector2 moveDirection = playerModel.MoveDirection;
+        if (moveDirection.x < 0)
+        {
+            FlipHeadServerRpc(true);
+        }
+        else if(moveDirection.x > 0)
+        {
+            FlipHeadServerRpc(false);
         }
     }
 
