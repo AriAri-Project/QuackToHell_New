@@ -24,7 +24,7 @@ EditorBuildSettings:
     path: Assets/Scenes/Test/YujinTestScene.unity
     guid: cb87c34834b83804ebd15dc3b0e42321
   - enabled: 1
-    path: Assets/Scenes/Test/Yujin_VillageScene.unity
+    path: Assets/Scenes/VillageScene.unity
     guid: 2e0ad75266b05e64faad8c0c74298a62
   - enabled: 1
     path: Assets/Scenes/ResultScene.unity
