@@ -1,11 +1,12 @@
+using Court;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 using TMPro;
 using Unity.Netcode;
 using UnityEngine;
-using UnityEngine.UI;
 using UnityEngine.SceneManagement;
-using System.Collections.Generic;
-using System.Linq;
-using Court;
+using UnityEngine.UI;
 
 public class TrialManager : NetworkBehaviour
 {
@@ -15,6 +16,8 @@ public class TrialManager : NetworkBehaviour
     private GameObject corpseTextObject;
     private Image reporterImage;
     private ulong reporterClientId; // 해당 정보는 서버에만 저장됨
+    private ulong _pendingExecutedClientId = ulong.MaxValue;
+    private TextMeshProUGUI _killTextTMP;
 
     public ulong ReporterClientId
     {
@@ -70,7 +73,7 @@ public class TrialManager : NetworkBehaviour
 
         if (RebellionVictoryService.TryTriggerRebellion(reporterClientId))
             return;
-        
+
         //모든 플레이어의 움직임 멈춤
         ulong localCliendId = NetworkManager.Singleton.LocalClientId;
         PlayerView playerView = PlayerHelperManager.Instance.GetPlayerViewlByClientId(localCliendId);
@@ -82,17 +85,17 @@ public class TrialManager : NetworkBehaviour
             Debug.LogError($"Server: Reporter client {reporterClientId} not found in connected clients");
             return;
         }
-        
+
         // 2. 서버에서 리포터가 실제로 살아있는 플레이어인지 검증
         PlayerModel reporterModel = PlayerHelperManager.Instance.GetPlayerModelByClientId(reporterClientId);
         DebugUtils.AssertNotNull(reporterModel, "ReporterModel", this);
-        
+
         if (reporterModel.PlayerStateData.Value.AliveState == PlayerLivingState.Dead)
         {
             Debug.LogError($"Server: Dead player {reporterClientId} cannot start trial");
             return;
         }
-        
+
         // 3. 서버에서 이미 재판이 진행 중인지 검증
         if (convocationOfTrialPanel != null && convocationOfTrialPanel.activeInHierarchy)
         {
@@ -104,7 +107,7 @@ public class TrialManager : NetworkBehaviour
 
         if (RebellionVictoryService.TryTriggerRebellion(reporterClientId)) // 재판 안 열리게 처리(임시)
         {
-            return; 
+            return;
         }
 
         // 4. 재판 시작 (서버가 권위적 정보로 처리)
@@ -115,10 +118,10 @@ public class TrialManager : NetworkBehaviour
     public void TrialResultClientRpc(ulong reporterClientId)
     {
         convocationOfTrialPanel.SetActive(true);
-        
+
         InjectReporterColor(reporterClientId);
         InjectReporterPlayerText(reporterClientId);
-          
+
 
         //5초뒤 씬 이동
         Invoke("LoadCourtScene", 5f);
@@ -136,7 +139,7 @@ public class TrialManager : NetworkBehaviour
     }
     private void InjectReporterPlayerText(ulong reporterCliendId)
     {
-        PlayerModel reporterModel =  PlayerHelperManager.Instance.GetPlayerModelByClientId(reporterCliendId);
+        PlayerModel reporterModel = PlayerHelperManager.Instance.GetPlayerModelByClientId(reporterCliendId);
         reporterPlayerText = reporterModel.PlayerStatusData.Value.Nickname.ToString();
         TextMeshProUGUI reporterTextTMP = corpseTextObject.GetComponent<TextMeshProUGUI>();
         reporterTextTMP.text = "ReporterPlayer: " + reporterPlayerText;
@@ -146,8 +149,8 @@ public class TrialManager : NetworkBehaviour
         PlayerModel reporterModel = PlayerHelperManager.Instance.GetPlayerModelByClientId(reporterClientId);
         PlayerAppearanceData playerAppearanceData = reporterModel.PlayerAppearanceData.Value;
         int colorIndex = playerAppearanceData.ColorIndex;
-        reporterImage.color = AppearanceUtils.GetColorByIndex(colorIndex);               
-        
+        reporterImage.color = AppearanceUtils.GetColorByIndex(colorIndex);
+
     }
 
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
@@ -164,7 +167,7 @@ public class TrialManager : NetworkBehaviour
                     corpseTextObject = convocationOfTrialPanel.transform.GetChild(1).gameObject;
                 }
             }
-            
+
             // note cba0898: 이것은 무엇..? 그때그때 검증하는 것으로 바꾸시긔.. convocationOfTrialCanvas는 왜 두번..?
             // 검증
             if (DebugUtils.AssertNotNull(convocationOfTrialCanvas, "ConvocationOfTrialCanvas", this))
@@ -176,69 +179,86 @@ public class TrialManager : NetworkBehaviour
                 }
             }
         }
+
+        if (scene.name == GameScenes.Kill)
+        {
+            // 모든 플레이어 가져오기
+            PlayerView[] players = PlayerHelperManager.Instance.GetAllPlayers<PlayerView>();
+
+            foreach (var player in players)
+            {
+                if (player == null) continue;
+
+                PlayerModel model = player.GetComponent<PlayerModel>();
+                if (model == null) continue;
+
+                // 처형 대상이면
+                if (model.ClientId == _pendingExecutedClientId)
+                {
+                    player.SetPlayerVisibility(true);
+
+                    // 중앙으로 이동
+                    player.transform.position = Vector3.zero;
+                }
+                else
+                {
+                    // 나머지는 숨김
+                    player.SetPlayerVisibility(false);
+                }
+            }
+
+            if (IsServer)
+                StartCoroutine(Co_HandleKillScene());
+        }
     }
 
-    #region 재판 결과 도출을 위한 조건 체크
-    private void HandleAfterExecutionServer(ulong executedClientId)
+    private IEnumerator Co_HandleKillScene()
     {
-        if (!IsServer) return;
+        yield return new WaitForSeconds(1f);
+
+        ShowExecutionClientRpc(_pendingExecutedClientId);
+
+        yield return new WaitForSeconds(1f);
 
         PlayerModel executedModel =
-            PlayerHelperManager.Instance.GetPlayerModelByClientId(executedClientId);
+            PlayerHelperManager.Instance.GetPlayerModelByClientId(_pendingExecutedClientId);
 
-        if (executedModel == null)
+        if (executedModel != null)
         {
-            Debug.LogError("[TrialResult] executedModel is null");
-            return;
+            PlayerDeadState deadState =
+                executedModel.GetComponent<PlayerDeadState>();
+
+            if (deadState != null)
+            {
+                deadState.TriggerWalkAnimation();
+            }
         }
 
         executedModel.HandlePlayerDeathServerRpc();
 
-        bool executedIsMafia =
-            executedModel.GetPlayerJob() == PlayerJob.Farmer;
+        yield return new WaitForSeconds(0.2f);
 
-        int aliveMafia = CountAliveMafia();
-        int aliveCitizen = CountAliveCitizen();
-
-        Debug.Log($"[TrialResult] executedIsMafia={executedIsMafia}, aliveMafia={aliveMafia}, aliveCitizen={aliveCitizen}");
-
-        bool shouldEndGame = false;
-
-        if (executedIsMafia)
+        if (GameManager.Instance.CheckLastPlayerAliveAndEndGame())
         {
-            // 농장주 처형
-            if (aliveMafia <= 0)
-            {
-                shouldEndGame = true; // 시민 승리
-            }
-        }
-        else
-        {
-            // 시민 처형
-            if (aliveCitizen <= aliveMafia)
-            {
-                shouldEndGame = true; // 마피아 승리
-            }
+            yield break; 
         }
 
-        StartCoroutine(DelayedSceneMove(shouldEndGame));
-    }
+        yield return new WaitForSeconds(2f);
 
-    private System.Collections.IEnumerator DelayedSceneMove(bool shouldEndGame)
-    {
-        yield return new WaitForSeconds(3f);
+        bool ended = GameManager.Instance.TryEndGameServer();
 
-        if (shouldEndGame)
+        if (!ended)
         {
-            Debug.Log("[TrialResult] Result 씬으로 이동");
-            NetworkManager.Singleton.SceneManager.LoadScene(GameScenes.Result, LoadSceneMode.Single);
+            ended = GameManager.Instance.CheckLastPlayerAliveAndEndGame();
         }
-        else
+
+        if (!ended)
         {
-            Debug.Log("[TrialResult] Village 씬으로 복귀");
             NetworkManager.Singleton.SceneManager.LoadScene(GameScenes.Village, LoadSceneMode.Single);
         }
     }
+
+    #region 재판 결과 도출을 위한 조건 체크
 
     private bool IsMafia(ulong clientId)
     {
@@ -310,20 +330,16 @@ public class TrialManager : NetworkBehaviour
     [ClientRpc]
     private void ShowExecutionClientRpc(ulong executedClientId)
     {
-        PlayerModel model =
-            PlayerHelperManager.Instance.GetPlayerModelByClientId(executedClientId);
+        PlayerModel model = PlayerHelperManager.Instance.GetPlayerModelByClientId(executedClientId);
 
-        if (model == null)
-        {
-            Debug.LogError("[Execution] PlayerModel not found.");
-            return;
-        }
+        string nickname = (model != null) ? model.GetPlayerNickname() : executedClientId.ToString();
+        string msg = $"{nickname}님이 처형되었습니다.";
 
-        string nickname = model.GetPlayerNickname();
+        Debug.Log($"<color=red>[Execution]</color> {msg}");
 
-        Debug.Log($"<color=red>[Execution]</color> {nickname}님이 처형되었습니다.");
-
-        // TODO: 여기서 중앙 연출 UI 붙이면 됨
+        // KillScene에서 텍스트가 잡혀있으면 화면에도 표시
+        if (_killTextTMP != null)
+            _killTextTMP.text = msg;
     }
 
     [ServerRpc(RequireOwnership = false)]
@@ -355,7 +371,7 @@ public class TrialManager : NetworkBehaviour
 
     public PlayerTrialState LocalPlayer { get; private set; }
     private List<PlayerTrialState> _allPlayers = new List<PlayerTrialState>();
-    
+
     public void SetLocalPlayer(PlayerTrialState player)
     {
         LocalPlayer = player;
@@ -403,52 +419,56 @@ public class TrialManager : NetworkBehaviour
     {
         if (!IsServer) return;
 
-        Debug.Log("<color=yellow>[TrialManager] EndTrialServer() 호출됨. 투표 집계/처형/승리판정 진행</color>");
+        var top = GetHighestVotedClientIds();
 
-        // 1) 처형 대상 선정
-        ulong executedClientId = GetHighestVotedClientId();
+        // 득표 리셋(다음 재판 대비) - 아래 4) 참고해서 함수로 빼도 됨
+        ResetVotesServer();
 
-        // 아무도 못 찾으면 그냥 리턴
-        if (executedClientId == ulong.MaxValue)
+        if (top.Count == 0 || top.Count >= 2)
         {
-            Debug.LogWarning("[TrialManager] 처형 대상을 찾지 못했습니다. (VoteDataList 비었거나 오류)");
+            Debug.Log("[TrialManager] 동점/무효 → Village 복귀");
+            NetworkManager.Singleton.SceneManager.LoadScene(GameScenes.Village, LoadSceneMode.Single);
             return;
         }
 
-        // 2) 모든 클라에 처형 연출 지시
-        ShowExecutionClientRpc(executedClientId);
+        _pendingExecutedClientId = top[0];
+        Debug.Log($"[TrialManager] 처형 대상 확정: {_pendingExecutedClientId} → KillScene");
 
-        // 3) 서버에서 승리 판정 + 씬 이동
-        HandleAfterExecutionServer(executedClientId);
+        NetworkManager.Singleton.SceneManager.LoadScene(GameScenes.Kill, LoadSceneMode.Single);
     }
 
-    // 최고 득표자 계산
-    private ulong GetHighestVotedClientId()
+    private void ResetVotesServer()
     {
-        if (VoteModel.Instance == null)
-        {
-            Debug.LogError("[TrialManager] VoteModel.Instance가 null 입니다.");
-            return ulong.MaxValue;
-        }
-
-        ulong bestId = ulong.MaxValue;
-        int bestCount = int.MinValue;
+        if (!IsServer) return;
+        if (VoteModel.Instance == null) return;
 
         var list = VoteModel.Instance.VoteDataList;
-
         for (int i = 0; i < list.Count; i++)
         {
             var v = list[i];
-
-            if (v.count > bestCount)
-            {
-                bestCount = v.count;
-                bestId = v.clientId;
-            }
+            v.count = 0;
+            list[i] = v;
         }
 
-        Debug.Log($"[TrialManager] 최고 득표자: {bestId}, 득표수: {bestCount}");
-        return bestId;
+        Debug.Log("[TrialManager] VoteDataList reset 완료");
     }
 
+    // 최고 득표자 계산
+    private List<ulong> GetHighestVotedClientIds()
+    {
+        if (VoteModel.Instance == null) return new List<ulong>();
+
+        var list = VoteModel.Instance.VoteDataList;
+        if (list.Count == 0) return new List<ulong>();
+
+        int maxVote = int.MinValue;
+        for (int i = 0; i < list.Count; i++)
+            if (list[i].count > maxVote) maxVote = list[i].count;
+
+        var result = new List<ulong>();
+        for (int i = 0; i < list.Count; i++)
+            if (list[i].count == maxVote) result.Add(list[i].clientId);
+
+        return result;
+    }
 }

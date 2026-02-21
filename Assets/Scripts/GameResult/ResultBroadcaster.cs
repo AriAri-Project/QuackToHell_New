@@ -77,6 +77,12 @@ public sealed class ResultBroadcaster : NetworkBehaviour
         if (!HasPayload) return;
         if (!scene.name.Equals(resultSceneName)) return;
 
+        PlayerView[] players = FindObjectsByType<PlayerView>(FindObjectsSortMode.None);
+        foreach (var p in players)
+        {
+            p.SetPlayerVisibility(false);
+        }
+
         // ResultScene 로드가 끝났으면 UI 찾아서 렌더
         var ui = FindFirstObjectByType<ResultScreenUI>(FindObjectsInactive.Include);
         if (ui != null)

@@ -424,7 +424,7 @@ public class GameManager : NetworkBehaviour
         if (_rebelWinnerClientId != ulong.MaxValue)
         {
             var rebel = FindByClientId(players, _rebelWinnerClientId);
-            if (rebel != null && IsAliveGuess(rebel))
+            if (rebel != null && rebel.GetPlayerAliveState() == PlayerLivingState.Alive)
             {
                 _gameEnded = true;
 
@@ -474,7 +474,76 @@ public class GameManager : NetworkBehaviour
             return true;
         }
 
+        if (CheckLastPlayerAliveAndEndGame())
+            return true;
+
         // 아직 게임 안 끝남
+        return false;
+    }
+
+    public bool CheckLastPlayerAliveAndEndGame()
+    {
+        if (!IsServer) return false;
+        if (_gameEnded) return false;
+
+        // 1) 전체 플레이어 수집 (TryEndGameServer랑 통일)
+        PlayerModel[] players = PlayerHelperManager.Instance.GetAllPlayers<PlayerModel>();
+        if (players == null || players.Length == 0) return false;
+
+        // 2) 생존자 찾기
+        PlayerModel lastAlive = null;
+        int aliveCount = 0;
+
+        Debug.Log($"[LastCheck] aliveCount = {aliveCount}");
+
+        foreach (var p in players)
+        {
+            if (p == null) continue;
+            if (p.GetPlayerAliveState() == PlayerLivingState.Alive)
+            {
+                aliveCount++;
+                lastAlive = p;
+            }
+        }
+
+        // 3) 1명 이하일 때 종료 처리
+        if (aliveCount <= 1)
+        {
+            _gameEnded = true;
+
+            // lastAlive가 null일 수도 있음(전원 사망 같은 케이스). 그럼 winners 빈 리스트로 처리
+            var winners = new List<PlayerModel>();
+            if (lastAlive != null) winners.Add(lastAlive);
+
+            // 승리 타입은 "마지막 생존자 기준"으로 간단히 정함
+            EWinType winType = EWinType.Citizens;
+            string reason = "최후의 생존자";
+
+            if (lastAlive != null)
+            {
+                var job = lastAlive.GetPlayerJob();
+                if (job == PlayerJob.Farmer) winType = EWinType.Mafia;
+                else if (job == PlayerJob.Animal) winType = EWinType.Citizens;
+                else winType = EWinType.Citizens; // Ghost 등은 일단 시민으로
+            }
+            else
+            {
+                reason = "생존자 없음";
+                winType = EWinType.Citizens; // 임시
+            }
+
+            var payload = BuildPayload(
+                winType: winType,
+                winReason: reason,
+                winners: winners,
+                losers: players,
+                winnerFilter: (pm) => pm != null && lastAlive != null && pm == lastAlive
+            );
+
+            BroadcastResult(payload);
+            return true;
+        }
+
         return false;
     }
 

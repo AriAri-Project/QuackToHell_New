@@ -608,8 +608,8 @@ public class PlayerModel : NetworkBehaviour
             }
         };
         ChangeToGhostStateClientRpc(clientRpcParams);
-        
-        //시각처리: Model의 State.OnValueChanged에서
+
+        GameManager.Instance.CheckLastPlayerAliveAndEndGame();
     }
     
     /// <summary>

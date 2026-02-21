@@ -10,6 +10,8 @@ public static class GameScenes
     public const string Court = "CourtScene";
     public const string Home = "HomeScene";
     public const string Result = "ResultScene";
+    public const string Kill = "KillScene";
+
     // 테스트 씬들
     public const string Yujin_VillageScene = "Yujin_VillageScene";
     public const string Siun_VillageScene = "Siun_VillageScene";
