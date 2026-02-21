@@ -302,8 +302,59 @@ public class MinigameController : MonoBehaviour
         ShowRewardPopup(amount);
     }
 
+    private void EnsureRewardUI()
+    {
+        if (rewardUIRoot == null)
+        {
+            var obj = GameObject.Find("RewardUI");
+            if (obj != null)
+                rewardUIRoot = obj;
+        }
+
+        if (rewardUITMP == null && rewardUIRoot != null)
+        {
+            rewardUITMP = rewardUIRoot.GetComponentInChildren<TextMeshProUGUI>(true);
+        }
+
+        ApplyFont(rewardUITMP);
+    }
+
+    private void EnsureCooldownUI()
+    {
+        if (cooldownToastRoot == null)
+        {
+            var canvas = FindMainCanvas();
+            if (canvas != null)
+            {
+                var t = canvas.transform.Find("CoolDownUI");
+                if (t != null)
+                    cooldownToastRoot = t.gameObject;
+            }
+        }
+
+        if (cooldownToastTMP == null && cooldownToastRoot != null)
+        {
+            cooldownToastTMP = cooldownToastRoot.GetComponentInChildren<TextMeshProUGUI>(true);
+        }
+
+        ApplyFont(cooldownToastTMP);
+    }
+
+    private void ApplyFont(TextMeshProUGUI tmp)
+    {
+        if (tmp == null) return;
+
+        var font = Resources.Load<TMP_FontAsset>("SejongGeulggot SDF 30");
+        if (font != null)
+        {
+            tmp.font = font;
+            tmp.fontSize = 30;
+        }
+    }
+
     private void ShowRewardPopup(int gold)
     {
+        EnsureRewardUI();
         if (rewardUIRoot == null) return;
 
         if (_rewardUICg == null)
@@ -347,6 +398,9 @@ public class MinigameController : MonoBehaviour
     {
         _localCooldownUntil = Time.unscaledTime + cooldownSeconds;
         ApplyDim(true);
+
+        ShowCooldownPopup(Mathf.CeilToInt(cooldownSeconds));
+
     }
 
     private void ApplyDim(bool on)
@@ -385,6 +439,9 @@ public class MinigameController : MonoBehaviour
 
     private void ShowCooldownPopup(int remainSec)
     {
+        Debug.Log("쿨타임 팝업 호출됨");
+
+        EnsureCooldownUI();
         if (cooldownToastRoot == null) return;
 
         if (_toastCg == null) _toastCg = cooldownToastRoot.GetComponent<CanvasGroup>() ?? cooldownToastRoot.AddComponent<CanvasGroup>();
@@ -392,7 +449,7 @@ public class MinigameController : MonoBehaviour
         _toastCg.blocksRaycasts = false;
 
         if (cooldownToastTMP != null)
-            cooldownToastTMP.text = $"미니게임을 플레이 할 수 없습니다.\n미니게임 쿨타임이 {remainSec}초 남았습니다!";
+            cooldownToastTMP.text = $"미니게임 쿨타임이 {remainSec}초 남았습니다!";
 
         if (_toastCo != null) StopCoroutine(_toastCo);
         _toastCo = StartCoroutine(CoShowCooldownToast());
