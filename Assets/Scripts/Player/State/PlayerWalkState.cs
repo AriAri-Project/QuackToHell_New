@@ -51,7 +51,10 @@ public class PlayerWalkState : NetworkStateBase
             walkSFX.volume = volume;
         }
         
-        walkSFX.Play();
+        if (!walkSFX.isPlaying)
+        {
+            walkSFX.Play();
+        }
     }
 
     // 트리거 방식으로 애니메이션 제어
@@ -74,9 +77,8 @@ public class PlayerWalkState : NetworkStateBase
         {
             return;
         }
-        
+
         walkSFX.loop = false;
-        walkSFX.Stop();
     }
 
     public override void OnStateUpdate()
