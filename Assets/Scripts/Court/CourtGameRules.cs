@@ -113,7 +113,7 @@ namespace Court
         // --- 값 식별 헬퍼 (DeckManager Enums 사용) ---
         private static bool IsOperatorCard(CardItemData card) => card.cardDef.type == TypeEnum.Operator;
         private static bool IsNumberCard(CardItemData card) => card.cardDef.type == TypeEnum.Number;
-        private static bool IsNCard(CardItemData card) => card.cardDef.Value == CardValue.N; // 혹은 SubTypeEnum.N
+        private static bool IsNCard(CardItemData card) => card.cardDef.Value == CardValue.N || card.cardDef.subType == SubTypeEnum.N;
 
         private static int GetNumberValue(CardItemData card)
         {
