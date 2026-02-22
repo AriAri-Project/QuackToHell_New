@@ -89,7 +89,7 @@ namespace Court
         {
             if (hudCanvas == null) hudCanvas = GetComponentInChildren<Canvas>(true);
             
-            bool isCourtScene = sceneName.Contains("Court");
+            bool isCourtScene = sceneName == GameScenes.Court;
             if (isCourtScene)
             {
                 if (hudCanvas != null) hudCanvas.gameObject.SetActive(true);
