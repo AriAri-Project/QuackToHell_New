@@ -35,7 +35,7 @@ namespace Court.Hand
         [Space(10)]
         [Header("4. Input Settings")]
         [SerializeField] private float dragThreshold = 20f;
-        [SerializeField] private float targetScreenFallbackRadius = 140f;
+        [SerializeField] private float targetScreenFallbackRadius = 240f;
         [SerializeField] private float evidenceTargetPlaneZ = 0f;
 
         // 내부 상태
@@ -436,10 +436,11 @@ namespace Court.Hand
                 }
             }
 
-            // 2) fallback: 플레이어별 콜라이더 직접 검사 + 화면거리 기반 검사
+            // 2) fallback: 플레이어별 콜라이더 직접 검사 + 스크린 바운드 기반 검사
             CourtPlayerView nearestByScreen = null;
             float nearestScreenDist = float.MaxValue;
             var players = FindObjectsByType<CourtPlayerView>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
+            Vector2 mouseScreen = Input.mousePosition;
 
             foreach (var player in players)
             {
@@ -456,14 +457,37 @@ namespace Court.Hand
                 }
 
                 if (Camera.main == null) continue;
-                Vector3 screenPos = Camera.main.WorldToScreenPoint(player.transform.position);
-                if (screenPos.z < 0f) continue;
 
-                float dist = Vector2.Distance(Input.mousePosition, new Vector2(screenPos.x, screenPos.y));
-                if (dist < nearestScreenDist)
+                var renderers = player.GetComponentsInChildren<SpriteRenderer>(true);
+                foreach (var renderer in renderers)
                 {
-                    nearestScreenDist = dist;
-                    nearestByScreen = player;
+                    if (renderer == null || !renderer.enabled) continue;
+
+                    var bounds = renderer.bounds;
+                    Vector3 min = Camera.main.WorldToScreenPoint(bounds.min);
+                    Vector3 max = Camera.main.WorldToScreenPoint(bounds.max);
+                    if (min.z < 0f && max.z < 0f) continue;
+
+                    float xMin = Mathf.Min(min.x, max.x);
+                    float xMax = Mathf.Max(min.x, max.x);
+                    float yMin = Mathf.Min(min.y, max.y);
+                    float yMax = Mathf.Max(min.y, max.y);
+
+                    Rect screenRect = Rect.MinMaxRect(xMin, yMin, xMax, yMax);
+                    if (screenRect.Contains(mouseScreen))
+                    {
+                        return player;
+                    }
+
+                    float clampedX = Mathf.Clamp(mouseScreen.x, xMin, xMax);
+                    float clampedY = Mathf.Clamp(mouseScreen.y, yMin, yMax);
+                    float rectDist = Vector2.Distance(mouseScreen, new Vector2(clampedX, clampedY));
+
+                    if (rectDist < nearestScreenDist)
+                    {
+                        nearestScreenDist = rectDist;
+                        nearestByScreen = player;
+                    }
                 }
             }
 

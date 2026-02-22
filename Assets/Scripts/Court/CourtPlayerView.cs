@@ -23,6 +23,8 @@ namespace Court
         [Header("UI Settings")]
         [SerializeField] private Color normalColor = Color.white;
         [SerializeField] private Color previewColor = Color.green;
+        [SerializeField] private float courtTargetColliderRadius = 3f;
+        [SerializeField] private Vector2 courtTargetColliderOffset = new Vector2(0f, 0.5f);
         
         public ulong OwnerId => OwnerClientId;
 
@@ -53,6 +55,27 @@ namespace Court
                 _targetMaterial.SetFloat(outlineProperty, 0f);
             }
             if (currentVoteText) currentVoteText.text = _realScore.ToString();
+
+            EnsureCourtTargetCollider();
+        }
+
+        private void EnsureCourtTargetCollider()
+        {
+            var colliders = GetComponents<CircleCollider2D>();
+            foreach (var col in colliders)
+            {
+                if (col == null) continue;
+                // 기존에 충분히 큰 트리거 콜라이더가 있으면 재사용
+                if (col.isTrigger && col.radius >= courtTargetColliderRadius * 0.9f)
+                {
+                    return;
+                }
+            }
+
+            var targetCol = gameObject.AddComponent<CircleCollider2D>();
+            targetCol.isTrigger = true;
+            targetCol.offset = courtTargetColliderOffset;
+            targetCol.radius = courtTargetColliderRadius;
         }
 
         private void CheckAndEnableUI(string sceneName)
