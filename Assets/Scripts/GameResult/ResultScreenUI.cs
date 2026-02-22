@@ -1,6 +1,9 @@
-using UnityEngine;
-using TMPro;
 using System.Collections.Generic;
+using TMPro;
+using Unity.Netcode;
+using UnityEngine;
+using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 public class ResultScreenUI : MonoBehaviour
 {
@@ -16,10 +19,18 @@ public class ResultScreenUI : MonoBehaviour
     public GameObject playerUIPrefab;
     public Transform spawnParent;
 
+    [SerializeField] private Button goToLobbyButton;
+    [SerializeField] private Button goToStartButton;
+
     public void Open(GameResultPayload payload)
     {
         gameObject.SetActive(true);
         StartCoroutine(ResultCoroutine(payload));
+    }
+    private void Awake()
+    {
+        goToLobbyButton.onClick.AddListener(OnClickGoToLobby);
+        goToStartButton.onClick.AddListener(OnClickGoToStart);
     }
 
     private System.Collections.IEnumerator ResultCoroutine(GameResultPayload payload)
@@ -96,5 +107,24 @@ public class ResultScreenUI : MonoBehaviour
 
         var nicknameText = playerUI.GetComponentInChildren<TextMeshProUGUI>();
         nicknameText.text = player.Name.ToString();
+    }
+
+    private void OnClickGoToLobby()
+    {
+        if (NetworkManager.Singleton.IsServer)
+        {
+            NetworkManager.Singleton.SceneManager
+                .LoadScene(GameScenes.Lobby, LoadSceneMode.Single);
+        }
+    }
+    private void OnClickGoToStart()
+    {
+        // 네트워크 연결 끊고 홈으로
+        if (NetworkManager.Singleton != null)
+        {
+            NetworkManager.Singleton.Shutdown();
+        }
+
+        SceneManager.LoadScene(GameScenes.Home, LoadSceneMode.Single);
     }
 }
