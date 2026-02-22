@@ -21,18 +21,32 @@ public class CardShopView : MonoBehaviour
     [SerializeField] private Button lockButton;
     [SerializeField] private Button rerollButton;
     [SerializeField] private GameObject cardShopPanel;
-
+    [SerializeField] private Image lockButtonImage;
 
     public event Action OnClickLock;
     public event Action OnClickReRoll;
     public event Action OnClickX;
 
+    private bool isLocked=false;
     private void Awake()
     {
         DebugUtils.AssertNotNull(lockButton, "lockButton", this);
         DebugUtils.AssertNotNull(rerollButton, "rerollButton", this);
-
-        lockButton.onClick.AddListener(() => OnClickLock?.Invoke());
+        
+        lockButton.onClick.AddListener(() => 
+        { 
+            OnClickLock?.Invoke();
+            isLocked = !isLocked;
+            if (isLocked)
+            {
+                lockButtonImage.color = new Color32(200, 200, 200, 255);    
+            }
+            else
+            {
+                lockButtonImage.color = new Color32(255, 255, 255, 255);
+            }
+            
+        }); 
         rerollButton.onClick.AddListener(() => OnClickReRoll?.Invoke());
     }
 
