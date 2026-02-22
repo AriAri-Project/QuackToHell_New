@@ -458,7 +458,8 @@ namespace Court.Hand
                 int targetIndex = VoteModel.Instance.GetPlayerIndex(targetView.OwnerId);
                 int currentVote = (targetIndex != -1) ? VoteModel.Instance.GetVoteCount(targetIndex) : 0;
                 int damage = CourtGameRules.CalculatePreviewScore(c1, c2, currentVote);
-                targetView.ShowPreview(damage);
+                bool allowZero = CourtGameRules.IsMultiplyByZeroCombo(c1, c2);
+                targetView.ShowPreview(damage, allowZero);
             }
         }
 
