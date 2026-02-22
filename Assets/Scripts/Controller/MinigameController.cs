@@ -47,11 +47,15 @@ public class MinigameController : MonoBehaviour
     [Tooltip("로컬 플레이어 Transform(비우면 자동 탐색) - self-input일 때만 사용")]
     [SerializeField] private Transform overrideLocalPlayer;
 
-    [Header("Highlight (Sprite Outline Clone)")]
-    [SerializeField] private List<Renderer> highlightRenderers = new();
-    [SerializeField, Min(1.0f)] private float outlineScale = 1.03f;
-    [SerializeField] private int outlineSortingOffset = -1;
-    [SerializeField] private float outlineAlpha = 1f;
+    [Header("Highlight (Custom Sprite)")]
+    [SerializeField] private Sprite highlightSprite;                 // 테두리 PNG 스프라이트
+    [SerializeField] private Vector3 highlightLocalOffset = Vector3.zero; // 위치 조정
+    [SerializeField] private Vector3 highlightLocalScale = Vector3.one;   
+    [SerializeField] private int highlightSortingOffset = 1;        
+    [SerializeField, Range(0f, 1f)] private float highlightAlpha = 1f;
+
+    private GameObject _highlightObj;
+    private SpriteRenderer _highlightSr;
 
     [SerializeField] private Renderer[] dimTargets;
     [SerializeField] private float dimAmount = 0.35f;
@@ -76,12 +80,7 @@ public class MinigameController : MonoBehaviour
 
     private void Awake()
     {
-        if (highlightRenderers == null || highlightRenderers.Count == 0)
-        {
-            Renderer[] found = GetComponentsInChildren<Renderer>(includeInactive: true);
-            highlightRenderers = new List<Renderer>(found);
-        }
-        DisableHighlight();
+        DisableHighlight(); // 하이라이트 스프라이트 숨김
     }
 
     // =========================
@@ -170,9 +169,9 @@ public class MinigameController : MonoBehaviour
     private void OnDestroy()
     {
         DisableHighlight();
-        for (int i = 0; i < _outlineClones.Count; i++)
-            if (_outlineClones[i]) Destroy(_outlineClones[i]);
-        _outlineClones.Clear();
+
+        if (_highlightObj != null)
+            Destroy(_highlightObj);
 
         if (_spawnedLocalUi)
         {
@@ -218,55 +217,50 @@ public class MinigameController : MonoBehaviour
         if (eligible) EnableHighlight(); else DisableHighlight();
     }
 
-    private void EnableHighlight() 
+    private void EnableHighlight()
     {
-        foreach (var r in highlightRenderers)
-        {
-            if (!r) continue;
-            var sr = r as SpriteRenderer ?? r.GetComponent<SpriteRenderer>();
-            if (sr == null || sr.sprite == null) continue;
+        if (highlightSprite == null) return;
 
-            var existing = sr.transform.Find("OutlineClone");
-            if (existing != null)
-            {
-                existing.gameObject.SetActive(true);
-                continue;
-            }
-
-            var go = new GameObject("OutlineClone");
-            go.transform.SetParent(sr.transform, false);
-            go.transform.localPosition = Vector3.zero;
-            go.transform.localRotation = Quaternion.identity;
-
-            go.transform.localScale = Vector3.one * 1.15f;
-
-            var sr2 = go.AddComponent<SpriteRenderer>();
-            sr2.sprite = sr.sprite;
-            sr2.flipX = sr.flipX;
-            sr2.flipY = sr.flipY;
-
-            sr2.sortingLayerID = sr.sortingLayerID;
-            sr2.sortingOrder = sr.sortingOrder - 1;
-
-            Shader shader = Shader.Find("Universal Render Pipeline/2D/Sprite-Unlit-Default");
-            if (shader == null) shader = Shader.Find("Sprites/Default");
-
-            if (shader != null)
-            {
-                sr2.material = new Material(shader); 
-            }
-
-            sr2.color = new Color(0.2f, 1.0f, 0.2f, 1f);
-
-            _outlineClones.Add(go);
-        }
+        EnsureHighlightObject();
+        _highlightObj.SetActive(true);
     }
-
 
     private void DisableHighlight()
     {
-        for (int i = 0; i < _outlineClones.Count; i++)
-            if (_outlineClones[i]) _outlineClones[i].SetActive(false);
+        if (_highlightObj != null)
+            _highlightObj.SetActive(false);
+    }
+
+    private void EnsureHighlightObject()
+    {
+        if (_highlightObj != null) return;
+
+        SpriteRenderer baseSr = null;
+
+        baseSr = GetComponentInChildren<SpriteRenderer>(includeInactive: true);
+
+        // 하이라이트 오브젝트 생성
+        _highlightObj = new GameObject("HighlightSprite");
+        _highlightObj.transform.SetParent(transform, false);
+        _highlightObj.transform.localPosition = highlightLocalOffset;
+        _highlightObj.transform.localRotation = Quaternion.identity;
+        _highlightObj.transform.localScale = highlightLocalScale;
+
+        _highlightSr = _highlightObj.AddComponent<SpriteRenderer>();
+        _highlightSr.sprite = highlightSprite;
+
+        // 정렬 기준: baseSr 있으면 그 레이어/오더를 따라감
+        if (baseSr != null)
+        {
+            _highlightSr.sortingLayerID = baseSr.sortingLayerID;
+            _highlightSr.sortingOrder = baseSr.sortingOrder + highlightSortingOffset;
+        }
+
+        // 투명도
+        var c = _highlightSr.color;
+        _highlightSr.color = new Color(c.r, c.g, c.b, highlightAlpha);
+
+        _highlightObj.SetActive(false);
     }
 
     private void HandleMinigameClearedReward()
