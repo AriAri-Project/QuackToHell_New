@@ -51,7 +51,7 @@ namespace Court
         {
             if (GetPlayerIndex(clientId) == -1)
             {
-                VoteDataList.Add(new VoteData { clientId = clientId, count = 0 });
+                VoteDataList.Add(new VoteData { clientId = clientId, count = 1 });
             }
         }
 
@@ -60,11 +60,11 @@ namespace Court
             VoteDataList.Clear();
             foreach (var client in NetworkManager.Singleton.ConnectedClientsList)
             {
-                VoteDataList.Add(new VoteData { clientId = client.ClientId, count = 0 });
+                VoteDataList.Add(new VoteData { clientId = client.ClientId, count = 1 });
             }
         }
 
-        public void AddVote(ulong targetClientId, int delta)
+        public void AddVote(ulong targetClientId, int delta, bool allowZero = false)
         {
             if (!IsServer) return;
 
@@ -75,8 +75,9 @@ namespace Court
                 int oldScore = data.count;
                 int newScore = oldScore + delta;
                 
-                // 0점 미만 방지
-                if (newScore < 0) newScore = 0;
+                // x0 조합이 아닐 때 최저 득표수는 1
+                int minScore = allowZero ? 0 : 1;
+                if (newScore < minScore) newScore = minScore;
 
                 data.count = newScore;
                 VoteDataList[index] = data;

@@ -233,13 +233,14 @@ public class CardInventoryModel : NetworkBehaviour
         // ★ 4. Rules에게 계산 위임! (여기가 핵심 변경점)
         // CardInventoryModel은 이제 수학을 몰라도 됩니다.
         int finalDelta = CourtGameRules.CalculateFinalScore(card1, card2, currentVote);
+        bool allowZero = CourtGameRules.IsMultiplyByZeroCombo(card1, card2);
         
         Debug.Log($"[Server] 카드 사용: Target({targetClientId}), 변동량({finalDelta})");
 
         // 5. 결과 적용
         if (VoteModel.Instance != null && finalDelta != 0)
         {
-            VoteModel.Instance.AddVote(targetClientId, finalDelta);
+            VoteModel.Instance.AddVote(targetClientId, finalDelta, allowZero);
         }
 
         // 6. 카드 소모
