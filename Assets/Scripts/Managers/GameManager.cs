@@ -122,6 +122,9 @@ public class GameManager : NetworkBehaviour
             ulong localClientId = NetworkManager.Singleton.LocalClientId;
             PlayerView playerView= PlayerHelperManager.Instance.GetPlayerViewlByClientId(localClientId);
             playerView.SetIgnoreAllPlayerMoveInputServerRpc(false);
+            //레디 풀기
+            PlayerModel localPlayer = PlayerHelperManager.Instance.GetPlayerModelByClientId(localClientId);
+            localPlayer.ToggleReady();
         }
     }
 
