@@ -383,22 +383,18 @@ namespace Court.Hand
 
         private void TrySubmitEvidence()
         {
-            Vector3 mousePos = GetMouseWorldPosition(0f); 
-            RaycastHit2D hit = Physics2D.Raycast(mousePos, Vector2.zero);
-            if (hit.collider != null)
+            Vector3 mousePos = GetMouseWorldPosition(0f);
+            var targetView = FindTargetByPoint(mousePos);
+            if (targetView != null && targetView.OwnerId != NetworkManager.Singleton.LocalClientId)
             {
-                var targetView = hit.collider.GetComponent<CourtPlayerView>();
-                if (targetView != null && targetView.OwnerId != NetworkManager.Singleton.LocalClientId)
+                if(_myInventory != null)
                 {
-                    if(_myInventory != null)
-                    {
-                        Debug.Log($"[TrialHand] 증거 제출! Target: {targetView.OwnerId}");
-                        _myInventory.SubmitEvidenceServerRpc(_selectedIndices[0], _selectedIndices[1], targetView.OwnerId);
-                    }
-                    _selectedIndices.Clear();
-                    UpdateFilterVisuals();
-                    return;
+                    Debug.Log($"[TrialHand] 증거 제출! Target: {targetView.OwnerId}");
+                    _myInventory.SubmitEvidenceServerRpc(_selectedIndices[0], _selectedIndices[1], targetView.OwnerId);
                 }
+                _selectedIndices.Clear();
+                UpdateFilterVisuals();
+                return;
             }
             Debug.Log("[System] 더 적절한 타겟을 찾아보자.");
         }
@@ -417,11 +413,28 @@ namespace Court.Hand
 
         private CourtPlayerView TryGetValidTarget(Vector3 mousePos)
         {
-            RaycastHit2D hit = Physics2D.Raycast(mousePos, Vector2.zero);
-            if (hit.collider == null) return null;
-            var view = hit.collider.GetComponent<CourtPlayerView>();
+            var view = FindTargetByPoint(mousePos);
             if (view == null || view.OwnerId == NetworkManager.Singleton.LocalClientId) return null;
             return view;
+        }
+
+        private CourtPlayerView FindTargetByPoint(Vector3 mousePos)
+        {
+            Vector2 point = new Vector2(mousePos.x, mousePos.y);
+            var hits = Physics2D.OverlapPointAll(point);
+            if (hits == null || hits.Length == 0) return null;
+
+            foreach (var hit in hits)
+            {
+                if (hit == null) continue;
+
+                var targetMarker = hit.GetComponentInParent<CourtTargetCollider>();
+                if (targetMarker != null && targetMarker.OwnerView != null)
+                {
+                    return targetMarker.OwnerView;
+                }
+            }
+            return null;
         }
         private void ClearLastHoveredPlayer()
         {
