@@ -135,7 +135,7 @@ namespace Court
                 case TierEnum.Special:
                     return numberValue >= 0 && numberValue <= 6;
                 case TierEnum.Rare:
-                    return numberValue >= 2 && numberValue <= 4;
+                    return numberValue >= 1 && numberValue <= 4;
                 case TierEnum.Common:
                 default:
                     return numberValue >= 1 && numberValue <= 2;
