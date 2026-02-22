@@ -69,17 +69,17 @@ namespace Court
             CardItemData opCard = card1IsOp ? card1 : card2;
             CardItemData valueCard = card1IsOp ? card2 : card1;
 
+            // 기호 + 미지 숫자카드(N) 조합은 항상 가능
+            if (IsNCard(valueCard))
+            {
+                return true;
+            }
+
             // 기호 + 숫자 카드 조합
             if (IsNumberCard(valueCard))
             {
                 int numberValue = GetNumberValue(valueCard);
                 return IsAllowedNumberForTier(opCard.cardDef.tier, numberValue);
-            }
-
-            // 기호 + 미지 숫자카드(N) 조합
-            if (IsNCard(valueCard))
-            {
-                return true;
             }
 
             return false;
