@@ -446,7 +446,7 @@ public class TrialManager : NetworkBehaviour
         for (int i = 0; i < list.Count; i++)
         {
             var v = list[i];
-            v.count = 0;
+            v.count = 1;
             list[i] = v;
         }
 

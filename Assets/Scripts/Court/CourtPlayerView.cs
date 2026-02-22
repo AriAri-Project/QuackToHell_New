@@ -165,14 +165,14 @@ namespace Court
         // ★ [핵심 수정] 프리뷰 0 미만 방지
         // ==================================================================================
         
-        public void ShowPreview(int damage)
+        public void ShowPreview(int damage, bool allowZero = false)
         {
             int predictedScore = _realScore + damage;
 
-            // ★ 0점 미만이면 0점으로 고정 (Clamp)
-            if (predictedScore < 0) 
+            int minScore = allowZero ? 0 : 1;
+            if (predictedScore < minScore)
             {
-                predictedScore = 0;
+                predictedScore = minScore;
             }
 
             ShowPreviewInternal(predictedScore.ToString());

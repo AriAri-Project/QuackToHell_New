@@ -85,6 +85,19 @@ namespace Court
             return false;
         }
 
+        /// <summary>
+        /// x0 조합인지 검사합니다. (0점 허용 예외)
+        /// </summary>
+        public static bool IsMultiplyByZeroCombo(CardItemData card1, CardItemData card2)
+        {
+            ClassifyCards(card1, card2, out CardItemData opCard, out CardItemData valCard, out bool isNInteraction);
+
+            if (isNInteraction) return false;
+            if (GetOperatorType(opCard) != "x") return false;
+
+            return GetNumberValue(valCard) == 0;
+        }
+
         // ==================================================================================
         // ★ 2. 내부 로직 (규칙 구현부)
         // ==================================================================================
