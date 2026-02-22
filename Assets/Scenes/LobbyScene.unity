@@ -354,7 +354,7 @@ MonoBehaviour:
   AutoObjectParentSync: 1
   SyncOwnerTransformWhenParented: 1
   AllowOwnerToParent: 0
---- !u!43 &864723872
+--- !u!43 &1158641587
 Mesh:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -710,11 +710,11 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 1516256558217516975, guid: 69653b4f5f98779499faa858e544dc47, type: 3}
       propertyPath: m_AnchorMax.y
-      value: 0.5
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 1516256558217516975, guid: 69653b4f5f98779499faa858e544dc47, type: 3}
       propertyPath: m_AnchorMin.y
-      value: 0.5
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 1516256558217516975, guid: 69653b4f5f98779499faa858e544dc47, type: 3}
       propertyPath: m_SizeDelta.y
@@ -722,7 +722,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1516256558217516975, guid: 69653b4f5f98779499faa858e544dc47, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: -382
+      value: 111.74884
       objectReference: {fileID: 0}
     - target: {fileID: 2348485432963200026, guid: 69653b4f5f98779499faa858e544dc47, type: 3}
       propertyPath: m_IsActive
@@ -3140,7 +3140,7 @@ MonoBehaviour:
     rid: 163390195030556761
   m_ShadowCastingSource: 2
   m_ShadowMesh:
-    m_Mesh: {fileID: 864723872}
+    m_Mesh: {fileID: 1158641587}
     m_LocalBounds:
       m_Center: {x: 0.14673615, y: -0.13913727, z: 0}
       m_Extent: {x: 9.69825, y: 7.6890793, z: 0}
