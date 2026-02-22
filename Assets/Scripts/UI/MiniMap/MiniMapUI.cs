@@ -20,6 +20,9 @@ public class MiniMapUI : MonoBehaviour
     [SerializeField]
     private Image minimapPlayerImage;
 
+    [SerializeField] private Vector2 offset;
+    [SerializeField] private float scaleMultiplier = 1f;
+
     // private CharacterMover targetPlayer;
     [SerializeField] 
     private Transform targetPlayer;
@@ -64,29 +67,41 @@ public class MiniMapUI : MonoBehaviour
 
     private void Update()
     {
-        if (targetPlayer == null || !targetPlayer.gameObject.activeInHierarchy)
+        if (targetPlayer == null)
         {
-            var localPlayerObj = Unity.Netcode.NetworkManager.Singleton?.LocalClient?.PlayerObject;
-            targetPlayer = (localPlayerObj != null) ? localPlayerObj.transform : FindOwnerByTags();
+            var localPlayerObj = NetworkManager.Singleton?.LocalClient?.PlayerObject;
+            if (localPlayerObj != null)
+            {
+                targetPlayer = localPlayerObj.transform;
+            }
+            else
+            {
+                targetPlayer = FindOwnerByTags();
+            }
+
+            if (targetPlayer == null)
+                return;
         }
 
-        if (targetPlayer != null)
-        {
-            Vector2 mapArea = new Vector2(
-                Vector3.Distance(left.position, right.position),
-                Vector3.Distance(bottom.position, top.position));
+        UpdateMiniMapPosition();
+    }
 
-            Vector2 charPos = new Vector2(
-                Vector3.Distance(left.position, new Vector3(targetPlayer.transform.position.x, 0f, 0f)),
-                Vector3.Distance(bottom.position, new Vector3(0f, targetPlayer.transform.position.y, 0f)));
+    private void UpdateMiniMapPosition()
+    {
+        float mapWidth = right.position.x - left.position.x;
+        float mapHeight = top.position.y - bottom.position.y;
 
-            Vector2 normalPos = new Vector2(charPos.x / mapArea.x, charPos.y / mapArea.y);
+        float normalizedX = (targetPlayer.position.x - left.position.x) / mapWidth;
+        float normalizedY = (targetPlayer.position.y - bottom.position.y) / mapHeight;
 
-            minimapPlayerImage.rectTransform.anchoredPosition =
-                new Vector2(minimapImage.rectTransform.sizeDelta.x * normalPos.x,
-                            minimapImage.rectTransform.sizeDelta.y * normalPos.y);
-        }
+        Vector2 mapSize = minimapImage.rectTransform.sizeDelta;
 
+        float posX = (normalizedX - 0.5f) * mapSize.x;
+        float posY = (normalizedY - 0.5f) * mapSize.y;
+
+        Vector2 finalPos = new Vector2(posX, posY) * scaleMultiplier + offset;
+
+        minimapPlayerImage.rectTransform.anchoredPosition = finalPos;
     }
 
     public void Open()
