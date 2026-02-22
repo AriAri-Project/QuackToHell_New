@@ -250,6 +250,7 @@ public sealed class VentController : NetworkBehaviour, IInteractable
             }
 
             _occupied.Value = false;
+            _occupantNetId.Value = 0UL;
             _lastExitServerTime = NetworkManager.Singleton.ServerTime.Time;
 
             SetPlayerHiddenClientRpc(_occupantNetId.Value, false);
@@ -336,6 +337,7 @@ public sealed class VentController : NetworkBehaviour, IInteractable
         foreach (Renderer renderer in networkObject.GetComponentsInChildren<Renderer>(true))
             renderer.enabled = !hidden;
 
+        /*
         // 2) 트리거 콜라이더 유지
         foreach (Collider2D col in networkObject.GetComponentsInChildren<Collider2D>(true))
         {
@@ -343,6 +345,7 @@ public sealed class VentController : NetworkBehaviour, IInteractable
             if (col.isTrigger) continue;
             col.enabled = !hidden;
         }
+        */
 
         try
         {

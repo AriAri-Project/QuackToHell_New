@@ -389,6 +389,9 @@ public class PlayerView : NetworkBehaviour
     {
         if (IsOwner)
         {
+            if (scene.name == "ResultScene")
+                return;
+
             // 씬 변경 시 카메라 초기화
             if (localCamera != null)
             {

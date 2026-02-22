@@ -1,76 +1,100 @@
-using System.Text;
-using TMPro;
 using UnityEngine;
+using TMPro;
+using System.Collections.Generic;
 
-public sealed class ResultScreenUI : MonoBehaviour
+public class ResultScreenUI : MonoBehaviour
 {
-    [SerializeField] private TMP_Text winnersText;
-    [SerializeField] private TMP_Text losersText;
-    [SerializeField] private TMP_Text reasonText;
+    [Header("Root")]
+    public GameObject intro;
+    public GameObject showResult;
 
-    private void Start()
-    {
-        if (ResultBroadcaster.Instance != null &&
-            ResultBroadcaster.Instance.HasPayload)
-        {
-            Render(ResultBroadcaster.Instance.LastPayload);
-        }
-    }
+    [Header("Text")]
+    public TextMeshProUGUI resultTitleText;
+    public TextMeshProUGUI resultExplainText;
+
+    [Header("Players")]
+    public GameObject playerUIPrefab;
+    public Transform spawnParent;
+
     public void Open(GameResultPayload payload)
     {
-        Render(payload);
+        gameObject.SetActive(true);
+        StartCoroutine(ResultCoroutine(payload));
     }
 
-    private void Render(GameResultPayload payload)
+    private System.Collections.IEnumerator ResultCoroutine(GameResultPayload payload)
     {
-        // 사유
-        if (reasonText != null)
-            reasonText.text = payload.WinReason.ToString();
+        intro.SetActive(true);
+        yield return new WaitForSeconds(1f);
+        intro.SetActive(false);
 
-        // 우승자
-        if (winnersText != null)
-            winnersText.text = BuildText("우승", payload, true);
+        showResult.SetActive(true);
 
-        // 패배자
-        if (losersText != null)
-            losersText.text = BuildText("패배", payload, false);
-    }
+        bool animalWin = payload.WinType == EWinType.Citizens;
 
-    private string BuildText(string title, GameResultPayload p, bool isWinner)
-    {
-        StringBuilder sb = new StringBuilder();
-        sb.Append($"{title} : ");
-
-        bool first = true;
-
-        if (isWinner)
+        // ===== 텍스트 세팅 =====
+        if (animalWin)
         {
-            AppendIf(ref sb, ref first, p.HasWinner0, p.Winner0);
-            AppendIf(ref sb, ref first, p.HasWinner1, p.Winner1);
-            AppendIf(ref sb, ref first, p.HasWinner2, p.Winner2);
-            AppendIf(ref sb, ref first, p.HasWinner3, p.Winner3);
+            resultTitleText.text = "동물 승리";
+            resultTitleText.color = new Color(0.3608f, 1f, 0.4039f, 1f);
+
+            resultExplainText.text =
+                "농장의 평화는 당분간 이어질 겁니다. 적어도... 다음 침입 전까지는요.";
         }
         else
         {
-            AppendIf(ref sb, ref first, p.HasLoser0, p.Loser0);
-            AppendIf(ref sb, ref first, p.HasLoser1, p.Loser1);
-            AppendIf(ref sb, ref first, p.HasLoser2, p.Loser2);
-            AppendIf(ref sb, ref first, p.HasLoser3, p.Loser3);
+            resultTitleText.text = "농장주 승리";
+            resultTitleText.color = new Color(1f, 0.3608f, 0.3608f, 1f);
+
+            resultExplainText.text =
+                "농장은 잠시 빼앗겼을 뿐입니다. 그리고 마침내 다시 제 주인을 찾았습니다.";
         }
 
-        return sb.ToString();
+        SpawnWinners(payload);
+
+        yield return new WaitForSeconds(4f);
     }
 
-    private void AppendIf(ref StringBuilder sb, ref bool first, bool has, ResultPlayerInfo info)
+    // ===== Winner만 V자 배치 =====
+    private void SpawnWinners(GameResultPayload payload)
     {
-        if (!has) return;
+        List<ResultPlayerInfo> winners = new();
 
-        string name = info.Name.ToString();
+        if (payload.HasWinner0) winners.Add(payload.Winner0);
+        if (payload.HasWinner1) winners.Add(payload.Winner1);
+        if (payload.HasWinner2) winners.Add(payload.Winner2);
+        if (payload.HasWinner3) winners.Add(payload.Winner3);
 
-        if (!first)
-            sb.Append("\n");   // 줄바꿈
+        float xSpacing = 180f;
+        float ySpacing = 100f;
 
-        sb.Append(name);
-        first = false;
+        for (int i = 0; i < winners.Count; i++)
+        {
+            SpawnPlayerUIVShape(winners[i], i, xSpacing, ySpacing);
+        }
+    }
+
+    private void SpawnPlayerUIVShape(ResultPlayerInfo player, int index,
+        float xSpace, float ySpace)
+    {
+        GameObject playerUI = Instantiate(playerUIPrefab, spawnParent);
+
+        float x = 0f;
+        float y = 200f; // 중앙 기준으로 시작
+
+        if (index != 0)
+        {
+            int pairIndex = (index - 1) / 2;
+            bool isLeft = (index - 1) % 2 == 0;
+
+            x = (pairIndex + 1) * xSpace * (isLeft ? -1 : 1);
+            y = (pairIndex + 1) * ySpace; // 위로 올라가게
+        }
+
+        RectTransform rect = playerUI.GetComponent<RectTransform>();
+        rect.anchoredPosition = new Vector2(x, y);
+
+        var nicknameText = playerUI.GetComponentInChildren<TextMeshProUGUI>();
+        nicknameText.text = player.Name.ToString();
     }
 }

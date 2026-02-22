@@ -74,20 +74,77 @@ public sealed class ResultBroadcaster : NetworkBehaviour
 
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
-        if (!HasPayload) return;
-        if (!scene.name.Equals(resultSceneName)) return;
+        Debug.Log($"[ResultBroadcaster] SceneLoaded: {scene.name}, HasPayload: {HasPayload}");
 
-        PlayerView[] players = FindObjectsByType<PlayerView>(FindObjectsSortMode.None);
-        foreach (var p in players)
+        // ResultScene 아니면 아무것도 안 함
+        if (!scene.name.Equals(resultSceneName))
+            return;
+
+        // 서버에서 플레이어 V자 배치
+        if (IsServer)
         {
-            p.SetPlayerVisibility(false);
+            ArrangePlayersInVShape();
         }
 
-        // ResultScene 로드가 끝났으면 UI 찾아서 렌더
+        // payload 없으면 UI 안 띄움
+        if (!HasPayload)
+        {
+            Debug.LogWarning("[ResultBroadcaster] HasPayload is false.");
+            return;
+        }
+
+        // 결과 UI 표시
         var ui = FindFirstObjectByType<ResultScreenUI>(FindObjectsInactive.Include);
+
         if (ui != null)
             ui.Open(LastPayload);
         else
             Debug.LogError("[ResultBroadcaster] ResultScreenUI not found in ResultScene.");
+    }
+
+    private void ArrangePlayersInVShape()
+    {
+        PlayerView[] playerViews = FindObjectsByType<PlayerView>(FindObjectsSortMode.None);
+
+        if (playerViews.Length == 0)
+            return;
+
+        Camera cam = Camera.main;
+
+        if (cam == null)
+        {
+            Debug.LogWarning("[ResultBroadcaster] Main Camera not found.");
+            return;
+        }
+
+        Vector3 center = cam.transform.position;
+        center.z = 0f;
+
+        float xSpacing = 2.5f;
+        float ySpacing = 1.2f;
+
+        for (int i = 0; i < playerViews.Length; i++)
+        {
+            Vector3 pos;
+
+            if (i == 0)
+            {
+                pos = center;
+            }
+            else
+            {
+                int pairIndex = (i - 1) / 2;
+                bool isLeft = (i - 1) % 2 == 0;
+
+                float xOffset = (pairIndex + 1) * xSpacing * (isLeft ? -1 : 1);
+                float yOffset = (pairIndex + 1) * ySpacing;
+
+                pos = center + new Vector3(xOffset, yOffset, 0f);
+            }
+
+            playerViews[i].transform.position = pos;
+        }
+
+        Debug.Log("[ResultBroadcaster] Players arranged in V shape.");
     }
 }
