@@ -35,8 +35,6 @@ namespace Court.Hand
         [Space(10)]
         [Header("4. Input Settings")]
         [SerializeField] private float dragThreshold = 20f;
-        [SerializeField] private float targetScreenFallbackRadius = 240f;
-        [SerializeField] private float evidenceTargetPlaneZ = 0f;
 
         // 내부 상태
         private List<TrialCardView> _spawnedCards = new List<TrialCardView>();
@@ -302,7 +300,7 @@ namespace Court.Hand
                 // B. 증거 제출 드래그 중 -> 화살표 표시
                 else if (_isDraggingEvidence)
                 {
-                    Vector3 mouseWorldPos = GetMouseWorldPosition(evidenceTargetPlaneZ);
+                    Vector3 mouseWorldPos = GetMouseWorldPosition(_currentDragStartPos.z);
                     if (arrowController != null) arrowController.ShowArrow(_currentDragStartPos, mouseWorldPos);
                     HandleDragHoverPreview(mouseWorldPos);
                 }
@@ -385,8 +383,8 @@ namespace Court.Hand
 
         private void TrySubmitEvidence()
         {
-            Vector3 mousePos = GetMouseWorldPosition(evidenceTargetPlaneZ); 
-            var targetView = GetTargetPlayerAtPoint(mousePos);
+            Vector3 mousePos = GetMouseWorldPosition(0f);
+            var targetView = FindTargetByPoint(mousePos);
             if (targetView != null && targetView.OwnerId != NetworkManager.Singleton.LocalClientId)
             {
                 if(_myInventory != null)
@@ -415,87 +413,23 @@ namespace Court.Hand
 
         private CourtPlayerView TryGetValidTarget(Vector3 mousePos)
         {
-            var view = GetTargetPlayerAtPoint(mousePos);
+            var view = FindTargetByPoint(mousePos);
             if (view == null || view.OwnerId == NetworkManager.Singleton.LocalClientId) return null;
             return view;
         }
 
-        private CourtPlayerView GetTargetPlayerAtPoint(Vector3 mousePos)
+        private CourtPlayerView FindTargetByPoint(Vector3 mousePos)
         {
-            Vector2 worldPoint = new Vector2(mousePos.x, mousePos.y);
+            var hits = Physics2D.RaycastAll(mousePos, Vector2.zero);
+            if (hits == null || hits.Length == 0) return null;
 
-            // 1) 먼저 물리 콜라이더 기반으로 탐색
-            Collider2D[] hits = Physics2D.OverlapPointAll(worldPoint);
-            if (hits != null)
+            foreach (var hit in hits)
             {
-                foreach (var hit in hits)
-                {
-                    if (hit == null) continue;
-                    var view = hit.GetComponentInParent<CourtPlayerView>();
-                    if (view != null) return view;
-                }
+                if (hit.collider == null) continue;
+                // main 프리팹에서 콜라이더가 자식 오브젝트에 붙은 경우 대응
+                var view = hit.collider.GetComponentInParent<CourtPlayerView>();
+                if (view != null) return view;
             }
-
-            // 2) fallback: 플레이어별 콜라이더 직접 검사 + 스크린 바운드 기반 검사
-            CourtPlayerView nearestByScreen = null;
-            float nearestScreenDist = float.MaxValue;
-            var players = FindObjectsByType<CourtPlayerView>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
-            Vector2 mouseScreen = Input.mousePosition;
-
-            foreach (var player in players)
-            {
-                if (player == null) continue;
-                if (player.OwnerId == NetworkManager.Singleton.LocalClientId) continue;
-
-                var colliders = player.GetComponentsInChildren<Collider2D>(true);
-                foreach (var col in colliders)
-                {
-                    if (col != null && col.enabled && col.OverlapPoint(worldPoint))
-                    {
-                        return player;
-                    }
-                }
-
-                if (Camera.main == null) continue;
-
-                var renderers = player.GetComponentsInChildren<SpriteRenderer>(true);
-                foreach (var renderer in renderers)
-                {
-                    if (renderer == null || !renderer.enabled) continue;
-
-                    var bounds = renderer.bounds;
-                    Vector3 min = Camera.main.WorldToScreenPoint(bounds.min);
-                    Vector3 max = Camera.main.WorldToScreenPoint(bounds.max);
-                    if (min.z < 0f && max.z < 0f) continue;
-
-                    float xMin = Mathf.Min(min.x, max.x);
-                    float xMax = Mathf.Max(min.x, max.x);
-                    float yMin = Mathf.Min(min.y, max.y);
-                    float yMax = Mathf.Max(min.y, max.y);
-
-                    Rect screenRect = Rect.MinMaxRect(xMin, yMin, xMax, yMax);
-                    if (screenRect.Contains(mouseScreen))
-                    {
-                        return player;
-                    }
-
-                    float clampedX = Mathf.Clamp(mouseScreen.x, xMin, xMax);
-                    float clampedY = Mathf.Clamp(mouseScreen.y, yMin, yMax);
-                    float rectDist = Vector2.Distance(mouseScreen, new Vector2(clampedX, clampedY));
-
-                    if (rectDist < nearestScreenDist)
-                    {
-                        nearestScreenDist = rectDist;
-                        nearestByScreen = player;
-                    }
-                }
-            }
-
-            if (nearestByScreen != null && nearestScreenDist <= targetScreenFallbackRadius)
-            {
-                return nearestByScreen;
-            }
-
             return null;
         }
         private void ClearLastHoveredPlayer()
