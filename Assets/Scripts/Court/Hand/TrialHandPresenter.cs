@@ -35,6 +35,8 @@ namespace Court.Hand
         [Space(10)]
         [Header("4. Input Settings")]
         [SerializeField] private float dragThreshold = 20f;
+        [SerializeField] private float targetScreenFallbackRadius = 140f;
+        [SerializeField] private float evidenceTargetPlaneZ = 0f;
 
         // 내부 상태
         private List<TrialCardView> _spawnedCards = new List<TrialCardView>();
@@ -300,7 +302,7 @@ namespace Court.Hand
                 // B. 증거 제출 드래그 중 -> 화살표 표시
                 else if (_isDraggingEvidence)
                 {
-                    Vector3 mouseWorldPos = GetMouseWorldPosition(_currentDragStartPos.z);
+                    Vector3 mouseWorldPos = GetMouseWorldPosition(evidenceTargetPlaneZ);
                     if (arrowController != null) arrowController.ShowArrow(_currentDragStartPos, mouseWorldPos);
                     HandleDragHoverPreview(mouseWorldPos);
                 }
@@ -383,7 +385,7 @@ namespace Court.Hand
 
         private void TrySubmitEvidence()
         {
-            Vector3 mousePos = GetMouseWorldPosition(0f); 
+            Vector3 mousePos = GetMouseWorldPosition(evidenceTargetPlaneZ); 
             var targetView = GetTargetPlayerAtPoint(mousePos);
             if (targetView != null && targetView.OwnerId != NetworkManager.Singleton.LocalClientId)
             {
@@ -420,16 +422,54 @@ namespace Court.Hand
 
         private CourtPlayerView GetTargetPlayerAtPoint(Vector3 mousePos)
         {
-            Vector2 point = new Vector2(mousePos.x, mousePos.y);
-            Collider2D[] hits = Physics2D.OverlapPointAll(point);
-            if (hits == null || hits.Length == 0) return null;
+            Vector2 worldPoint = new Vector2(mousePos.x, mousePos.y);
 
-            foreach (var hit in hits)
+            // 1) 먼저 물리 콜라이더 기반으로 탐색
+            Collider2D[] hits = Physics2D.OverlapPointAll(worldPoint);
+            if (hits != null)
             {
-                if (hit == null) continue;
-                // 콜라이더가 자식 오브젝트에 붙은 경우까지 고려
-                var view = hit.GetComponentInParent<CourtPlayerView>();
-                if (view != null) return view;
+                foreach (var hit in hits)
+                {
+                    if (hit == null) continue;
+                    var view = hit.GetComponentInParent<CourtPlayerView>();
+                    if (view != null) return view;
+                }
+            }
+
+            // 2) fallback: 플레이어별 콜라이더 직접 검사 + 화면거리 기반 검사
+            CourtPlayerView nearestByScreen = null;
+            float nearestScreenDist = float.MaxValue;
+            var players = FindObjectsByType<CourtPlayerView>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
+
+            foreach (var player in players)
+            {
+                if (player == null) continue;
+                if (player.OwnerId == NetworkManager.Singleton.LocalClientId) continue;
+
+                var colliders = player.GetComponentsInChildren<Collider2D>(true);
+                foreach (var col in colliders)
+                {
+                    if (col != null && col.enabled && col.OverlapPoint(worldPoint))
+                    {
+                        return player;
+                    }
+                }
+
+                if (Camera.main == null) continue;
+                Vector3 screenPos = Camera.main.WorldToScreenPoint(player.transform.position);
+                if (screenPos.z < 0f) continue;
+
+                float dist = Vector2.Distance(Input.mousePosition, new Vector2(screenPos.x, screenPos.y));
+                if (dist < nearestScreenDist)
+                {
+                    nearestScreenDist = dist;
+                    nearestByScreen = player;
+                }
+            }
+
+            if (nearestByScreen != null && nearestScreenDist <= targetScreenFallbackRadius)
+            {
+                return nearestByScreen;
             }
 
             return null;
