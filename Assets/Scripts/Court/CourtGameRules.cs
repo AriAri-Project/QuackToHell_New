@@ -60,12 +60,29 @@ namespace Court
         /// </summary>
         public static bool IsCompatible(CardItemData card1, CardItemData card2)
         {
-            bool hasOp = IsOperatorCard(card1) || IsOperatorCard(card2);
-            bool hasNum = IsNumberCard(card1) || IsNumberCard(card2);
-            bool hasN = IsNCard(card1) || IsNCard(card2);
+            bool card1IsOp = IsOperatorCard(card1);
+            bool card2IsOp = IsOperatorCard(card2);
 
-            // 기호 + 숫자  OR  기호 + N  조합만 가능
-            return hasOp && (hasNum || hasN);
+            // 정확히 1장은 기호 카드여야 한다.
+            if (card1IsOp == card2IsOp) return false;
+
+            CardItemData opCard = card1IsOp ? card1 : card2;
+            CardItemData valueCard = card1IsOp ? card2 : card1;
+
+            // 기호 + 숫자 카드 조합
+            if (IsNumberCard(valueCard))
+            {
+                int numberValue = GetNumberValue(valueCard);
+                return IsAllowedNumberForTier(opCard.cardDef.tier, numberValue);
+            }
+
+            // 기호 + 미지 숫자카드(N) 조합
+            if (IsNCard(valueCard))
+            {
+                return true;
+            }
+
+            return false;
         }
 
         // ==================================================================================
@@ -107,19 +124,41 @@ namespace Court
         // --- 확률 로직 (N 카드) ---
         private static int ResolveNCardValue(CardItemData opCard)
         {
-            // 기호 카드의 등급(Tier)에 따라 범위 결정
-            // Common=Bronze, Rare=Silver, Special=Gold
-            switch (opCard.cardDef.tier)
+            GetAllowedUnknownRange(opCard.cardDef.tier, out int min, out int max);
+            return Random.Range(min, max + 1);
+        }
+
+        private static bool IsAllowedNumberForTier(TierEnum tier, int numberValue)
+        {
+            switch (tier)
             {
-                case TierEnum.Special: // Gold
-                    return Random.Range(0, 7); // 0~6
-                
-                case TierEnum.Rare:    // Silver
-                    return Random.Range(1, 5); // 1~4
-                
-                case TierEnum.Common:  // Bronze
+                case TierEnum.Special:
+                    return numberValue >= 0 && numberValue <= 6;
+                case TierEnum.Rare:
+                    return numberValue >= 2 && numberValue <= 4;
+                case TierEnum.Common:
                 default:
-                    return Random.Range(1, 3); // 1~2
+                    return numberValue >= 1 && numberValue <= 2;
+            }
+        }
+
+        private static void GetAllowedUnknownRange(TierEnum tier, out int min, out int max)
+        {
+            switch (tier)
+            {
+                case TierEnum.Special:
+                    min = 0;
+                    max = 6;
+                    return;
+                case TierEnum.Rare:
+                    min = 1;
+                    max = 4;
+                    return;
+                case TierEnum.Common:
+                default:
+                    min = 1;
+                    max = 2;
+                    return;
             }
         }
 
