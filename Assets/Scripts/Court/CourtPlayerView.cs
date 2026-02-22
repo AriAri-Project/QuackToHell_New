@@ -23,6 +23,7 @@ namespace Court
         [Header("UI Settings")]
         [SerializeField] private Color normalColor = Color.white;
         [SerializeField] private Color previewColor = Color.green;
+        [SerializeField] private Collider2D courtOnlyTargetCollider;
         
         public ulong OwnerId => OwnerClientId;
 
@@ -46,6 +47,7 @@ namespace Court
 
         private void Start()
         {
+            EnsureCourtOnlyTargetCollider();
             CheckAndEnableUI(SceneManager.GetActiveScene().name);
             if (characterRenderer != null)
             {
@@ -55,17 +57,51 @@ namespace Court
             if (currentVoteText) currentVoteText.text = _realScore.ToString();
         }
 
+        private void EnsureCourtOnlyTargetCollider()
+        {
+            if (courtOnlyTargetCollider == null)
+            {
+                var marker = GetComponentInChildren<CourtTargetCollider>(true);
+                if (marker != null)
+                {
+                    courtOnlyTargetCollider = marker.GetComponent<Collider2D>();
+                    marker.SetOwner(this);
+                }
+            }
+
+            if (courtOnlyTargetCollider == null)
+            {
+                GameObject targetObj = new GameObject("CourtTargetCollider");
+                targetObj.transform.SetParent(transform, false);
+                targetObj.transform.localPosition = new Vector3(0f, 0.5f, 0f);
+
+                var col = targetObj.AddComponent<CircleCollider2D>();
+                col.isTrigger = true;
+                col.radius = 3f;
+                courtOnlyTargetCollider = col;
+
+                var marker = targetObj.AddComponent<CourtTargetCollider>();
+                marker.SetOwner(this);
+            }
+        }
+
         private void CheckAndEnableUI(string sceneName)
         {
             if (hudCanvas == null) hudCanvas = GetComponentInChildren<Canvas>(true);
             
-            if (sceneName.Contains("Court"))
+            bool isCourtScene = sceneName.Contains("Court");
+            if (isCourtScene)
             {
                 if (hudCanvas != null) hudCanvas.gameObject.SetActive(true);
             }
             else
             {
                 if (hudCanvas != null) hudCanvas.gameObject.SetActive(false);
+            }
+
+            if (courtOnlyTargetCollider != null)
+            {
+                courtOnlyTargetCollider.enabled = isCourtScene;
             }
         }
 

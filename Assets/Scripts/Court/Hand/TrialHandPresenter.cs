@@ -420,15 +420,19 @@ namespace Court.Hand
 
         private CourtPlayerView FindTargetByPoint(Vector3 mousePos)
         {
-            var hits = Physics2D.RaycastAll(mousePos, Vector2.zero);
+            Vector2 point = new Vector2(mousePos.x, mousePos.y);
+            var hits = Physics2D.OverlapPointAll(point);
             if (hits == null || hits.Length == 0) return null;
 
             foreach (var hit in hits)
             {
-                if (hit.collider == null) continue;
-                // main 프리팹에서 콜라이더가 자식 오브젝트에 붙은 경우 대응
-                var view = hit.collider.GetComponentInParent<CourtPlayerView>();
-                if (view != null) return view;
+                if (hit == null) continue;
+
+                var targetMarker = hit.GetComponentInParent<CourtTargetCollider>();
+                if (targetMarker != null && targetMarker.OwnerView != null)
+                {
+                    return targetMarker.OwnerView;
+                }
             }
             return null;
         }
