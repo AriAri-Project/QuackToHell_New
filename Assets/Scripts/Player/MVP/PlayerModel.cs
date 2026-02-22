@@ -36,7 +36,7 @@ public class PlayerModel : NetworkBehaviour
     //충돌범위 레이
     private float upRay = 0.47f;
     private float downRay = 0.05f;
-    private float xRay = 0.17f;
+    private float xRay = 0.5f;
     private int wallLayerMask;
     private float rayOffset = 0.1f; 
 
