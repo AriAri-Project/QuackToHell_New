@@ -62,7 +62,7 @@ public class PlayerModel : NetworkBehaviour
         _ventStateComponent = GetComponent<PlayerVentState>();
         
         //벽 감지 레이어 초기화
-        wallLayerMask = LayerMask.GetMask(GameLayers.Wall, GameLayers.Default);
+        wallLayerMask = LayerMask.GetMask(GameLayers.Wall, GameLayers.Object);
         
         //내가 owner가 아니면 light 2d component삭제
         if (!IsOwner)

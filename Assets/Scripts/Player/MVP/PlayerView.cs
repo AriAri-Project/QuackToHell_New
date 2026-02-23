@@ -18,10 +18,11 @@ public class PlayerView : NetworkBehaviour
 
 
     [Header("For Trigger Detect Colliders")]
-    [Tooltip("this is for hide player behind shadow.")]
-    //플레이어만 감지하는 콜라이더
+    [Tooltip("this is for hide player behind shadow.")] 
     [SerializeField] private Collider2D forShadowCollider;
-
+    [Tooltip("this is for interact.")] 
+    [SerializeField] private Collider2D forInteractCollider;
+    
     public Action<GameObject> onPlayerDetected;
     public Action<GameObject> onPlayerExited;
     public Action<GameObject> onCorpseDetected;
@@ -125,39 +126,45 @@ public class PlayerView : NetworkBehaviour
                 overlappingPlayers.Add(detectedObject);
             }
         }
-        
-        if (collision.CompareTag(GameTags.Player))
-        {
-            if (!detectedObject.Equals(this.gameObject))
-            {
-                // 직업이 Animal이고 Alive인 플레이어만 추가
-                PlayerModel detectedPlayerModel = detectedObject.GetComponent<PlayerModel>();
-                if (detectedPlayerModel == null) return;
-    
-                if (detectedPlayerModel.GetPlayerJob() != PlayerJob.Animal || 
-                    detectedPlayerModel.GetPlayerAliveState() != PlayerLivingState.Alive)
-                {
-                    return; // Animal이 아니거나 죽은 플레이어는 추가하지 않음
-                }
 
-                if (!overlappingAliveAnimalPlayers.Contains(detectedObject))
+        //다 감지되도록 인스펙터에서 설정되어있으므로 코드에서 태그비교x
+        if (forInteractCollider.IsTouching(collision))
+        {
+            if (collision.CompareTag(GameTags.Player))
+            {
+                if (!detectedObject.Equals(this.gameObject))
                 {
-                    overlappingAliveAnimalPlayers?.Add(detectedObject);
-                    onPlayerDetected?.Invoke(detectedObject);
-                }
+                    // 직업이 Animal이고 Alive인 플레이어만 추가
+                    PlayerModel detectedPlayerModel = detectedObject.GetComponent<PlayerModel>();
+                    if (detectedPlayerModel == null) return;
+    
+                    if (detectedPlayerModel.GetPlayerJob() != PlayerJob.Animal || 
+                        detectedPlayerModel.GetPlayerAliveState() != PlayerLivingState.Alive)
+                    {
+                        return; // Animal이 아니거나 죽은 플레이어는 추가하지 않음
+                    }
+
+                    if (!overlappingAliveAnimalPlayers.Contains(detectedObject))
+                    {
+                        overlappingAliveAnimalPlayers?.Add(detectedObject);
+                        onPlayerDetected?.Invoke(detectedObject);
+                    }
                 
+                }
+            }
+            else if (collision.CompareTag(GameTags.PlayerCorpse))
+            {
+                targetCorpseCache =  collision.gameObject;
+                onCorpseDetected?.Invoke(targetCorpseCache);
+            }
+            else if(collision.CompareTag(GameTags.MiniGame)||collision.CompareTag(GameTags.Vent)||collision.CompareTag(GameTags.ConvocationOfTrial)||collision.CompareTag(GameTags.Closet)||collision.CompareTag(GameTags.Keyboard))
+            {
+                interactObjCache = collision.gameObject;
+                OnObjectEntered?.Invoke(detectedObject);
             }
         }
-        else if (collision.CompareTag(GameTags.PlayerCorpse))
-        {
-            targetCorpseCache =  collision.gameObject;
-            onCorpseDetected?.Invoke(targetCorpseCache);
-        }
-        else if(collision.CompareTag(GameTags.MiniGame)||collision.CompareTag(GameTags.Vent)||collision.CompareTag(GameTags.ConvocationOfTrial)||collision.CompareTag(GameTags.Closet)||collision.CompareTag(GameTags.Keyboard))
-        {
-            interactObjCache = collision.gameObject;
-            OnObjectEntered?.Invoke(detectedObject);
-        }
+        
+        
         
         
         

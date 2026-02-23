@@ -27,6 +27,11 @@ namespace Court
             Time_Slider
         }
 
+        enum Images
+        {
+            Player_Role_Icon,
+        }
+        
         private void Start()
         {
             var controllerObj = FindFirstObjectByType<CourtController>();
@@ -38,12 +43,25 @@ namespace Court
             base.Init();
             Bind<TextMeshProUGUI>(typeof(Texts));
             Bind<Slider>(typeof(Sliders));
+            Bind<Image>(typeof(Images));
 
             // Inspector에서 연결 안 했을 경우를 대비해 Bind로 가져오기
             if (voteNumberText == null) voteNumberText = Get<TextMeshProUGUI>((int)Texts.Votes_Number_Text);
             if (voteRankingText == null) voteRankingText = Get<TextMeshProUGUI>((int)Texts.Votes_Ranking_Text);
             if (timeSlider == null) timeSlider = Get<Slider>((int)Sliders.Time_Slider);
-
+            
+            //역할 이미지 초기화
+            GameObject Image_Role_gameObject = Get<Image>((int)Images.Player_Role_Icon).gameObject;
+            if (PlayerHelperManager.Instance.GetPlayerModelByClientId(NetworkManager.Singleton.LocalClientId)
+                    .GetPlayerJob() == PlayerJob.Animal)
+            {
+                Image_Role_gameObject.GetComponent<Image>().sprite = Resources.Load<Sprite>("UI/Art/Duck");    
+            }
+            else
+            {
+                Image_Role_gameObject.GetComponent<Image>().sprite = Resources.Load<Sprite>("UI/Art/Farmer");    
+            }
+            
             // 1. 초기 데이터 표시
             UpdateMyVoteInfo();
 

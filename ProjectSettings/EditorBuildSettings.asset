@@ -15,26 +15,23 @@ EditorBuildSettings:
     path: Assets/Scenes/LobbyScene.unity
     guid: 3fc209af340ae44479449193e233f2b1
   - enabled: 1
-    path: Assets/Scenes/VillageScene.unity
-    guid: 008984d48ed8b954085c68b4ae1bb426
-  - enabled: 1
     path: Assets/Scenes/CourtScene.unity
     guid: 728778deddd9ebb498e7cd80e58d9a6f
   - enabled: 0
     path: Assets/Scenes/Test/YujinTestScene.unity
     guid: cb87c34834b83804ebd15dc3b0e42321
   - enabled: 1
-    path: Assets/Scenes/VillageScene.unity
-    guid: 2e0ad75266b05e64faad8c0c74298a62
-  - enabled: 1
     path: Assets/Scenes/ResultScene.unity
     guid: f61a0af36fbf4cc449f740da50274223
   - enabled: 1
     path: Assets/Scenes/KillScene.unity
     guid: 613003e03cab3a7458ce148f04e0ad24
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/Test/Yujin_VillageScene.unity
     guid: fce3c5dc70c2a534ab7b44c25c77bdf6
+  - enabled: 1
+    path: Assets/Scenes/VillageScene.unity
+    guid: c32ccb1ea4b55e34e8b46150562ece5a
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 2bcd2660ca9b64942af0de543d8d7100, type: 3}
   m_UseUCBPForAssetBundles: 0

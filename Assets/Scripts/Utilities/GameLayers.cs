@@ -14,6 +14,7 @@ public static class GameLayers
     public const string Wall = "Wall";
     public const string ShadowWall = "ShadowWall";
     public const string Interactable = "Interactable";
+    public const string Object = "Object";
     
     // Default 레이어
     public const string Default = "Default";
