@@ -26,9 +26,9 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/KillScene.unity
     guid: 613003e03cab3a7458ce148f04e0ad24
-  - enabled: 0
+  - enabled: 1
     path: Assets/Scenes/Test/Yujin_VillageScene.unity
-    guid: fce3c5dc70c2a534ab7b44c25c77bdf6
+    guid: c5e2983ee6144a446bb7ba82522935fc
   - enabled: 1
     path: Assets/Scenes/VillageScene.unity
     guid: c32ccb1ea4b55e34e8b46150562ece5a
