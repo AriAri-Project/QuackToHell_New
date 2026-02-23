@@ -59,7 +59,7 @@ public class RoleController : MonoBehaviour
     private void Update()
     {
         // 현재 전략 업데이트
-        _currentStrategy?.Update();
+        _currentStrategy?.OnRoleUpdate();
     }
     
     /// <summary>

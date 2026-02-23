@@ -30,6 +30,11 @@ public class FarmerStrategy : NetworkBehaviour, IRoleStrategy
     private VentController _currentVent;
 
     private float killCooltimeMax;
+
+    public float KillCooltimeMax
+    {
+        get { return killCooltimeMax; }
+    }
     private float killCooltimer = 0f;
 
     public float KillCooltimer
@@ -44,7 +49,12 @@ public class FarmerStrategy : NetworkBehaviour, IRoleStrategy
         get{return canKill;}
     }
     
-    private float savotageCooltimeMax; 
+    private float savotageCooltimeMax;
+
+    public float SavotageCooltimeMax
+    {
+        get{return savotageCooltimeMax;}
+    }
     private float savotageCooltimer = 0f;
 
     public float SavotageCooltimer
@@ -100,10 +110,18 @@ public class FarmerStrategy : NetworkBehaviour, IRoleStrategy
         savotageCooltimeMax = LobbyManager.Instance.LobbyData.savotageCooltime; 
         savotageCooltimer = 0f; 
         canSavotage = false;  
+        
+        //바인드
+        GameManager.Instance.onRoleAssignDirectionEnd += SetCooltimeZero;
     }
-   
+
+    private void SetCooltimeZero()
+    {
+        killCooltimer = 0;
+        savotageCooltimer = 0;
+    }
     
-    public void Update()
+    public void OnRoleUpdate()
     {
         if (!canKill)
         {
@@ -277,6 +295,10 @@ public class FarmerStrategy : NetworkBehaviour, IRoleStrategy
         {
             _commonActionMap.Disable();
         }
+        
+        //바인드해지
+        //바인드
+        GameManager.Instance.onRoleAssignDirectionEnd -= SetCooltimeZero;
     }
     
     //스킬지정

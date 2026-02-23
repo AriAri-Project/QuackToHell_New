@@ -24,7 +24,7 @@ public interface IRoleStrategy
     /// <summary>
     /// 역할별 업데이트 로직
     /// </summary>
-    void Update();
+    void OnRoleUpdate();
     
     /// <summary>
     /// 역할별 정리 작업

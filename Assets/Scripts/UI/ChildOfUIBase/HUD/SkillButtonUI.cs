@@ -148,13 +148,13 @@ public class SkillButtonUI : UIHUD
 
     private void ShowKillCooltime()
     {
-        float remainTime = GameConstants.Lobby.Initials.KillCooltime - farmerStrategy.KillCooltimer;
+        float remainTime = farmerStrategy.KillCooltimeMax - farmerStrategy.KillCooltimer;
         KillCooltime.text = Mathf.CeilToInt(remainTime).ToString();
     }
 
     private void ShowSavotageCooltime()
     {
-        float remainTime = GameConstants.Lobby.Initials.SavotageCooltime - farmerStrategy.SavotageCooltimer;
+        float remainTime = farmerStrategy.SavotageCooltimeMax - farmerStrategy.SavotageCooltimer;
         SavotageCooltime.text = Mathf.CeilToInt(remainTime).ToString();
     }
     

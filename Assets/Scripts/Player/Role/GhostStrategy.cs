@@ -32,7 +32,7 @@ public class GhostStrategy : NetworkBehaviour, IRoleStrategy
     
 
     
-    public void Update()
+    public void OnRoleUpdate()
     {
         // 유령 전용 업데이트 로직
         // 예: 투명도, 특별한 효과 등
