@@ -29,6 +29,8 @@ public class ResultScreenUI : MonoBehaviour
     }
     private void Awake()
     {
+        Debug.Log("ResultScreenUI Awake");
+
         goToLobbyButton.onClick.AddListener(OnClickGoToLobby);
         goToStartButton.onClick.AddListener(OnClickGoToStart);
     }
@@ -91,7 +93,7 @@ public class ResultScreenUI : MonoBehaviour
         GameObject playerUI = Instantiate(playerUIPrefab, spawnParent);
 
         float x = 0f;
-        float y = 200f; // 중앙 기준으로 시작
+        float y = 150f; // 중앙 기준으로 시작
 
         if (index != 0)
         {
@@ -111,6 +113,8 @@ public class ResultScreenUI : MonoBehaviour
 
     private void OnClickGoToLobby()
     {
+        Debug.Log("GoToLobby 버튼 눌림");
+
         if (NetworkManager.Singleton.IsServer)
         {
             NetworkManager.Singleton.SceneManager
@@ -119,6 +123,8 @@ public class ResultScreenUI : MonoBehaviour
     }
     private void OnClickGoToStart()
     {
+        Debug.Log("GoToStart 버튼 눌림");
+
         // 네트워크 연결 끊고 홈으로
         if (NetworkManager.Singleton != null)
         {
