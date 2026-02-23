@@ -28,6 +28,7 @@ public class HomeUI : UIHUD
     private GameObject Roomlist_Content_gameObject;
     private GameObject Default_gameObject;
 
+    private Sprite buttonHighlighted''
 
     private TextMeshProUGUI Text_MaxPlayerNum;
 
@@ -118,11 +119,16 @@ public class HomeUI : UIHUD
         BindEvent(Button_Option_gameObject,OnClicked_Option, GameEvents.UIEvent.Click);
         GameObject Button_CreateGame_gameObject = Get<Button>((int)Buttons.Button_CreateGame).gameObject;
         BindEvent(Button_CreateGame_gameObject,OnClicked_CreateGame, GameEvents.UIEvent.Click);
+        BindEvent(Button_CreateGame_gameObject,OnPointerEnter_CreateGame, GameEvents.UIEvent.PointerEnter);
+        BindEvent(Button_CreateGame_gameObject,OnPointerExit_CreateGame, GameEvents.UIEvent.PointerExit);
         GameObject Button_FindGame_gameObject = Get<Button>((int)Buttons.Button_FindGame).gameObject;
         BindEvent(Button_FindGame_gameObject,OnClicked_FindGame, GameEvents.UIEvent.Click);
+        BindEvent(Button_FindGame_gameObject,OnPointerEnter_FindGame, GameEvents.UIEvent.PointerEnter);
+        BindEvent(Button_FindGame_gameObject,OnPointerExit_FindGame, GameEvents.UIEvent.PointerExit);
         GameObject Button_EnterGame_gameObject = Get<Button>((int)Buttons.Button_EnterGame).gameObject;
         BindEvent(Button_EnterGame_gameObject,OnClicked_EnterCode, GameEvents.UIEvent.Click);
-        
+        BindEvent(Button_EnterGame_gameObject,OnPointerEnter_EnterCode,GameEvents.UIEvent.PointerEnter);
+        BindEvent(Button_EnterGame_gameObject,OnPointerExit_EnterCode,GameEvents.UIEvent.PointerExit);
         GameObject Button_Back_CreateGameContents_gameObject = Get<Button>((int)Buttons.Button_Back_CreateGameContents).gameObject;
         BindEvent(Button_Back_CreateGameContents_gameObject,OnClicked_Button_Back_CreateGameContents, GameEvents.UIEvent.Click);
         GameObject Button_Back_EnterGameContents_gameObject = Get<Button>((int)Buttons.Button_Back_EnterGameContents).gameObject;
@@ -198,7 +204,6 @@ public class HomeUI : UIHUD
         code = input;
     }
     
-    
     private async void OnClicked_Button_Create(PointerEventData data)
     {
         //더블클릭방지
@@ -223,6 +228,9 @@ public class HomeUI : UIHUD
             isCreated = false;
         }
     }
+
+  
+    
     private async void OnClicked_Button_EnterCodeConfirm(PointerEventData data)
     {
         //방 참가: 코드로
@@ -337,6 +345,15 @@ public class HomeUI : UIHUD
         FindGame_gameObject.SetActive(false);
         Default_gameObject.SetActive(true);
     }
+    private void OnPointerEnter_CreateGame(PointerEventData data)
+    {
+        
+    }
+    private void OnPointerExit_CreateGame(PointerEventData data)
+    {
+        
+    }
+    
     private void OnClicked_EnterCode(PointerEventData data)
     {
         //사운드
@@ -347,6 +364,14 @@ public class HomeUI : UIHUD
         EnterCodeContents_gameObject.SetActive(true);
         FindGame_gameObject.SetActive(false);
         Default_gameObject.SetActive(true);
+    }
+    private void OnPointerEnter_EnterCode(PointerEventData data)
+    {
+        
+    }
+    private void OnPointerExit_EnterCode(PointerEventData data)
+    {
+        
     }
     private void OnClicked_FindGame(PointerEventData data)
     {
@@ -361,7 +386,14 @@ public class HomeUI : UIHUD
         //리스트 풀
         OnClicked_Button_F5();
     }
-
+    private void OnPointerEnter_FindGame(PointerEventData data)
+    {
+        
+    }
+    private void OnPointerExit_FindGame(PointerEventData data)
+    {
+        
+    }
     
 
     private void OnClicked_Button_Back_CreateGameContents(PointerEventData data)

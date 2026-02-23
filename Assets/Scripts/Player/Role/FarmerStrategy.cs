@@ -41,9 +41,9 @@ public class FarmerStrategy : NetworkBehaviour, IRoleStrategy
     {
         get => killCooltimer;
     }
+    
     private bool canKill = false;
     
-
     public bool CanKill
     {
         get{return canKill;}
@@ -115,7 +115,7 @@ public class FarmerStrategy : NetworkBehaviour, IRoleStrategy
         GameManager.Instance.onRoleAssignDirectionEnd += SetCooltimeZero;
     }
 
-    private void SetCooltimeZero()
+    public void SetCooltimeZero()
     {
         killCooltimer = 0;
         savotageCooltimer = 0;

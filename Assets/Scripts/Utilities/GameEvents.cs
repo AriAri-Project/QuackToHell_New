@@ -7,6 +7,9 @@ public static class GameEvents
         public const string BeginDrag = "BeginDrag";
         public const string EndDrag = "EndDrag";
         public const string Drop = "Drop";
+        public const string PointerEnter = "PointerEnter";
+        public const string PointerExit = "PointerExit";
+        
     }
     
 }

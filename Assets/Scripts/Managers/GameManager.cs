@@ -125,6 +125,12 @@ public class GameManager : NetworkBehaviour
             //레디 풀기
             PlayerModel localPlayer = PlayerHelperManager.Instance.GetPlayerModelByClientId(localClientId);
             localPlayer.ToggleReady();
+            //쿨타임 zero로 시작
+            if (localPlayer.GetPlayerJob()==PlayerJob.Farmer)
+            {
+                FarmerStrategy farmerStrategy = localPlayer.GetComponent<FarmerStrategy>();
+                farmerStrategy.SetCooltimeZero();
+            }
         }
     }
 

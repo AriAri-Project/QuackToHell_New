@@ -65,6 +65,14 @@ public abstract class UIBase : MonoBehaviour
                 evt.OnDropHandler -= action;
                 evt.OnDropHandler += action;
                 break;
+            case GameEvents.UIEvent.PointerEnter:
+                evt.OnPointerEnterHandler -= action;
+                evt.OnPointerEnterHandler += action;
+                break;
+            case GameEvents.UIEvent.PointerExit: 
+                evt.OnPointerExitHandler -= action;
+                evt.OnPointerExitHandler += action;
+                break;
         }
     }
 }
