@@ -292,7 +292,7 @@ public class GameManager : NetworkBehaviour
         float uiScale = scaleFactor;
         
         // 전체 배치의 시작 y 위치 (아래로 뾰족한 V자이므로 아래에서 시작)
-        float startYOffset = -250f * scaleFactor;
+        float startYOffset = 100f * scaleFactor;
         
         for (int i = 0; i < count; i++)
         {
