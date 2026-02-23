@@ -3,6 +3,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UIElements;
 using WorldMouseInteraction;
+using UnityEngine.SceneManagement;
 
 public class WorldMouseInteractionController : MonoBehaviour
 {
@@ -14,13 +15,20 @@ public class WorldMouseInteractionController : MonoBehaviour
         mainCamera = GetComponent<Camera>();
         interactableLayer = GameLayers.GetLayerMask(GameLayers.ClickableWorldObj);
     }
+    private void OnEnable()
+    {
+        if (SceneManager.GetActiveScene().name == "ResultScene")
+        {
+            enabled = false;
+        }
+    }
 
     private void Update()
     {
         if (Input.GetMouseButtonDown(0))
         {
             //UI클릭 시 무시
-            if (EventSystem.current.IsPointerOverGameObject())
+            if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())
             {
                 return;
             }
