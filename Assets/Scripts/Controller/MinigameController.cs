@@ -627,6 +627,8 @@ public class MinigameController : MonoBehaviour
                 g7.OnCleared.RemoveListener(BeginLocalCooldown);
                 g7.OnCleared.AddListener(BeginLocalCooldown);
             }
+            
+            
             _rewardGrantedThisRun = false;
         }
     }
