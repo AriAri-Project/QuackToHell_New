@@ -73,6 +73,14 @@ public abstract class UIBase : MonoBehaviour
                 evt.OnPointerExitHandler -= action;
                 evt.OnPointerExitHandler += action;
                 break;
+            case GameEvents.UIEvent.PointerDown:
+                evt.OnPointerDownHandler -= action;
+                evt.OnPointerDownHandler += action;
+                break;
+            case GameEvents.UIEvent.PointerUp:
+                evt.OnPointerUpHandler -= action;
+                evt.OnPointerUpHandler += action;
+                break;
         }
     }
 }

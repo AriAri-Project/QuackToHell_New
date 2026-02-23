@@ -28,16 +28,26 @@ public class HomeUI : UIHUD
     private GameObject Roomlist_Content_gameObject;
     private GameObject Default_gameObject;
 
-    private Sprite buttonHighlighted''
+    private Sprite buttonHighlighted;
+    private Sprite CreateGameContents_sprite;
+    private Sprite FindGameContents_sprite;
+    private Sprite EnterGameContents_sprite;
+    private Image CreateGameContents_image;
+    private Image FindGameContents_image;
+    private Image EnterGameContents_image;
+    
 
     private TextMeshProUGUI Text_MaxPlayerNum;
+    private TextMeshProUGUI Button_CreateGameText;
+    private TextMeshProUGUI Button_FindGameText;
+    private TextMeshProUGUI Button_EnterGameText;
 
     private string sessionName="";
     private string code="";
     private bool buttonLock = false;
     private bool isPrivate = false;
     private Color buttonLockColor;
-    private int maxPlayerNum=GameConstants.Lobby.Initials.MaxPlayers;
+    private int maxPlayerNum = GameConstants.Lobby.Initials.MaxPlayers;
     
     //새로고침 쿨타임
     //쿨타임 근거: https://unity3.tistory.com/14
@@ -74,6 +84,9 @@ public class HomeUI : UIHUD
     enum Texts
     {
         Text_MaxPlayerNum,
+        Button_CreateGameText,
+        Button_FindGameText,
+        Button_EnterGameText
     }
     
     enum GameObjects
@@ -101,7 +114,8 @@ public class HomeUI : UIHUD
     private void Start()
     {
         base.Init();
-        
+
+        buttonHighlighted = Resources.Load<Sprite>("Sprites/Home/8(2)");
         
         Bind<GameObject>(typeof(GameObjects));
         GameStartContents_gameObject = Get<GameObject>((int)GameObjects.GameStartContents).gameObject;
@@ -118,17 +132,26 @@ public class HomeUI : UIHUD
         GameObject Button_Option_gameObject = Get<Button>((int)Buttons.Button_Option).gameObject;
         BindEvent(Button_Option_gameObject,OnClicked_Option, GameEvents.UIEvent.Click);
         GameObject Button_CreateGame_gameObject = Get<Button>((int)Buttons.Button_CreateGame).gameObject;
+        CreateGameContents_image = Button_CreateGame_gameObject.GetComponent<Image>();
+        CreateGameContents_sprite =  CreateGameContents_image.sprite;
         BindEvent(Button_CreateGame_gameObject,OnClicked_CreateGame, GameEvents.UIEvent.Click);
         BindEvent(Button_CreateGame_gameObject,OnPointerEnter_CreateGame, GameEvents.UIEvent.PointerEnter);
         BindEvent(Button_CreateGame_gameObject,OnPointerExit_CreateGame, GameEvents.UIEvent.PointerExit);
+        BindEvent(Button_CreateGame_gameObject,OnPointerUp_CreateGame,GameEvents.UIEvent.PointerUp);
         GameObject Button_FindGame_gameObject = Get<Button>((int)Buttons.Button_FindGame).gameObject;
+        FindGameContents_image = Button_FindGame_gameObject.GetComponent<Image>();
+        FindGameContents_sprite =  FindGameContents_image.sprite;
         BindEvent(Button_FindGame_gameObject,OnClicked_FindGame, GameEvents.UIEvent.Click);
         BindEvent(Button_FindGame_gameObject,OnPointerEnter_FindGame, GameEvents.UIEvent.PointerEnter);
         BindEvent(Button_FindGame_gameObject,OnPointerExit_FindGame, GameEvents.UIEvent.PointerExit);
+        BindEvent(Button_FindGame_gameObject,OnPointerUp_FindGame,GameEvents.UIEvent.PointerUp);
         GameObject Button_EnterGame_gameObject = Get<Button>((int)Buttons.Button_EnterGame).gameObject;
+        EnterGameContents_image = Button_EnterGame_gameObject.GetComponent<Image>();
+        EnterGameContents_sprite =  EnterGameContents_image.sprite;
         BindEvent(Button_EnterGame_gameObject,OnClicked_EnterCode, GameEvents.UIEvent.Click);
         BindEvent(Button_EnterGame_gameObject,OnPointerEnter_EnterCode,GameEvents.UIEvent.PointerEnter);
         BindEvent(Button_EnterGame_gameObject,OnPointerExit_EnterCode,GameEvents.UIEvent.PointerExit);
+        BindEvent(Button_EnterGame_gameObject,OnPointerUp_EnterCode,GameEvents.UIEvent.PointerUp);
         GameObject Button_Back_CreateGameContents_gameObject = Get<Button>((int)Buttons.Button_Back_CreateGameContents).gameObject;
         BindEvent(Button_Back_CreateGameContents_gameObject,OnClicked_Button_Back_CreateGameContents, GameEvents.UIEvent.Click);
         GameObject Button_Back_EnterGameContents_gameObject = Get<Button>((int)Buttons.Button_Back_EnterGameContents).gameObject;
@@ -161,9 +184,12 @@ public class HomeUI : UIHUD
         Bind<TextMeshProUGUI>(typeof(Texts));
         Text_MaxPlayerNum = Get<TextMeshProUGUI>((int)Texts.Text_MaxPlayerNum);
         Text_MaxPlayerNum.text = maxPlayerNum.ToString();
+        Button_CreateGameText = Get<TextMeshProUGUI>((int)Texts.Button_CreateGameText);
+        Button_FindGameText = Get<TextMeshProUGUI>((int)Texts.Button_FindGameText);
+        Button_EnterGameText = Get<TextMeshProUGUI>((int)Texts.Button_EnterGameText);
 
     }
-    
+
 
     private void LobbyManagerOnRoomListPulledAddSlotToRoomListContent(List<Lobby> lobbyList)
     {
@@ -347,13 +373,19 @@ public class HomeUI : UIHUD
     }
     private void OnPointerEnter_CreateGame(PointerEventData data)
     {
-        
+        CreateGameContents_image.sprite = buttonHighlighted;
+        Button_CreateGameText.color = Color.white;
     }
     private void OnPointerExit_CreateGame(PointerEventData data)
     {
-        
+        CreateGameContents_image.sprite = CreateGameContents_sprite;
+        Button_CreateGameText.color = Color.black;
     }
-    
+    private void OnPointerUp_CreateGame(PointerEventData data)
+    {
+        CreateGameContents_image.sprite = CreateGameContents_sprite;
+        Button_CreateGameText.color = Color.black;
+    }
     private void OnClicked_EnterCode(PointerEventData data)
     {
         //사운드
@@ -367,11 +399,18 @@ public class HomeUI : UIHUD
     }
     private void OnPointerEnter_EnterCode(PointerEventData data)
     {
-        
+        EnterGameContents_image.sprite = buttonHighlighted;
+        Button_EnterGameText.color = Color.white;
     }
     private void OnPointerExit_EnterCode(PointerEventData data)
     {
-        
+        EnterGameContents_image.sprite = EnterGameContents_sprite;
+        Button_EnterGameText.color = Color.black;
+    }
+    private void OnPointerUp_EnterCode(PointerEventData data)
+    {
+        EnterGameContents_image.sprite = EnterGameContents_sprite;
+        Button_EnterGameText.color = Color.black;
     }
     private void OnClicked_FindGame(PointerEventData data)
     {
@@ -388,14 +427,20 @@ public class HomeUI : UIHUD
     }
     private void OnPointerEnter_FindGame(PointerEventData data)
     {
-        
+        FindGameContents_image.sprite = buttonHighlighted;
+        Button_FindGameText.color=Color.white;
     }
     private void OnPointerExit_FindGame(PointerEventData data)
     {
-        
+        FindGameContents_image.sprite = FindGameContents_sprite;   
+        Button_FindGameText.color = Color.black;
     }
     
-
+    private void OnPointerUp_FindGame(PointerEventData data)
+    {
+        FindGameContents_image.sprite = FindGameContents_sprite;
+        Button_FindGameText.color = Color.black;
+    }
     private void OnClicked_Button_Back_CreateGameContents(PointerEventData data)
     {
         //사운드

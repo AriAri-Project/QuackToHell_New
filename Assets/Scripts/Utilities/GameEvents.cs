@@ -9,6 +9,8 @@ public static class GameEvents
         public const string Drop = "Drop";
         public const string PointerEnter = "PointerEnter";
         public const string PointerExit = "PointerExit";
+        public const string PointerDown = "PointerDown"; 
+        public const string PointerUp = "PointerUp";
         
     }
     
