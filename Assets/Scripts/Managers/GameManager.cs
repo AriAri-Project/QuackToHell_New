@@ -108,14 +108,14 @@ public class GameManager : NetworkBehaviour
         if (scene.name == GameScenes.Lobby) // 또는 해당 씬 이름
         {
             UIManager.Instance.ShowHUDUI<LobbyUI>("LobbyUI");
-            UIManager.Instance.ShowHUDUI<MobileJoystickUI>("MobileJoystickUI");
+            //UIManager.Instance.ShowHUDUI<MobileJoystickUI>("MobileJoystickUI");
             FindLobbyUIElements();
         }
         if(scene.name == GameScenes.Village)
         {
             UIManager.Instance.ShowHUDUI<VillageUI>("VillageUI");
             UIManager.Instance.ShowHUDUI<SkillButtonUI>("SkillButtonUI");
-            UIManager.Instance.ShowHUDUI<MobileJoystickUI>("MobileJoystickUI");
+            //UIManager.Instance.ShowHUDUI<MobileJoystickUI>("MobileJoystickUI");
             //시체 청소하기
             CleanPlayerCorpse();
             //움직임 켜기
