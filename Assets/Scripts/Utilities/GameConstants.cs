@@ -63,7 +63,7 @@ public static class GameConstants
             public const int MaxPlayers = 6;
             public const int FarmerNum = 1;
             public const int SavotageCooltime = 20;
-            public const int KillCooltime = 20;
+            public const int KillCooltime = 30;
             public const bool IsShowKillerInfo = true;
             public const int InnerEyesight = 29;
             public const int OuterEyesight = 30;
