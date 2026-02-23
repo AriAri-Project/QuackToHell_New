@@ -1,4 +1,5 @@
 using System;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
@@ -15,6 +16,9 @@ public class SkillButtonUI : UIHUD
     private Button Button_Kill;
     private Button Button_Report;
     private Button Button_Interaction;
+
+    private TextMeshProUGUI SavotageCooltime;
+    private TextMeshProUGUI KillCooltime;
     
     private PlayerView playerView;
     private PlayerModel playerModel;
@@ -39,9 +43,16 @@ public class SkillButtonUI : UIHUD
         Button_Interaction
     }
 
+    enum Texts
+    {
+        SavotageCooltime,
+        KillCooltime,
+    }
+
     private void Start()
     {
         base.Init();
+        
         Bind<Button>(typeof(Buttons));
         
         Button_Interaction = Get<Button>((int)Buttons.Button_Interaction);
@@ -52,6 +63,11 @@ public class SkillButtonUI : UIHUD
         BindEvent(Button_Report.gameObject, OnCorpseReportButton, GameEvents.UIEvent.Click);
         Button_Savotage = Get<Button>((int)Buttons.Button_Savotage);
         BindEvent(Button_Savotage.gameObject, OnSavotageButton, GameEvents.UIEvent.Click);
+        
+        Bind<TextMeshProUGUI>(typeof(Texts));
+        SavotageCooltime =  Get<TextMeshProUGUI>((int)Texts.SavotageCooltime);
+        KillCooltime = Get<TextMeshProUGUI>((int)Texts.KillCooltime);
+        
         
         playerView = PlayerHelperManager.Instance.GetPlayerViewlByClientId(NetworkManager.Singleton.LocalClientId);
         playerView.OnObjectEntered += HandleObjectEntered;
@@ -110,6 +126,10 @@ public class SkillButtonUI : UIHUD
             {
                 DisableButton(Buttons.Button_Kill);
             }
+            
+            //킬,사보 쿨타임 업데이트
+            ShowKillCooltime();
+            ShowSavotageCooltime();
         }
         
         if (playerModel.GetPlayerAliveState() == PlayerLivingState.Alive && playerView != null)
@@ -124,6 +144,18 @@ public class SkillButtonUI : UIHUD
                 DisableButton(Buttons.Button_Report);
             }
         }
+    }
+
+    private void ShowKillCooltime()
+    {
+        float remainTime = GameConstants.Lobby.Initials.KillCooltime - farmerStrategy.KillCooltimer;
+        KillCooltime.text = Mathf.CeilToInt(remainTime).ToString();
+    }
+
+    private void ShowSavotageCooltime()
+    {
+        float remainTime = GameConstants.Lobby.Initials.SavotageCooltime - farmerStrategy.SavotageCooltimer;
+        SavotageCooltime.text = Mathf.CeilToInt(remainTime).ToString();
     }
     
     private void HandleKillCooldownReady()

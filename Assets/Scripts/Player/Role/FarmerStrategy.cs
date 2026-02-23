@@ -31,6 +31,11 @@ public class FarmerStrategy : NetworkBehaviour, IRoleStrategy
 
     private float killCooltimeMax;
     private float killCooltimer = 0f;
+
+    public float KillCooltimer
+    {
+        get => killCooltimer;
+    }
     private bool canKill = false;
     
 
@@ -40,7 +45,13 @@ public class FarmerStrategy : NetworkBehaviour, IRoleStrategy
     }
     
     private float savotageCooltimeMax; 
-    private float savotageCooltimer = 0f;  
+    private float savotageCooltimer = 0f;
+
+    public float SavotageCooltimer
+    {
+        get => savotageCooltimer;
+    }
+
     private bool canSavotage = false;
 
     private bool isVentEntered = false;
