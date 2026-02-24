@@ -56,6 +56,7 @@ public class ScrubGameUI : MinigameBaseUI
     
     private void Awake()
     {
+        base.Awake();
         base.Init();
         Bind<Image>(typeof(Images));
         
