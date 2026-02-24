@@ -1,6 +1,7 @@
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using System.Collections;
 
 public sealed class ResultBroadcaster : NetworkBehaviour
 {
@@ -50,13 +51,22 @@ public sealed class ResultBroadcaster : NetworkBehaviour
         CachePayloadClientRpc(payload);
 
         // 네트워크 씬 로드 (모든 클라 동기화)
+        StartCoroutine(DelayedLoadResultScene());
+    }
+
+    private IEnumerator DelayedLoadResultScene()
+    {
+        Debug.Log("[ResultBroadcaster] Waiting 4 seconds before loading ResultScene...");
+
+        yield return new WaitForSeconds(4f);
+
         if (NetworkManager.Singleton != null && NetworkManager.Singleton.SceneManager != null)
         {
             NetworkManager.Singleton.SceneManager.LoadScene(resultSceneName, LoadSceneMode.Single);
         }
         else
         {
-            Debug.LogError("[ResultBroadcaster] NetworkManager/SceneManager missing. Cannot load ResultScene.");
+            Debug.LogError("[ResultBroadcaster] NetworkManager/SceneManager missing.");
         }
     }
 
