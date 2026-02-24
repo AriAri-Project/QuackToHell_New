@@ -24,6 +24,8 @@ public class PutBooksDragToTargetGameUI : MinigameBaseUI
     private List<Vector3> _initialDragItemPositions;
     private List<GameObject> dragItemGameObject;
 
+    private GameObject DragItems;
+
     private int matchCount = 0;
     
     [Header("Put in here match count")]
@@ -52,7 +54,11 @@ public class PutBooksDragToTargetGameUI : MinigameBaseUI
         DragItem8,
         DragItem9,
     }
-    
+
+    enum GameObjects
+    {
+        DragItems,
+    }
     
     private void Awake()
     {
@@ -63,7 +69,6 @@ public class PutBooksDragToTargetGameUI : MinigameBaseUI
         dragItemGameObject = new List<GameObject>();
         _onDroppedFitPositions = new List<Vector3>();
         _initialDragItemPositions = new List<Vector3>();
-        
         for (int i = 0; i < TOTAL_MATCH_COUNT; i++)
         {
             dragItemGameObject.Add(Get<Image>((int)Images.DragItem0 + i).gameObject);
@@ -77,7 +82,11 @@ public class PutBooksDragToTargetGameUI : MinigameBaseUI
             
             GameObject dropZoneGameObject = Get<Image>((int)Images.DropZone0 + i).gameObject;
             BindEvent(dropZoneGameObject, OnDropped, GameEvents.UIEvent.Drop);
+            
         }
+        
+        Bind<GameObject>(typeof(GameObjects));
+        DragItems = Get<GameObject>((int)GameObjects.DragItems);
     }
 
     protected override void Initialize()
@@ -86,15 +95,16 @@ public class PutBooksDragToTargetGameUI : MinigameBaseUI
         //상태 변수 초기화
         matchCount = 0;
         completeDelayTimer = 0f;
-        
         //드래그 아이템 위치 복원
         for (int i = 0; i < TOTAL_MATCH_COUNT; i++)
         {
+            
+            dragItemGameObject[i].transform.SetParent(DragItems.transform);
             //초기 위치로 복원
             dragItemGameObject[i].transform.position = _initialDragItemPositions[i];
             _onDroppedFitPositions[i] = _initialDragItemPositions[i];
-            
         }
+       
     }
     
     private void Update()
@@ -163,10 +173,13 @@ public class PutBooksDragToTargetGameUI : MinigameBaseUI
         //해당 인덱스로, 매칭위치 덮어씌우기
         _onDroppedFitPositions[index] = onDroppedFitPositions[index].position;
         
+        dragItemGameObject[index].transform.SetParent(transform);
+        
         //오더레이어 조정
         if (index == 0)
         {
             dragItemGameObject[index].transform.SetSiblingIndex(2);
+            
         }
         else if (index == 1)
         {
