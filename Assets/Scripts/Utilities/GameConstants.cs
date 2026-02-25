@@ -8,7 +8,7 @@ public static class GameConstants
     {
         public const float GhostSpeedMultiplier = 1.5f;
         public const float GhostTransparency = 0.5f;
-        public const int DefaultGold = 10;
+        public const int DefaultGold = 30;
         public const float DefaultMoveSpeed = 10f;
     }
     
