@@ -15,11 +15,13 @@ namespace Court
         [SerializeField] private Slider timeSlider;
 
         private CourtController courtController;
-
+        private TextMeshProUGUI Text_Gold;
+        PlayerModel playerModel;
         enum Texts
         {
             Votes_Number_Text,
             Votes_Ranking_Text,
+            GoldText
         }
 
         enum Sliders
@@ -31,6 +33,8 @@ namespace Court
         {
             Player_Role_Icon,
         }
+
+        
         
         private void Start()
         {
@@ -48,6 +52,7 @@ namespace Court
             // Inspector에서 연결 안 했을 경우를 대비해 Bind로 가져오기
             if (voteNumberText == null) voteNumberText = Get<TextMeshProUGUI>((int)Texts.Votes_Number_Text);
             if (voteRankingText == null) voteRankingText = Get<TextMeshProUGUI>((int)Texts.Votes_Ranking_Text);
+            Text_Gold = Get<TextMeshProUGUI>((int)Texts.GoldText);
             if (timeSlider == null) timeSlider = Get<Slider>((int)Sliders.Time_Slider);
             
             //역할 이미지 초기화
@@ -70,6 +75,12 @@ namespace Court
             {
                 VoteModel.Instance.VoteDataList.OnListChanged += OnVoteDataChanged;
             }
+            
+            //골드
+            ulong localClientId = NetworkManager.Singleton.LocalClientId;
+            playerModel = PlayerHelperManager.Instance.GetPlayerModelByClientId(localClientId);
+            UpdatePlayerGold(playerModel.GetGold());
+            playerModel.PlayerStatusData.OnValueChanged += OnPlayerStatusChanged;
         }
 
         private void OnDestroy()
@@ -129,5 +140,23 @@ namespace Court
                 voteRankingText.text = rank.ToString();
             }
         }
+        
+        /// <summary>
+        /// 플레이어 상태 변경 시 호출되는 메서드
+        /// </summary>
+        private void OnPlayerStatusChanged(PlayerStatusData previousValue, PlayerStatusData newValue)
+        {
+            // 골드가 실제로 변경되었을 때만 UI 업데이트
+            if (previousValue.gold != newValue.gold)
+            {
+                UpdatePlayerGold(newValue.gold);
+            }
+        }
+        
+        public void UpdatePlayerGold(int gold)
+        {
+            Text_Gold.text = "gold: " + gold.ToString();
+        }
     }
+
 }
