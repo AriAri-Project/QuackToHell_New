@@ -128,11 +128,7 @@ public class ResultScreenUI : MonoBehaviour
     {
         Debug.Log("GoToLobby 버튼 눌림");
 
-        if (NetworkManager.Singleton.IsServer)
-        {
-            NetworkManager.Singleton.SceneManager
-                .LoadScene(GameScenes.Lobby, LoadSceneMode.Single);
-        }
+        ResultBroadcaster.Instance.RequestGoToLobby();
     }
     private void OnClickGoToStart()
     {

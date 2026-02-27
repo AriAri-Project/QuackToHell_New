@@ -33,6 +33,31 @@ public sealed class ResultBroadcaster : NetworkBehaviour
         SceneManager.sceneLoaded -= OnSceneLoaded;
     }
 
+    public void RequestGoToLobby()
+    {
+        if (IsServer)
+        {
+            GoToLobbyInternal();
+        }
+        else
+        {
+            RequestGoToLobbyServerRpc();
+        }
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    private void RequestGoToLobbyServerRpc(ServerRpcParams rpcParams = default)
+    {
+        GoToLobbyInternal();
+    }
+
+    private void GoToLobbyInternal()
+    {
+        if (!IsServer) return;
+
+        NetworkManager.Singleton.SceneManager.LoadScene("LobbyScene", LoadSceneMode.Single);
+    }
+
     /// <summary>
     /// 서버에서만 호출: payload 전파 + ResultScene 이동
     /// </summary>
