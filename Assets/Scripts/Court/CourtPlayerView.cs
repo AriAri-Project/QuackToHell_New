@@ -33,6 +33,7 @@ namespace Court
         private bool _isSubscribed = false; 
         private VoteModel _subscribedVoteModel;
         private Coroutine _connectRoutine;
+        private bool _isOwnerDead;
         
         private Material _targetMaterial;
 
@@ -46,6 +47,7 @@ namespace Court
         private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
         {
             CheckAndEnableUI(scene.name);
+            RefreshVoteUiVisibility();
 
             if (scene.name == GameScenes.Court)
             {
@@ -60,6 +62,7 @@ namespace Court
         public override void OnNetworkSpawn()
         {
             CheckAndEnableUI(SceneManager.GetActiveScene().name);
+            RefreshVoteUiVisibility();
             ReconnectVoteModel();
         }
 
@@ -73,6 +76,7 @@ namespace Court
                 _targetMaterial.SetFloat(outlineProperty, 0f);
             }
             if (currentVoteText) currentVoteText.text = _realScore.ToString();
+            RefreshVoteUiVisibility();
         }
 
         private void EnsureCourtOnlyTargetCollider()
@@ -119,8 +123,35 @@ namespace Court
 
             if (courtOnlyTargetCollider != null)
             {
-                courtOnlyTargetCollider.enabled = isCourtScene;
+                courtOnlyTargetCollider.enabled = isCourtScene && !_isOwnerDead;
             }
+        }
+
+
+        private void RefreshVoteUiVisibility()
+        {
+            _isOwnerDead = IsOwnerDead();
+
+            if (currentVoteText != null)
+            {
+                currentVoteText.gameObject.SetActive(!_isOwnerDead);
+            }
+
+            if (courtOnlyTargetCollider != null)
+            {
+                bool isCourtScene = SceneManager.GetActiveScene().name == GameScenes.Court;
+                courtOnlyTargetCollider.enabled = isCourtScene && !_isOwnerDead;
+            }
+        }
+
+        private bool IsOwnerDead()
+        {
+            if (PlayerHelperManager.Instance == null) return false;
+
+            PlayerModel ownerModel = PlayerHelperManager.Instance.GetPlayerModelByClientId(OwnerId);
+            if (ownerModel == null) return false;
+
+            return ownerModel.GetPlayerAliveState() == PlayerLivingState.Dead;
         }
 
         public override void OnNetworkDespawn()
@@ -163,6 +194,13 @@ namespace Court
                 {
                     yield return new WaitForSeconds(1.0f);
                     continue;
+                }
+
+                RefreshVoteUiVisibility();
+                if (_isOwnerDead)
+                {
+                    _connectRoutine = null;
+                    yield break;
                 }
 
                 VoteModel currentVoteModel = VoteModel.Instance;

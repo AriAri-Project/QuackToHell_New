@@ -53,6 +53,16 @@ namespace Court.Hand
         
         private CardInventoryModel _myInventory;
 
+        private bool IsLocalPlayerDead()
+        {
+            if (NetworkManager.Singleton == null || PlayerHelperManager.Instance == null) return false;
+
+            PlayerModel localModel = PlayerHelperManager.Instance.GetPlayerModelByClientId(NetworkManager.Singleton.LocalClientId);
+            if (localModel == null) return false;
+
+            return localModel.GetPlayerAliveState() == PlayerLivingState.Dead;
+        }
+
         private void Awake()
         {
             if (cardsParent == null) cardsParent = transform;
@@ -70,6 +80,7 @@ namespace Court.Hand
         private void Update()
         {
             if (_myInventory == null) return;
+            if (IsLocalPlayerDead()) return;
 
             UpdateHandLayout();    
             UpdateDragInput();     
@@ -92,9 +103,18 @@ namespace Court.Hand
             foreach (var card in _spawnedCards) if (card) Destroy(card.gameObject);
             _spawnedCards.Clear();
             _selectedIndices.Clear();
-            
+
             if (arrowController != null) arrowController.HideArrow();
             if (_myInventory == null) return;
+
+            if (cardsParent != null)
+            {
+                cardsParent.gameObject.SetActive(!IsLocalPlayerDead());
+                if (!cardsParent.gameObject.activeSelf)
+                {
+                    return;
+                }
+            }
 
             // 1. 발언 마치기 카드 생성 (인덱스 -1)
             if (endSpeechCardPrefab != null)
@@ -385,7 +405,7 @@ namespace Court.Hand
         {
             Vector3 mousePos = GetMouseWorldPosition(0f);
             var targetView = FindTargetByPoint(mousePos);
-            if (targetView != null && targetView.OwnerId != NetworkManager.Singleton.LocalClientId)
+            if (targetView != null)
             {
                 if(_myInventory != null)
                 {
@@ -414,7 +434,7 @@ namespace Court.Hand
         private CourtPlayerView TryGetValidTarget(Vector3 mousePos)
         {
             var view = FindTargetByPoint(mousePos);
-            if (view == null || view.OwnerId == NetworkManager.Singleton.LocalClientId) return null;
+            if (view == null) return null;
             return view;
         }
 
