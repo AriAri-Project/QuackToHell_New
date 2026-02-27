@@ -388,34 +388,36 @@ public class TrialManager : NetworkBehaviour
     }
 
     /// <summary>
-    /// 서버 전용: 생존 플레이어가 모두 발언을 마쳤는지 확인
+    /// 서버 전용: 모든 플레이어의 발언 종료를 확인하되,
+    /// 사망 플레이어는 항상 EndSpeechCard를 사용한 것으로 간주합니다.
     /// </summary>
     public void CheckAllPlayersEnded()
     {
         if (!IsServer) return;
         if (_allPlayers.Count == 0) return;
 
-        List<PlayerTrialState> alivePlayers = _allPlayers.Where(IsAliveTrialParticipant).ToList();
-        if (alivePlayers.Count == 0) return;
+        bool isAllEndedOrDead = _allPlayers.All(player => HasEndedSpeechOrDead(player));
 
-        // 생존 플레이어의 HasEndedSpeech가 true인지 검사
-        bool isAllAliveEnded = alivePlayers.All(p => p.HasEndedSpeech.Value);
-
-        if (isAllAliveEnded)
+        if (isAllEndedOrDead)
         {
             EndTrialServer();
         }
     }
 
-    private bool IsAliveTrialParticipant(PlayerTrialState player)
+    private bool HasEndedSpeechOrDead(PlayerTrialState player)
     {
-        if (player == null) return false;
+        if (player == null) return true;
         if (PlayerHelperManager.Instance == null) return false;
 
         PlayerModel model = PlayerHelperManager.Instance.GetPlayerModelByClientId(player.OwnerClientId);
         if (model == null) return false;
 
-        return model.GetPlayerAliveState() == PlayerLivingState.Alive;
+        if (model.GetPlayerAliveState() == PlayerLivingState.Dead)
+        {
+            return true;
+        }
+
+        return player.HasEndedSpeech.Value;
     }
 
     /*
