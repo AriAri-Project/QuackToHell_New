@@ -1182,6 +1182,9 @@ MonoBehaviour:
   resultExplainText: {fileID: 134318468}
   playerUIPrefab: {fileID: 3904200660345883418, guid: 8ad601674dfaf7f458eef5420e291666, type: 3}
   spawnParent: {fileID: 300354339}
+  spawnParentImage: {fileID: 300354340}
+  farmerFootholdSprite: {fileID: 21300000, guid: 4cfd14ef829428646b9903aae2ec5b47, type: 3}
+  animalFootholdSprite: {fileID: 21300000, guid: 8fa1a147addb36c4c8da67b275da0565, type: 3}
   goToLobbyButton: {fileID: 54989928}
   goToStartButton: {fileID: 799988858}
 --- !u!224 &1206572314

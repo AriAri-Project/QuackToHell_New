@@ -19,6 +19,11 @@ public class ResultScreenUI : MonoBehaviour
     public GameObject playerUIPrefab;
     public Transform spawnParent;
 
+    [Header("Foothold Sprites")]
+    [SerializeField] private Image spawnParentImage;
+    [SerializeField] private Sprite farmerFootholdSprite;
+    [SerializeField] private Sprite animalFootholdSprite;
+
     [SerializeField] private Button goToLobbyButton;
     [SerializeField] private Button goToStartButton;
 
@@ -44,6 +49,14 @@ public class ResultScreenUI : MonoBehaviour
         showResult.SetActive(true);
 
         bool animalWin = payload.WinType == EWinType.Citizens;
+
+        // 발판 교체
+        if (spawnParentImage != null)
+        {
+            spawnParentImage.sprite = animalWin
+                ? animalFootholdSprite
+                : farmerFootholdSprite;
+        }
 
         // ===== 텍스트 세팅 =====
         if (animalWin)

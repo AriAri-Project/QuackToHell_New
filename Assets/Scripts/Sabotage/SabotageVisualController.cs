@@ -1,4 +1,5 @@
 using System.Collections;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -12,7 +13,7 @@ public class SabotageVisualController : MonoBehaviour
     public GameObject maskObject;
 
     [Header("중앙 메시지(Text) - 임시 안내/실패 문구")]
-    public Text messageText;
+    public TextMeshProUGUI messageText;
 
     [Header("설정 값")]
     public float fadeDuration = 1f;
@@ -111,6 +112,16 @@ public class SabotageVisualController : MonoBehaviour
         {
             Debug.Log($"[SabotageUI] {msg}");
             return;
+        }
+
+        if (msg.Contains("긴급행동"))
+        {
+            var font = Resources.Load<TMP_FontAsset>("SejongGeulggot SDF 30");
+            if (font != null)
+            {
+                messageText.font = font;
+                messageText.fontSize = 30;
+            }
         }
 
         if (msgRoutine != null) StopCoroutine(msgRoutine);

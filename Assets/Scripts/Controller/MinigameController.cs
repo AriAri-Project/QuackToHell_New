@@ -6,7 +6,7 @@ using UnityEngine.EventSystems;
 
 [DisallowMultipleComponent]
 [RequireComponent(typeof(Collider2D))]
-public class MinigameController : MonoBehaviour
+public class MinigameController : NetworkBehaviour
 {
     [SerializeField] private GameObject existingUiInstance;
 

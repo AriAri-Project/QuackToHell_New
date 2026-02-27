@@ -506,15 +506,26 @@ public class PlayerModel : NetworkBehaviour
             ApplyAnimationStateChange();
         }
     }
-    
+
     //-----------public---------
-    [ServerRpc]
-    public void SetGoldServerRpc(int gold)
+    [ServerRpc(RequireOwnership = false)]
+    public void SetGoldServerRpc(int gold, ServerRpcParams rpcParams = default)
     {
-        PlayerStatusData temp =  _playerStatusData.Value;
-        temp.gold = gold;
-        PlayerStatusData.Value = temp;
+        // 서버에서 실행 중이면 바로 처리
+        if (IsServer)
+        {
+            var temp = _playerStatusData.Value;
+            temp.gold = gold;
+            _playerStatusData.Value = temp;
+            return;
+        }
+
+        // 클라이언트에서 호출되면 서버로 요청
+        var temp2 = _playerStatusData.Value;
+        temp2.gold = gold;
+        _playerStatusData.Value = temp2;
     }
+
     public int GetGold()
     {
         return PlayerStatusData.Value.gold;

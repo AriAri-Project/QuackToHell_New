@@ -1,6 +1,7 @@
 using System.Collections;
 using Unity.Netcode;
 using UnityEngine;
+using TMPro;
 
 public enum SabotageType
 {
@@ -180,8 +181,6 @@ public class SabotageNetworkManager : NetworkBehaviour
         forcedActive = false;
         TriggerForcedInteractStateClientRpc(false);
 
-        TriggerForcedInteractStateClientRpc(false);
-
         ShowMessageAllClientRpc("실패했습니다");
 
         TryAllKillServer();
@@ -241,13 +240,12 @@ public class SabotageNetworkManager : NetworkBehaviour
     [ClientRpc]
     private void TriggerForcedInteractStateClientRpc(bool active)
     {
-        // 클라 로컬 상태도 같이 맞춰줘서 TryResolveForcedInteract()의 early return이 동작하게 함
         forcedActive = active;
 
-        // 시작 시 안내 문구
         if (active && visualController != null)
         {
-            visualController.ShowCenterMessage($"사보타지 발생! 10초 안에 타깃 아이템과 상호작용!", 2.5f);
+            visualController.ShowCenterMessage
+                ($"긴급행동 : {forcedInteractLimit}초 안에 침실에 놓인 꽃병과 상호작용하세요!", 4f);
         }
     }
 
