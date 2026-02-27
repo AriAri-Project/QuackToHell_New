@@ -437,6 +437,7 @@ public class PlayerPresenter : NetworkBehaviour
     {
         if (playerModel.GetPlayerAliveState() == PlayerLivingState.Dead) return;
         if (playerModel.GetPlayerJob() != PlayerJob.Farmer) return;
+        if (farmerStrategy.CanSavotage == false) return;
         UIManager.Instance.ShowPopupUI<SabotagePopup>();
     }
     

@@ -64,10 +64,22 @@ public class EndSpeechCard : MonoBehaviour, IBeginDragHandler, IDragHandler, IEn
         // TODO: 만약 특정 영역(테이블 등) 위에 놨을 때만 발동하게 하려면 여기서 Raycast 체크
         // 지금은 "놓으면 무조건 발동"으로 처리
         
-        if (TrialManager.Instance != null && TrialManager.Instance.LocalPlayer != null)
+        bool hasManager = TrialManager.Instance != null;
+        bool hasLocalPlayer = hasManager && TrialManager.Instance.LocalPlayer != null;
+        Debug.Log($"[EndSpeechCard] TryUseCard - hasManager:{hasManager}, hasLocalPlayer:{hasLocalPlayer}");
+
+        if (hasManager && hasLocalPlayer)
         {
-            Debug.Log("[EndSpeechCard] 발언 종료!");
-            TrialManager.Instance.LocalPlayer.EndSpeech();
+            ulong ownerClientId = TrialManager.Instance.LocalPlayer.OwnerClientId;
+            Debug.Log($"[EndSpeechCard] 발언 종료! OwnerClientId:{ownerClientId}");
+            try
+            {
+                TrialManager.Instance.LocalPlayer.EndSpeech();
+            }
+            catch (System.Exception ex)
+            {
+                Debug.LogError($"[EndSpeechCard] EndSpeech 예외 발생: {ex}");
+            }
             return true;
         }
         

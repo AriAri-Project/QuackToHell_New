@@ -110,9 +110,16 @@ public class GameManager : NetworkBehaviour
             UIManager.Instance.ShowHUDUI<LobbyUI>("LobbyUI");
             //UIManager.Instance.ShowHUDUI<MobileJoystickUI>("MobileJoystickUI");
             FindLobbyUIElements();
+            //데이터 초기화
+            if (IsServer)
+            {
+                RunServerSideGameRestartInitialization();
+                GameRestartClientRpc();
+            }
         }
         if(scene.name == GameScenes.Village)
         {
+            //유아이 초기화
             UIManager.Instance.ShowHUDUI<VillageUI>("VillageUI");
             UIManager.Instance.ShowHUDUI<SkillButtonUI>("SkillButtonUI");
             //UIManager.Instance.ShowHUDUI<MobileJoystickUI>("MobileJoystickUI");
@@ -130,6 +137,14 @@ public class GameManager : NetworkBehaviour
             {
                 FarmerStrategy farmerStrategy = localPlayer.GetComponent<FarmerStrategy>();
                 farmerStrategy.SetCooltimeZero();
+            }
+        }
+        if (scene.name == GameScenes.Court)
+        {
+            // 서버에서만 Trial 라운드 초기화
+            if (IsServer && TrialManager.Instance != null)
+            {
+                TrialManager.Instance.Initialize();
             }
         }
     }
@@ -418,8 +433,8 @@ public class GameManager : NetworkBehaviour
                 deadPlayers.Add(p);
                 continue;
             }
-
-            var job = p.GetPlayerJob();
+            
+            var job = GetFactionJob(p); 
             if (job == PlayerJob.Farmer) aliveFarmers.Add(p);
             else if (job == PlayerJob.Animal) aliveAnimals.Add(p);
             else
@@ -456,12 +471,26 @@ public class GameManager : NetworkBehaviour
         {
             _gameEnded = true;
 
+            // 1) 살아있는 농장주들로 시작
+            var winnerFarmers = new List<PlayerModel>(aliveFarmers);
+
+            // 2) 죽은 플레이어들 중 농장주 진영이었던 애들 추가
+            foreach (var p in deadPlayers)
+            {
+                if (p == null) continue;
+                if (GetFactionJob(p) == PlayerJob.Farmer && !winnerFarmers.Contains(p))
+                {
+                    winnerFarmers.Add(p);
+                }
+            }
+
             var payload = BuildPayload(
-                winType: EWinType.Mafia,         
+                winType: EWinType.Mafia,
                 winReason: "농장주 진영 생존",
-                winners: aliveFarmers,
+                winners: winnerFarmers,
                 losers: players,
-                winnerFilter: (pm) => pm.GetPlayerJob() == PlayerJob.Farmer && IsAliveGuess(pm)
+                // 진영 기준 필터로 바꾸는 쪽이 일관됨
+                winnerFilter: (pm) => GetFactionJob(pm) == PlayerJob.Farmer
             );
 
             BroadcastResult(payload);
@@ -472,12 +501,23 @@ public class GameManager : NetworkBehaviour
         {
             _gameEnded = true;
 
+            var winnerAnimals = new List<PlayerModel>(aliveAnimals);
+
+            foreach (var p in deadPlayers)
+            {
+                if (p == null) continue;
+                if (GetFactionJob(p) == PlayerJob.Animal && !winnerAnimals.Contains(p))
+                {
+                    winnerAnimals.Add(p);
+                }
+            }
+
             var payload = BuildPayload(
                 winType: EWinType.Citizens,
                 winReason: "시민 진영 생존",
-                winners: aliveAnimals,
+                winners: winnerAnimals,
                 losers: players,
-                winnerFilter: (pm) => pm.GetPlayerJob() == PlayerJob.Animal && IsAliveGuess(pm)
+                winnerFilter: (pm) => GetFactionJob(pm) == PlayerJob.Animal
             );
 
             BroadcastResult(payload);
@@ -531,7 +571,7 @@ public class GameManager : NetworkBehaviour
 
             if (lastAlive != null)
             {
-                var job = lastAlive.GetPlayerJob();
+                var job = GetFactionJob(lastAlive);
                 if (job == PlayerJob.Farmer) winType = EWinType.Mafia;
                 else if (job == PlayerJob.Animal) winType = EWinType.Citizens;
                 else winType = EWinType.Citizens; // Ghost 등은 일단 시민으로
@@ -624,6 +664,46 @@ public class GameManager : NetworkBehaviour
         return true;
     }
 
+    // ① 진영 판단용 직업 반환
+    private static PlayerJob GetFactionJob(PlayerModel p)
+    {
+        if (p == null) return PlayerJob.None;
+
+        PlayerStatusData status = p.PlayerStatusData.Value;
+
+        // Ghost인데 초기 직업이 설정돼 있으면 → 초기 직업 기준
+        if (status.job == PlayerJob.Ghost && status.initialJob != PlayerJob.None)
+        {
+            return status.initialJob;
+        }
+
+        // Ghost인데 초기 직업이 None이면 → 시민 진영(Animal)으로 취급
+        if (status.job == PlayerJob.Ghost && status.initialJob == PlayerJob.None)
+        {
+            return PlayerJob.Animal;
+        }
+
+        // 그 외엔 현재 job 그대로
+        return status.job;
+    }
+    
+    // ② 결과 화면 표시용 직업 문자열
+    private static string GetDisplayJobName(PlayerModel p)
+    {
+        if (p == null) return "Unknown";
+
+        PlayerStatusData status = p.PlayerStatusData.Value;
+
+        // Ghost라도 초기 직업이 있으면 → 초기 직업 이름으로 표시
+        if (status.job == PlayerJob.Ghost && status.initialJob != PlayerJob.None)
+        {
+            return status.initialJob.ToString();
+        }
+
+        // 그 외에는 현재 job 이름 그대로
+        return status.job.ToString();
+    }
+    
     private static GameResultPayload BuildPayload(
         EWinType winType,
         string winReason,
@@ -674,7 +754,7 @@ public class GameManager : NetworkBehaviour
     {
         bool has = idx < list.Count && list[idx] != null;
         var info = has
-            ? new ResultPlayerInfo(list[idx].GetPlayerNickname(), list[idx].GetPlayerJob().ToString())
+            ? new ResultPlayerInfo(list[idx].GetPlayerNickname(), GetDisplayJobName(list[idx]))
             : default;
 
         switch (slot)
@@ -690,7 +770,7 @@ public class GameManager : NetworkBehaviour
     {
         bool has = idx < list.Count && list[idx] != null;
         var info = has
-            ? new ResultPlayerInfo(list[idx].GetPlayerNickname(), list[idx].GetPlayerJob().ToString())
+            ? new ResultPlayerInfo(list[idx].GetPlayerNickname(), GetDisplayJobName(list[idx]))
             : default;
 
         switch (slot)
@@ -704,4 +784,63 @@ public class GameManager : NetworkBehaviour
 
     #endregion
 
+    /// <summary>
+    /// 서버에서만 호출. NetworkVariable/NetworkList 초기화 (동기화됨).
+    /// </summary>
+    private void RunServerSideGameRestartInitialization()
+    {
+        if (!IsServer) return;
+
+        _gameEnded = false;
+        _rebelWinnerClientId = ulong.MaxValue;
+        
+        if (Court.VoteModel.Instance != null)
+            Court.VoteModel.Instance.Initialize();
+
+        PlayerModel[] players = PlayerHelperManager.Instance.GetAllPlayers<PlayerModel>();
+        if (players == null) return;
+
+        foreach (PlayerModel playerModel in players)
+        {
+            if (playerModel == null) continue;
+            playerModel.Initialize();
+
+            CardInventoryModel inv = playerModel.GetComponent<CardInventoryModel>();
+            if (inv != null)
+                inv.Initialize();
+        }
+    }
+    /// <summary>
+    /// Village 로드 시 모든 클라이언트에서 로컬 전용 상태/UI 초기화.
+    /// </summary>
+    [ClientRpc]
+    private void GameRestartClientRpc()
+    {
+        Debug.Log("클라상태초기화");
+        if (DeckManager.Instance != null)
+            DeckManager.Instance.Initialize();
+
+        if (TrialManager.Instance != null)
+            TrialManager.Instance.Initialize();
+
+        if (UIManager.Instance != null)
+            UIManager.Instance.Initialize();
+
+        ulong localClientId = NetworkManager.Singleton.LocalClientId;
+        PlayerModel localPlayer = PlayerHelperManager.Instance.GetPlayerModelByClientId(localClientId);
+        Debug.Log($"GameRestartClientRpc: localPlayer == null? {localPlayer == null}");  // 추가
+
+        if (localPlayer != null)
+        {
+            PlayerView playerView = localPlayer.GetComponent<PlayerView>();
+            Debug.Log($"GameRestartClientRpc: playerView == null? {playerView == null}"); 
+            if (playerView != null) playerView.Initialize();
+
+            MinigameController minigame = localPlayer.GetComponent<MinigameController>();
+            if (minigame != null) minigame.Initialize();
+
+            SabotageNetworkManager sabotage = localPlayer.GetComponent<SabotageNetworkManager>();
+            if (sabotage != null) sabotage.Initialize();
+        }
+    }
 }

@@ -374,17 +374,29 @@ public class TrialManager : NetworkBehaviour
 
     public void SetLocalPlayer(PlayerTrialState player)
     {
+        ulong newOwnerId = player != null ? player.OwnerClientId : ulong.MaxValue;
+        Debug.Log($"[TrialManager] SetLocalPlayer 호출 - newOwnerId:{newOwnerId}");
         LocalPlayer = player;
     }
 
     public void RegisterPlayer(PlayerTrialState player)
     {
-        if (!_allPlayers.Contains(player)) _allPlayers.Add(player);
+        if (!_allPlayers.Contains(player))
+        {
+            _allPlayers.Add(player);
+            ulong ownerId = player != null ? player.OwnerClientId : ulong.MaxValue;
+            Debug.Log($"[TrialManager] RegisterPlayer - OwnerClientId:{ownerId}, 총 인원:{_allPlayers.Count}");
+        }
     }
 
     public void UnregisterPlayer(PlayerTrialState player)
     {
-        if (_allPlayers.Contains(player)) _allPlayers.Remove(player);
+        if (_allPlayers.Contains(player))
+        {
+            _allPlayers.Remove(player);
+            ulong ownerId = player != null ? player.OwnerClientId : ulong.MaxValue;
+            Debug.Log($"[TrialManager] UnregisterPlayer - OwnerClientId:{ownerId}, 총 인원:{_allPlayers.Count}");
+        }
     }
 
     /// <summary>
@@ -394,12 +406,17 @@ public class TrialManager : NetworkBehaviour
     public void CheckAllPlayersEnded()
     {
         if (!IsServer) return;
-        if (_allPlayers.Count == 0) return;
+        if (_allPlayers.Count == 0)
+        {
+            Debug.Log("[CheckAllPlayersEnded] _allPlayers.Count == 0");
+            return;
+        }
 
         bool isAllEndedOrDead = _allPlayers.All(player => HasEndedSpeechOrDead(player));
 
         if (isAllEndedOrDead)
         {
+            Debug.Log("[CheckAllPlayersEnded] 모든 플레이어 발언 종료 → EndTrialServer 호출");
             EndTrialServer();
         }
     }
@@ -486,5 +503,29 @@ public class TrialManager : NetworkBehaviour
             if (list[i].count == maxVote) result.Add(list[i].clientId);
 
         return result;
+    }
+    
+    //초기화 함수
+    public void Initialize()
+    {
+        // 서버 전용: 발언 상태/내부 상태 리셋
+        if (IsServer)
+        {
+            reporterClientId = 0;
+            _pendingExecutedClientId = ulong.MaxValue;
+
+            // 모든 PlayerTrialState의 HasEndedSpeech false로
+            var trialStates = PlayerHelperManager.Instance.GetAllPlayers<PlayerTrialState>();
+            foreach (var value in trialStates)
+            {
+                if (value != null)
+                    value.HasEndedSpeech.Value = false;
+            }
+        }
+
+        if (convocationOfTrialPanel != null)
+        {
+            convocationOfTrialPanel.SetActive(false);
+        }
     }
 }

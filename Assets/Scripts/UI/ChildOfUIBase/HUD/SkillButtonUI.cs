@@ -357,22 +357,33 @@ public class SkillButtonUI : UIHUD
     
     private void SetUpButtons()
     {
-        //로컬플레이어의 역할에 따라 다르게 버튼을 활성화
-        PlayerJob playerJob = PlayerHelperManager.Instance.GetPlayerModelByClientId(NetworkManager.Singleton.LocalClientId).GetPlayerJob();
-    
-        // 모든 버튼 기본 설정
-        SetAllButtonsActiveState(playerJob);
+        var model = PlayerHelperManager.Instance
+            .GetPlayerModelByClientId(NetworkManager.Singleton.LocalClientId);
+
+        PlayerJob currentJob = model.GetPlayerJob();
+
+        PlayerStatusData status = model.GetPlayerStatusData();
+        PlayerJob initialJob = status.initialJob;   
+        
+        // Ghost면 initialJob을, 그 외에는 현재 job을 사용
+        PlayerJob baseJob = currentJob == PlayerJob.Ghost ? initialJob : currentJob;
+
+        // 모든 버튼 기본 상태 초기화
+        SetAllButtonsActiveState(baseJob);
         SetInteractionButtonDefault();
-    
-        switch(playerJob){
+
+        switch (baseJob)
+        {
             case PlayerJob.Farmer:
                 SetupFarmerButtons();
                 break;
+
             case PlayerJob.Animal:
                 SetupAnimalButtons();
                 break;
+
             default:
-                Debug.Log("유령이어서 Button Setup 안 함");
+                Debug.Log($"[SkillButtonUI] baseJob={baseJob} -> 버튼 세팅 스킵");
                 break;
         }
     }

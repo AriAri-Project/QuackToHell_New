@@ -107,5 +107,10 @@ namespace Court
             }
             return 0;
         }
+        //초기화 함수
+        public void Initialize()
+        {
+            VoteDataList.Clear();
+        }
     }
 }

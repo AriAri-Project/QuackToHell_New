@@ -493,7 +493,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  GlobalObjectIdHash: 2126406361
+  GlobalObjectIdHash: 1975815420
   InScenePlacedSourceGlobalObjectIdHash: 0
   DeferredDespawnTick: 0
   Ownership: 1
@@ -557,6 +557,7 @@ MonoBehaviour:
   ShowTopMostFoldoutHeaderGroup: 1
   _playerStatusData:
     m_InternalValue:
+      initialJob: 0
       nickname: Player
       job: 0
       credibility: 100
@@ -577,6 +578,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ShowTopMostFoldoutHeaderGroup: 1
   forShadowCollider: {fileID: 6207190526624410842}
+  forInteractCollider: {fileID: 0}
   playerInput: {fileID: 3855099441482742434}
   nicknameText: {fileID: 4710416165935099427}
 --- !u!114 &1793609255088142441
@@ -783,6 +785,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ShowTopMostFoldoutHeaderGroup: 1
+  animator: {fileID: 0}
 --- !u!114 &4937549695881782939
 MonoBehaviour:
   m_ObjectHideFlags: 0

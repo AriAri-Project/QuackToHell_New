@@ -68,8 +68,8 @@ public class PlayerFactoryManager : NetworkBehaviour
         myPlayerStateData.moveSpeed = GameConstants.Player.DefaultMoveSpeed;
         myPlayerStateData.gold = GameConstants.Player.DefaultGold;
         myPlayerStateData.IsReady = false;
-        myPlayerStateData.credibility = PlayerStatusData.MaxCredibility;
-        myPlayerStateData.spellpower = PlayerStatusData.MaxSpellpower;
+        myPlayerStateData.credibility = GameConstants.Player.MaxCredibility;
+        myPlayerStateData.spellpower = GameConstants.Player.MaxSpellpower;
         
         playerModel.PlayerStatusData.Value = myPlayerStateData;
 

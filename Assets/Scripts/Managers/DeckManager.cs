@@ -1426,4 +1426,21 @@ public class DeckManager : NetworkBehaviour
     }
 
     #endregion
+    
+    //초기화 함수
+    public void Initialize()
+    {
+        for (int i = 0; i < _allCardsOnGameData.Count; i++)
+        {
+            CardItemData card = _allCardsOnGameData[i];
+
+            card.cardItemStatusData.state = CardItemState.None;
+        
+            card.displayingClientId = GameConstants.Card.NOT_DISPLAYING_CLIENT_ID;
+
+            _allCardsOnGameData[i] = card;
+        }
+        
+        _clientDisplayCounts.Clear();
+    }
 }

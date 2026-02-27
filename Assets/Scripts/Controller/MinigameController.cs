@@ -654,4 +654,16 @@ public class MinigameController : NetworkBehaviour
     {
         return EventSystem.current != null && EventSystem.current.IsPointerOverGameObject();
     }
+    
+    //초기화 함수
+    public void Initialize()
+    {
+        _localCooldownUntil = 0f;
+        _rewardGrantedThisRun = false;
+        if (_spawnedLocalUi != null)
+        {
+            _spawnedLocalUi.SetActive(false);
+        }
+        
+    }
 }

@@ -100,6 +100,7 @@ public class RoleController : MonoBehaviour
                 return _farmerStrategy;
             
             case PlayerJob.Animal:
+            case PlayerJob.None:
                 _animalStrategy.Initialize(_playerModel, _playerPresenter, playerInput);
                 return _animalStrategy;
             

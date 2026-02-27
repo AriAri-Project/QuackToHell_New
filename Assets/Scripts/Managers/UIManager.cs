@@ -71,6 +71,7 @@ public class UIManager:MonoBehaviour
 			if (root == null){
                 root = new GameObject { name = "@UI_SystemRoot" };
                 SetCanvas(root, UITypes.UIType.System);
+                DontDestroyOnLoad(root);
             }
 				
             return root;
@@ -263,5 +264,13 @@ public class UIManager:MonoBehaviour
     {
 	    while (systemList.Count > 0)
 		    CloseSystemUI();
+    }
+    
+    //초기화 함수
+    public void Initialize()
+    {
+	    popupStack.Clear();
+	    hudList.Clear();
+	    systemList.Clear();
     }
 }

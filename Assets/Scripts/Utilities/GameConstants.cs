@@ -10,6 +10,8 @@ public static class GameConstants
         public const float GhostTransparency = 0.5f;
         public const int DefaultGold = 30;
         public const float DefaultMoveSpeed = 10f;
+        public const int MaxCredibility = 100;
+        public const int MaxSpellpower = 100;
     }
     
     // UI 관련 상수

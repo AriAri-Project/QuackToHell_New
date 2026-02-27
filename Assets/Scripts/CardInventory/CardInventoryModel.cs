@@ -249,4 +249,10 @@ public class CardInventoryModel : NetworkBehaviour
     }
 
     #endregion
+    
+    //초기화 함수
+    public void Initialize()
+    {
+        ownedCards.Clear();
+    }
 }

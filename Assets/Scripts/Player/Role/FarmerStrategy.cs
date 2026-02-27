@@ -63,6 +63,10 @@ public class FarmerStrategy : NetworkBehaviour, IRoleStrategy
     }
 
     private bool canSavotage = false;
+    public bool CanSavotage
+    {
+        get{return canSavotage;}
+    }
 
     private bool isVentEntered = false;
 
@@ -119,6 +123,8 @@ public class FarmerStrategy : NetworkBehaviour, IRoleStrategy
     {
         killCooltimer = 0;
         savotageCooltimer = 0;
+        canKill = false;
+        canSavotage = false;
     }
     
     public void OnRoleUpdate()

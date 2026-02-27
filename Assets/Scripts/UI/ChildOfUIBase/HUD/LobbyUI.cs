@@ -15,7 +15,8 @@ public class LobbyUI : UIHUD
     private TMP_Text codeText;
 
     
-
+    private PlayerModel _boundPlayer;          // 현재 Ready 이벤트를 구독한 플레이어
+    private Action _spawnCallback;             // PlayerFactoryManager에 등록할 콜백 캐시
     enum Texts
     {
         Text_Code,
@@ -60,28 +61,71 @@ public class LobbyUI : UIHUD
         
         
 
-        //플레이어가 생성된 후에 바인드하기.
-        PlayerFactoryManager.Instance.onPlayerSpawned += () =>
+        // 이미 로컬 플레이어가 있는지 먼저 확인
+        ulong localClientId = NetworkManager.Singleton.LocalClientId;
+        var localPlayer = PlayerHelperManager.Instance.GetPlayerModelByClientId(localClientId);
+
+        if (localPlayer != null)
         {
+            // 플레이어가 이미 스폰되어 있다면 곧바로 바인딩
             StartCoroutine(BindHandlePlayerStatusChanged());
-        };
+        }
+        else
+        {
+            // 아니면 기존처럼 스폰 이벤트 기다리기
+            _spawnCallback = () =>
+            {
+                StartCoroutine(BindHandlePlayerStatusChanged());
+            };
+            PlayerFactoryManager.Instance.onPlayerSpawned += _spawnCallback;
+        }
     }
 
     IEnumerator BindHandlePlayerStatusChanged()
     {
-        //컴포넌트가 초기화 될 떄까지 기다리기
+        //컴포넌트 초기화까지 대기
         yield return new WaitForEndOfFrame();
+
         ulong localClientId = NetworkManager.Singleton.LocalClientId;
         PlayerModel localPlayer = PlayerHelperManager.Instance.GetPlayerModelByClientId(localClientId);
-        if (localPlayer!=null)
+
+        if (localPlayer == null)
+            yield break;
+
+        // 1) 이전에 다른 PlayerModel에 묶여 있었다면 해제
+        if (_boundPlayer != null)
         {
-            localPlayer.SubscribeToPlayerReadyStatusChanges(HandlePlayerStatusChanged);
+            _boundPlayer.PlayerStatusData.OnValueChanged -= HandlePlayerStatusChanged;
+            _boundPlayer = null;
+        }
+
+        // 2) 새 로컬 플레이어에 구독
+        localPlayer.SubscribeToPlayerReadyStatusChanges(HandlePlayerStatusChanged);
+        _boundPlayer = localPlayer;
+
+        // 3) onPlayerSpawned 콜백은 한 번 쓰고 나면 제거
+        if (_spawnCallback != null && PlayerFactoryManager.Instance != null)
+        {
+            PlayerFactoryManager.Instance.onPlayerSpawned -= _spawnCallback;
+            _spawnCallback = null;
         }
     }
 
     private void OnDestroy()
     {
         Debug.Log("[LobbyUI] OnDestroy");
+
+        if (_boundPlayer != null)
+        {
+            _boundPlayer.PlayerStatusData.OnValueChanged -= HandlePlayerStatusChanged;
+            _boundPlayer = null;
+        }
+
+        if (_spawnCallback != null && PlayerFactoryManager.Instance != null)
+        {
+            PlayerFactoryManager.Instance.onPlayerSpawned -= _spawnCallback;
+            _spawnCallback = null;
+        }
     }
 
     private void OnDisable()

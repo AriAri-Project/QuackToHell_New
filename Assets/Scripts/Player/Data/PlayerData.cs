@@ -52,9 +52,8 @@ public struct PlayerAppearanceData : INetworkSerializable
 [System.Serializable]
 public struct PlayerStatusData : INetworkSerializable
 {
-    public const int MaxCredibility = 100;
-    public const int MaxSpellpower = 100;
 
+    public PlayerJob initialJob;
     public string nickname;
     public PlayerJob job;
     public int credibility;
@@ -82,6 +81,7 @@ public struct PlayerStatusData : INetworkSerializable
     {
         if (nickname == null)
             nickname = "";
+        serializer.SerializeValue(ref initialJob);
         serializer.SerializeValue(ref nickname);
         serializer.SerializeValue(ref job);
         serializer.SerializeValue(ref credibility);

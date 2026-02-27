@@ -11,6 +11,8 @@ namespace Court
 
         public override void OnNetworkSpawn()
         {
+            Debug.Log($"[PlayerTrialState] OnNetworkSpawn - OwnerClientId:{OwnerClientId}, IsOwner:{IsOwner}");
+
             // 내가 로컬 플레이어라면, 매니저에 나를 등록
             if (IsOwner)
             {
@@ -24,6 +26,7 @@ namespace Court
         
         public override void OnNetworkDespawn()
         {
+            Debug.Log($"[PlayerTrialState] OnNetworkDespawn - OwnerClientId:{OwnerClientId}, IsOwner:{IsOwner}");
             TrialManager.Instance.UnregisterPlayer(this);
         }
 
@@ -32,6 +35,8 @@ namespace Court
         /// </summary>
         public void EndSpeech()
         {
+            Debug.Log($"[PlayerTrialState] EndSpeech 호출 - OwnerClientId:{OwnerClientId}, IsOwner:{IsOwner}, HasEndedSpeech:{HasEndedSpeech.Value}");
+
             if (IsOwner && !HasEndedSpeech.Value)
             {
                 EndSpeechServerRpc();
@@ -42,7 +47,7 @@ namespace Court
         private void EndSpeechServerRpc()
         {
             HasEndedSpeech.Value = true;
-            Debug.Log($"[Server] 플레이어 {OwnerClientId} 발언 종료.");
+            Debug.Log($"[Server] 플레이어 {OwnerClientId} 발언 종료. HasEndedSpeech:{HasEndedSpeech.Value}");
             
             // 전체 종료 체크
             TrialManager.Instance.CheckAllPlayersEnded();

@@ -134,12 +134,6 @@ public class ResultScreenUI : MonoBehaviour
     {
         Debug.Log("GoToStart 버튼 눌림");
 
-        // 네트워크 연결 끊고 홈으로
-        if (NetworkManager.Singleton != null)
-        {
-            NetworkManager.Singleton.Shutdown();
-        }
-
-        SceneManager.LoadScene(GameScenes.Home, LoadSceneMode.Single);
+        LobbyManager.Instance.CleanUpLobby();//홈씬로드까지 담당
     }
 }

@@ -165,6 +165,9 @@ public class LobbyManager : NetworkBehaviour
         try{
             if (hostLobby != null)
             {
+                //호스트 나가서 방 파괴되었다고 알림
+                NoticeHostExitClientRpc();
+                
                 // 1. 먼저 모든 클라이언트에게 씬 전환 알림 (Shutdown 전에)
                 GoToHomeClientRpc();
         
@@ -194,6 +197,8 @@ public class LobbyManager : NetworkBehaviour
                 hostLobby = null;
                 joinedLobby = null;
                 _hostLobbyCode = "";
+                
+                
             }
             else if (joinedLobby != null)
             {
@@ -215,6 +220,12 @@ public class LobbyManager : NetworkBehaviour
             joinedLobby = null;
             _hostLobbyCode = "";
         }
+    }
+
+    [ClientRpc]
+    private void NoticeHostExitClientRpc()
+    {
+        UIManager.Instance.ShowSystemUI<LobbyHostExitNoticeSystemUI>();
     }
 
     //멀티캐스트

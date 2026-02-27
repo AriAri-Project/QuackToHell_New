@@ -667,6 +667,7 @@ MonoBehaviour:
   ShowTopMostFoldoutHeaderGroup: 1
   _playerStatusData:
     m_InternalValue:
+      initialJob: 0
       nickname: Player
       job: 0
       credibility: 100
@@ -686,6 +687,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ShowTopMostFoldoutHeaderGroup: 1
+  CourtUI: {fileID: 2399429865182648121}
   forShadowCollider: {fileID: 6207190526624410842}
   forInteractCollider: {fileID: 5914445253439406617}
   playerInput: {fileID: 3855099441482742434}
@@ -777,6 +779,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ShowTopMostFoldoutHeaderGroup: 1
+  animator: {fileID: 5639819905214187387}
 --- !u!114 &4937549695881782939
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1399,6 +1402,11 @@ PrefabInstance:
       addedObject: {fileID: 6169712467521445630}
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: fbed7708ffc52de4fad4b0b653f74e16, type: 3}
+--- !u!1 &2399429865182648121 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 4131371456449455971, guid: fbed7708ffc52de4fad4b0b653f74e16, type: 3}
+  m_PrefabInstance: {fileID: 1736675096505315418}
+  m_PrefabAsset: {fileID: 0}
 --- !u!224 &3636437854922530545 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 3057610148165430955, guid: fbed7708ffc52de4fad4b0b653f74e16, type: 3}

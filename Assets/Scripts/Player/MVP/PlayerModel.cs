@@ -14,7 +14,7 @@ using UnityEngine.Rendering.Universal;
 /// </summary>
 public class PlayerModel : NetworkBehaviour
 {
-
+    
     [Header("Network Synchronized Data")]
     private NetworkVariable<FixedString64Bytes> _playerTag = new NetworkVariable<FixedString64Bytes>(
         GameTags.Player, // 기본값
@@ -476,6 +476,11 @@ public class PlayerModel : NetworkBehaviour
     #region 역할 변경
     public void ChangeRole(PlayerJob newRole){
         PlayerStatusData newStatusData = PlayerStatusData.Value;
+        // ★ 초기 역할 기록: 아직 설정 안 됐고, Ghost가 아닐 때만
+        if (newStatusData.initialJob == PlayerJob.None && newRole != PlayerJob.Ghost)
+        {
+            newStatusData.initialJob = newRole;
+        }
         newStatusData.job = newRole;
         PlayerStatusData.Value = newStatusData;
     }
@@ -662,4 +667,37 @@ public class PlayerModel : NetworkBehaviour
         currentAppearanceData.AlphaValue = GameConstants.Player.GhostTransparency;
         _playerAppearanceData.Value = currentAppearanceData;
     }
+    
+    //초기화 함수
+    public void Initialize()
+    {
+        PlayerStatusData statusTemp =  _playerStatusData.Value;
+        statusTemp.job = PlayerJob.None;
+        statusTemp.initialJob = PlayerJob.None;
+        statusTemp.gold = GameConstants.Player.DefaultGold;
+        statusTemp.IsReady = false;
+        statusTemp.credibility = GameConstants.Player.MaxCredibility;
+        statusTemp.spellpower = GameConstants.Player.MaxSpellpower;
+        statusTemp.moveSpeed = GameConstants.Player.DefaultMoveSpeed;
+        _playerStatusData.Value = statusTemp;
+        
+        PlayerStateData stateTemp = _playerStateData.Value;
+        stateTemp.aliveState = PlayerLivingState.Alive;
+        stateTemp.animationState = PlayerAnimationState.Idle;
+        _playerStateData.Value = stateTemp;
+        
+        _playerTag.Value = GameTags.Player;
+
+        PlayerAppearanceData appearanceTemp = _playerAppearanceData.Value;
+        appearanceTemp.AlphaValue = 1.0f;
+        _playerAppearanceData.Value = appearanceTemp;
+        
+        direction.Value = Vector2.zero;
+
+        transform.position = Vector3.zero;
+
+    } 
+    
+  
+    
 }

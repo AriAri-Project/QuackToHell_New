@@ -261,4 +261,15 @@ public class SabotageNetworkManager : NetworkBehaviour
             Debug.Log($"[Sabotage Message] {msg}");
         }
     }
+    
+    //초기화 함수
+    public void Initialize()
+    {
+        forcedActive = false;
+        if (forcedRoutine != null)
+        {
+            StopCoroutine(forcedRoutine);
+            forcedRoutine = null;
+        }
+    }
 }

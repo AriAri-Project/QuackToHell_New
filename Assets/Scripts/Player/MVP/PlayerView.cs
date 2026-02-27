@@ -16,7 +16,6 @@ using System.Collections;
 public class PlayerView : NetworkBehaviour
 {
 
-
     [Header("For Trigger Detect Colliders")]
     [Tooltip("this is for hide player behind shadow.")] 
     [SerializeField] private Collider2D forShadowCollider;
@@ -389,6 +388,9 @@ public class PlayerView : NetworkBehaviour
                 killAction.performed -= OnKillInput;
             }
         }
+        
+        SceneManager.sceneLoaded -= OnSceneLoaded;
+        
         base.OnDestroy();
     }
 
@@ -668,7 +670,7 @@ public class PlayerView : NetworkBehaviour
         {
             renderer.enabled = visible;
         }
-        
+
         // 닉네임 텍스트도 함께 처리
         SetNicknameVisibility(visible);
 
@@ -702,5 +704,21 @@ public class PlayerView : NetworkBehaviour
         }
     }
     
+    //초기화 함수
+    public void Initialize()
+    {
+        Debug.Log("캐시 초기화함!");
+        ignoreMoveInput.Value = false;
+
+        interactObjCache = null;
+        targetCorpseCache = null;
+        
+        gameObject.layer = GameLayers.GetLayerIndex(GameLayers.Player);
     
+        SetPlayerVisibility(true);
+    
+        overlappingPlayers.Clear();
+        overlappingAliveAnimalPlayers.Clear();
+    
+    }
 }
