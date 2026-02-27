@@ -31,18 +31,39 @@ namespace Court
         private bool _isPreviewing = false;
         private int _myVoteIndex = -1;
         private bool _isSubscribed = false; 
+        private VoteModel _subscribedVoteModel;
+        private Coroutine _connectRoutine;
+        private bool _isOwnerDead;
         
         private Material _targetMaterial;
 
         // --- (초기화 및 연결 로직 생략, 기존과 동일) ---
         private void OnEnable() => SceneManager.sceneLoaded += OnSceneLoaded;
-        private void OnDisable() => SceneManager.sceneLoaded -= OnSceneLoaded;
-        private void OnSceneLoaded(Scene scene, LoadSceneMode mode) => CheckAndEnableUI(scene.name);
+        private void OnDisable()
+        {
+            SceneManager.sceneLoaded -= OnSceneLoaded;
+            ClearVoteBinding();
+        }
+        private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+        {
+            CheckAndEnableUI(scene.name);
+            RefreshVoteUiVisibility();
+
+            if (scene.name == GameScenes.Court)
+            {
+                ReconnectVoteModel();
+            }
+            else
+            {
+                ClearVoteBinding();
+            }
+        }
 
         public override void OnNetworkSpawn()
         {
             CheckAndEnableUI(SceneManager.GetActiveScene().name);
-            StartCoroutine(TryConnectRoutine());
+            RefreshVoteUiVisibility();
+            ReconnectVoteModel();
         }
 
         private void Start()
@@ -55,6 +76,7 @@ namespace Court
                 _targetMaterial.SetFloat(outlineProperty, 0f);
             }
             if (currentVoteText) currentVoteText.text = _realScore.ToString();
+            RefreshVoteUiVisibility();
         }
 
         private void EnsureCourtOnlyTargetCollider()
@@ -101,15 +123,66 @@ namespace Court
 
             if (courtOnlyTargetCollider != null)
             {
-                courtOnlyTargetCollider.enabled = isCourtScene;
+                courtOnlyTargetCollider.enabled = isCourtScene && !_isOwnerDead;
             }
+        }
+
+
+        private void RefreshVoteUiVisibility()
+        {
+            _isOwnerDead = IsOwnerDead();
+
+            if (currentVoteText != null)
+            {
+                currentVoteText.gameObject.SetActive(!_isOwnerDead);
+            }
+
+            if (courtOnlyTargetCollider != null)
+            {
+                bool isCourtScene = SceneManager.GetActiveScene().name == GameScenes.Court;
+                courtOnlyTargetCollider.enabled = isCourtScene && !_isOwnerDead;
+            }
+        }
+
+        private bool IsOwnerDead()
+        {
+            if (PlayerHelperManager.Instance == null) return false;
+
+            PlayerModel ownerModel = PlayerHelperManager.Instance.GetPlayerModelByClientId(OwnerId);
+            if (ownerModel == null) return false;
+
+            return ownerModel.GetPlayerAliveState() == PlayerLivingState.Dead;
         }
 
         public override void OnNetworkDespawn()
         {
-            if (VoteModel.Instance != null && _isSubscribed)
+            ClearVoteBinding();
+        }
+
+        private void ReconnectVoteModel()
+        {
+            ClearVoteBinding();
+
+            if (!IsSpawned) return;
+            if (_connectRoutine != null) StopCoroutine(_connectRoutine);
+            _connectRoutine = StartCoroutine(TryConnectRoutine());
+        }
+
+        private void ClearVoteBinding()
+        {
+            if (_subscribedVoteModel != null && _isSubscribed)
             {
-                VoteModel.Instance.VoteDataList.OnListChanged -= OnVoteDataChanged;
+                _subscribedVoteModel.VoteDataList.OnListChanged -= OnVoteDataChanged;
+            }
+
+            _isSubscribed = false;
+            _myVoteIndex = -1;
+            _subscribedVoteModel = null;
+
+            if (_connectRoutine != null)
+            {
+                StopCoroutine(_connectRoutine);
+                _connectRoutine = null;
             }
         }
 
@@ -123,17 +196,27 @@ namespace Court
                     continue;
                 }
 
-                int foundIndex = VoteModel.Instance.GetPlayerIndex(OwnerId);
+                RefreshVoteUiVisibility();
+                if (_isOwnerDead)
+                {
+                    _connectRoutine = null;
+                    yield break;
+                }
+
+                VoteModel currentVoteModel = VoteModel.Instance;
+                int foundIndex = currentVoteModel.GetPlayerIndex(OwnerId);
 
                 if (foundIndex != -1)
                 {
                     _myVoteIndex = foundIndex;
-                    VoteModel.Instance.VoteDataList.OnListChanged += OnVoteDataChanged;
+                    _subscribedVoteModel = currentVoteModel;
+                    _subscribedVoteModel.VoteDataList.OnListChanged += OnVoteDataChanged;
                     _isSubscribed = true;
+                    _connectRoutine = null;
 
-                    if (_myVoteIndex < VoteModel.Instance.VoteDataList.Count)
+                    if (_myVoteIndex < _subscribedVoteModel.VoteDataList.Count)
                     {
-                        UpdateScoreUI(VoteModel.Instance.GetVoteCount(_myVoteIndex));
+                        UpdateScoreUI(_subscribedVoteModel.GetVoteCount(_myVoteIndex));
                     }
                     yield break; 
                 }
