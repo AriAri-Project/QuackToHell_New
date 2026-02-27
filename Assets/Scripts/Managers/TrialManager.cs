@@ -388,20 +388,34 @@ public class TrialManager : NetworkBehaviour
     }
 
     /// <summary>
-    /// 서버 전용: 모든 플레이어가 발언을 마쳤는지 확인
+    /// 서버 전용: 생존 플레이어가 모두 발언을 마쳤는지 확인
     /// </summary>
     public void CheckAllPlayersEnded()
     {
         if (!IsServer) return;
         if (_allPlayers.Count == 0) return;
 
-        // 모든 플레이어의 HasEndedSpeech가 true인지 검사
-        bool isAllEnded = _allPlayers.All(p => p.HasEndedSpeech.Value);
+        List<PlayerTrialState> alivePlayers = _allPlayers.Where(IsAliveTrialParticipant).ToList();
+        if (alivePlayers.Count == 0) return;
 
-        if (isAllEnded)
+        // 생존 플레이어의 HasEndedSpeech가 true인지 검사
+        bool isAllAliveEnded = alivePlayers.All(p => p.HasEndedSpeech.Value);
+
+        if (isAllAliveEnded)
         {
             EndTrialServer();
         }
+    }
+
+    private bool IsAliveTrialParticipant(PlayerTrialState player)
+    {
+        if (player == null) return false;
+        if (PlayerHelperManager.Instance == null) return false;
+
+        PlayerModel model = PlayerHelperManager.Instance.GetPlayerModelByClientId(player.OwnerClientId);
+        if (model == null) return false;
+
+        return model.GetPlayerAliveState() == PlayerLivingState.Alive;
     }
 
     /*
