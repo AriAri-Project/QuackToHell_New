@@ -913,7 +913,7 @@ public class DeckManager : NetworkBehaviour
         int sellPrice = Mathf.FloorToInt(card.cardItemStatusData.price * 0.5f);
 
         // 골드 지급
-        GameManager.Instance.AddPlayerGoldServerRpc(clientId, sellPrice);
+        GameManager.Instance.AddPlayerGoldServer(clientId, sellPrice);
 
         inv.RemoveOwnedCardServerRpc(card);
 

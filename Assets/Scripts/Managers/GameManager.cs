@@ -208,20 +208,12 @@ public class GameManager : NetworkBehaviour
     /// </summary>
     /// <param name="clientId">골드를 증가시킬 클라이언트 ID</param>
     /// <param name="amount">증가할 골드 양</param>
-    [ServerRpc(RequireOwnership = false)]
-    public void AddPlayerGoldServerRpc(ulong clientId, int amount, ServerRpcParams rpcParams = default)
+    public void AddPlayerGoldServer(ulong clientId, int amount)
     {
-        ulong requesterClientId = rpcParams.Receive.SenderClientId;
-
-        // 서버 권위 검증
-        if (clientId != requesterClientId)
-        {
-            Debug.LogError($"Server: Unauthorized gold add attempt. Requested: {clientId}, Actual: {requesterClientId}");
-            return;
-        }
+        if (!IsServer) return;
 
         PlayerModel player = PlayerHelperManager.Instance.GetPlayerModelByClientId(clientId);
-        DebugUtils.AssertNotNull(player, "PlayerModel", this);
+        if (player == null) return;
 
         PlayerStatusData currentStatus = player.PlayerStatusData.Value;
         currentStatus.gold += amount;
@@ -466,58 +458,53 @@ public class GameManager : NetworkBehaviour
             }
         }
 
-        // 3-2) 농장주(=Farmer)만 남음 / 시민(=Animal)만 남음
-        if (aliveFarmers.Count > 0 && aliveAnimals.Count == 0)
+        // 3-2) "살아있는 플레이어" 기준 진영 승리
+        // - 살아있는 Animal이 0이고, 살아있는 Farmer가 1 이상이면 => Farmer 승 (Farmer가 2명이어도 OK)
+        // - 살아있는 Farmer가 0이고, 살아있는 Animal이 1 이상이면 => Animal 승
+        if (aliveAnimals.Count == 0 && aliveFarmers.Count > 0)
         {
             _gameEnded = true;
 
-            // 1) 살아있는 농장주들로 시작
-            var winnerFarmers = new List<PlayerModel>(aliveFarmers);
-
-            // 2) 죽은 플레이어들 중 농장주 진영이었던 애들 추가
-            foreach (var p in deadPlayers)
+            // 승자는 "진영(Farmer)" 기준으로 전체(죽은 Farmer 포함) 다 넣기
+            var winners = new List<PlayerModel>();
+            foreach (var p in players)
             {
                 if (p == null) continue;
-                if (GetFactionJob(p) == PlayerJob.Farmer && !winnerFarmers.Contains(p))
-                {
-                    winnerFarmers.Add(p);
-                }
+                if (GetFactionJob(p) == PlayerJob.Farmer)
+                    winners.Add(p);
             }
 
             var payload = BuildPayload(
                 winType: EWinType.Mafia,
-                winReason: "농장주 진영 생존",
-                winners: winnerFarmers,
+                winReason: "농장주만 생존",
+                winners: winners,
                 losers: players,
-                // 진영 기준 필터로 바꾸는 쪽이 일관됨
-                winnerFilter: (pm) => GetFactionJob(pm) == PlayerJob.Farmer
+                winnerFilter: (pm) => pm != null && GetFactionJob(pm) == PlayerJob.Farmer
             );
 
             BroadcastResult(payload);
             return true;
         }
 
-        if (aliveAnimals.Count > 0 && aliveFarmers.Count == 0)
+        if (aliveFarmers.Count == 0 && aliveAnimals.Count > 0)
         {
             _gameEnded = true;
 
-            var winnerAnimals = new List<PlayerModel>(aliveAnimals);
-
-            foreach (var p in deadPlayers)
+            // 승자는 "진영(Animal)" 기준으로 전체(죽은 Animal 포함) 다 넣기
+            var winners = new List<PlayerModel>();
+            foreach (var p in players)
             {
                 if (p == null) continue;
-                if (GetFactionJob(p) == PlayerJob.Animal && !winnerAnimals.Contains(p))
-                {
-                    winnerAnimals.Add(p);
-                }
+                if (GetFactionJob(p) == PlayerJob.Animal)
+                    winners.Add(p);
             }
 
             var payload = BuildPayload(
                 winType: EWinType.Citizens,
-                winReason: "시민 진영 생존",
-                winners: winnerAnimals,
+                winReason: "동물만 생존",
+                winners: winners,
                 losers: players,
-                winnerFilter: (pm) => GetFactionJob(pm) == PlayerJob.Animal
+                winnerFilter: (pm) => pm != null && GetFactionJob(pm) == PlayerJob.Animal
             );
 
             BroadcastResult(payload);
