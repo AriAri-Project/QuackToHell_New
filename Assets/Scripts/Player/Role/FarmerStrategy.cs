@@ -511,6 +511,8 @@ public class FarmerStrategy : NetworkBehaviour, IRoleStrategy
             PlayerVentState ventState = GetComponent<PlayerVentState>();
             ventState?.TriggerExitAnimation();
             ventState?.SetVentAction(false, interatingVentNetworkId, this);
+            isVentEntered = false;
+            interatingVentNetworkId = 0;
         }
         else
         {

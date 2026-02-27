@@ -226,7 +226,7 @@ public sealed class VentController : NetworkBehaviour, IInteractable
 
             TeleportPlayerServer(playerObj, _tr.position);
             TeleportPlayerClientRpc(playerObj.NetworkObjectId, _tr.position, TargetClient(senderClientId));
-            SetPlayerHiddenClientRpc(_occupantNetId.Value, true);
+            SetPlayerHiddenClientRpc(playerObj.NetworkObjectId, true);
 
             SpawnArrowsClientRpc(NetworkObjectId, BuildTargetIds(), TargetClient(senderClientId));
             NotifyPlayerCurrentVentClientRpc(playerObj.NetworkObjectId, this.NetworkObjectId, TargetClient(senderClientId));
@@ -253,7 +253,7 @@ public sealed class VentController : NetworkBehaviour, IInteractable
             _occupantNetId.Value = 0UL;
             _lastExitServerTime = NetworkManager.Singleton.ServerTime.Time;
 
-            SetPlayerHiddenClientRpc(_occupantNetId.Value, false);
+            SetPlayerHiddenClientRpc(playerObj.NetworkObjectId, false);
             DespawnArrowsClientRpc(TargetClient(senderClientId));
 
             var exitPos = _tr.position + (Vector3)exitOffset;
