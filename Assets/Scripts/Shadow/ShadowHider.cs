@@ -15,6 +15,7 @@ public class ShadowHider : NetworkBehaviour
 {
     private PlayerView playerView;
     private PlayerModel playerModel;
+    private FarmerStrategy playerFarmerStrategy;
     private LayerMask detectionLayer;
     private float innerEyesight;
     private float outerEyesight;
@@ -98,10 +99,17 @@ public class ShadowHider : NetworkBehaviour
             }
             else//벽에 안 부딪힘 = 타겟플레이어가 보여져야 함
             {
-                target?.GetComponent<PlayerView>()?.SetPlayerVisibility(true);
+                playerFarmerStrategy = target.GetComponent<FarmerStrategy>();
+                //벤트에 있는지도 확인
+                if (playerFarmerStrategy.enabled)
+                {
+                    if (playerFarmerStrategy.IsVentEntered==false)
+                    {
+                        target?.GetComponent<PlayerView>()?.SetPlayerVisibility(true);        
+                    }
+                }
             }
         }
-        
     }
     
     public bool IsTargetHiddenByShadow(GameObject target)

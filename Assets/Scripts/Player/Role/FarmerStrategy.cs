@@ -68,12 +68,15 @@ public class FarmerStrategy : NetworkBehaviour, IRoleStrategy
         get{return canSavotage;}
     }
 
-    private bool isVentEntered = false;
+    private readonly NetworkVariable<bool> isVentEntered = new NetworkVariable<bool>(
+        false,
+        NetworkVariableReadPermission.Everyone,
+        NetworkVariableWritePermission.Server);
 
     public bool IsVentEntered
     {
-        set {isVentEntered = value;}
-        get { return isVentEntered; }
+        set {isVentEntered.Value = value;}
+        get { return isVentEntered.Value; }
     }
     private ulong interatingVentNetworkId=0;
 
@@ -474,8 +477,8 @@ public class FarmerStrategy : NetworkBehaviour, IRoleStrategy
         PlayerModel playerModel = GetComponent<PlayerModel>();
         playerModel?.SetAnimationStateServerRpc(PlayerAnimationState.VentEnter);
         
-        isVentEntered=true;
-        if (isVentEntered)
+        IsVentEntered=true;
+        if (IsVentEntered)
         {
             interatingVentNetworkId = targetNetworkObjectId;
         }
@@ -511,14 +514,14 @@ public class FarmerStrategy : NetworkBehaviour, IRoleStrategy
             PlayerVentState ventState = GetComponent<PlayerVentState>();
             ventState?.TriggerExitAnimation();
             ventState?.SetVentAction(false, interatingVentNetworkId, this);
-            isVentEntered = false;
+            IsVentEntered = false;
             interatingVentNetworkId = 0;
         }
         else
         {
             // 탈출 실패 - 상태 복구
             Debug.Log("탈출 실패 - 상태 복구");
-            isVentEntered = true; // 다시 벤트 안에 있음
+            IsVentEntered = true; // 다시 벤트 안에 있음
             PlayerVentState ventState = GetComponent<PlayerVentState>();
             ventState?.SetVentAction(true, interatingVentNetworkId, this);
         }
