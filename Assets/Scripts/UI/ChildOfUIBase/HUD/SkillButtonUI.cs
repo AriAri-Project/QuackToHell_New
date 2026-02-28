@@ -476,6 +476,7 @@ public class SkillButtonUI : UIHUD
     public void OnCorpseReportButton(PointerEventData eventData)
     { 
         ulong targetCorpseId = playerView.TargetCorpseCache.GetComponent<PlayerCorpse>().ClientId;
-       onCorpseReportButton?.Invoke(targetCorpseId);
+        Debug.Log($"[Skillbutton] 리포트 위해 가져온 시체 클라이언트 아이디: {targetCorpseId}");
+        onCorpseReportButton?.Invoke(targetCorpseId);
     }
 }

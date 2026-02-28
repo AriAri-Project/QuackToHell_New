@@ -225,7 +225,7 @@ public class LobbyManager : NetworkBehaviour
     [ClientRpc]
     private void NoticeHostExitClientRpc()
     {
-        UIManager.Instance.ShowSystemUI<LobbyHostExitNoticeSystemUI>();
+        UIManager.Instance.ShowSystemUI<LobbyHostExitNoticeSystem>();
     }
 
     //멀티캐스트
@@ -631,6 +631,7 @@ private void SyncLobbyDataClientRpc(
         if (!isCardDataLoaded)
         {
             Debug.LogError("Card data is not loaded!");
+            UIManager.Instance.ShowSystemUI<CardDataNotLoadedSystem>();
             return;
         }
         

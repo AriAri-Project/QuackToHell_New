@@ -56,6 +56,7 @@ public class CorpseFactory : MonoBehaviour
         // 2. 데이터 초기화
         PlayerCorpse playerCorpse = corpseInstance.GetComponent<PlayerCorpse>();
         playerCorpse.AppearanceData.Value = victimAppearanceData;
+        Debug.Log($"[CorpseFactoryManager] 생성되는 시체 cliend id: {clientId}");
         playerCorpse.ClientId = clientId;
         
         // 3. 네트워크에 스폰

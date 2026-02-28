@@ -115,6 +115,10 @@ public class UIManager:MonoBehaviour
     /// </summary>
 	public T ShowPopupUI<T>(string name = null) where T : UIPopup
     {
+	    //팝업 중복생성 막기: 이미 있으면 그걸 보여주기
+	    foreach (UIPopup p in popupStack)
+		    if (p is T) return (T)p;
+	    
         if (string.IsNullOrEmpty(name))
             name = typeof(T).Name;
         //Popup프리팹의 경로는 Resources/UI/Popup 이하여야 합니다.

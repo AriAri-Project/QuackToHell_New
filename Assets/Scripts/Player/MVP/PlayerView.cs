@@ -645,7 +645,7 @@ public class PlayerView : NetworkBehaviour
     #region 시체발견 (LeftShift키) - 모든 사람 가능 (Ghost 제외)
     public Action<ulong> OnCorpseReported;
     
-    // LeftShift키로 시체 리포트 처리
+    // r키로 시체 리포트 처리
     private void OnCorpseReportInput(InputAction.CallbackContext context)
     {
         if (!IsOwner) return;
@@ -656,6 +656,7 @@ public class PlayerView : NetworkBehaviour
         }
         
         ulong targetCorpseId = targetCorpseCache.GetComponent<PlayerCorpse>().ClientId;
+        Debug.Log($"[PlayerView] 리포트 위해 가져온 시체 클라이언트 아이디: {targetCorpseId}");
         OnCorpseReported?.Invoke(targetCorpseId);
     }
     

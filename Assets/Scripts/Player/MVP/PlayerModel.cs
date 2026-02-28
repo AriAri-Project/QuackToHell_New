@@ -32,7 +32,10 @@ public class PlayerModel : NetworkBehaviour
     
     private RoleController _roleController;
 
-    private ulong clientId;
+    private NetworkVariable<ulong> clientId = new NetworkVariable<ulong>(
+        0,
+        NetworkVariableReadPermission.Everyone,
+        NetworkVariableWritePermission.Server);
     //충돌범위 레이
     private float upRay = 0.47f;
     private float downRay = 0.05f;
@@ -42,11 +45,11 @@ public class PlayerModel : NetworkBehaviour
 
     public ulong ClientId
     {
-        get { return clientId; }
+        get { return clientId.Value; }
         set
         {
             if (!IsHost) return;
-            clientId = value;
+            clientId.Value = value;
         }
     }
     
@@ -611,6 +614,7 @@ public class PlayerModel : NetworkBehaviour
         }
         
         // 시체 프리팹 생성 (서버가 권위적 정보로 처리)
+        Debug.Log($"[PlayerModle] 생성되는 시체 cliend id: {clientId}");
         CorpseFactory.Instance.CreateCorpseServerRpc(transform.position, Quaternion.identity  , _playerAppearanceData.Value, ClientId);
         
         // 죽은 플레이어에게만 유령 상태로 변경하라고 알림

@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 using UnityEngine.UI;
-public class LobbyHostExitNoticeSystem : UISystem
+public class CardDataNotLoadedSystem : UISystem
 {
     private void Start()
     {

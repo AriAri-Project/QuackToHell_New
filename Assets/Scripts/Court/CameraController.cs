@@ -28,7 +28,10 @@ namespace Court
 
         public void OnDestroy()
         {
-            mainCam.transform.localPosition = new Vector3(0f, 0f, mainCam.transform.position.z);
+            if (mainCam != null)
+            {
+                mainCam.transform.localPosition = new Vector3(0f, 0f, mainCam.transform.position.z);
+            }
         }
     }
 }
