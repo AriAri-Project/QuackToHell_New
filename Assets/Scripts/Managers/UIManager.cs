@@ -83,6 +83,11 @@ public class UIManager:MonoBehaviour
     {
         Canvas canvas = GameObjectUtils.GetOrAddComponent<Canvas>(go);
         GraphicRaycaster raycaster = GameObjectUtils.GetOrAddComponent<GraphicRaycaster>(go);
+        CanvasScaler scaler = GameObjectUtils.GetOrAddComponent<CanvasScaler>(go);
+        scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize; // 해상도에 따라 크기 조절
+        scaler.referenceResolution = new Vector2(1920, 1080); // 기준 해상도 설정
+        scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
+        scaler.matchWidthOrHeight = 0.5f; // 가로/세로 중간 비율로 맞춤
         canvas.renderMode = RenderMode.ScreenSpaceOverlay;
         canvas.overrideSorting = true;
         canvas.sortingOrder = UITypes.GetSortingOrder(uiType);
