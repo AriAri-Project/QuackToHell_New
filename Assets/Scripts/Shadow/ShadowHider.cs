@@ -107,6 +107,10 @@ public class ShadowHider : NetworkBehaviour
                     {
                         target?.GetComponent<PlayerView>()?.SetPlayerVisibility(true);        
                     }
+                    else
+                    {
+                        target?.GetComponent<PlayerView>()?.SetPlayerVisibility(false); 
+                    }
                 }
             }
         }

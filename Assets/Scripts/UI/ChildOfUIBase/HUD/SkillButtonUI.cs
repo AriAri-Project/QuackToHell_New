@@ -169,7 +169,7 @@ public class SkillButtonUI : UIHUD
     private void HandleVentEnter()
     {
         EnableButton(Buttons.Button_Interaction);
-        farmerStrategy.IsVentEntered = true; 
+        farmerStrategy.SetIsVentEnteredServerRpc(true); 
     }
     private void HandleSavotageCooldownReady()
     {

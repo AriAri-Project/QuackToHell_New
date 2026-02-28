@@ -477,7 +477,7 @@ public class FarmerStrategy : NetworkBehaviour, IRoleStrategy
         PlayerModel playerModel = GetComponent<PlayerModel>();
         playerModel?.SetAnimationStateServerRpc(PlayerAnimationState.VentEnter);
         
-        IsVentEntered=true;
+        SetIsVentEnteredServerRpc(true);
         if (IsVentEntered)
         {
             interatingVentNetworkId = targetNetworkObjectId;
@@ -486,6 +486,12 @@ public class FarmerStrategy : NetworkBehaviour, IRoleStrategy
         {
             interatingVentNetworkId = 0;
         }
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    public void SetIsVentEnteredServerRpc(bool isEntering,ServerRpcParams rpcParams = default)
+    {
+        IsVentEntered = isEntering;
     }
 
     public void ExitVent()
@@ -514,14 +520,14 @@ public class FarmerStrategy : NetworkBehaviour, IRoleStrategy
             PlayerVentState ventState = GetComponent<PlayerVentState>();
             ventState?.TriggerExitAnimation();
             ventState?.SetVentAction(false, interatingVentNetworkId, this);
-            IsVentEntered = false;
+            SetIsVentEnteredServerRpc(false);
             interatingVentNetworkId = 0;
         }
         else
         {
             // 탈출 실패 - 상태 복구
             Debug.Log("탈출 실패 - 상태 복구");
-            IsVentEntered = true; // 다시 벤트 안에 있음
+            SetIsVentEnteredServerRpc(true); // 다시 벤트 안에 있음
             PlayerVentState ventState = GetComponent<PlayerVentState>();
             ventState?.SetVentAction(true, interatingVentNetworkId, this);
         }
