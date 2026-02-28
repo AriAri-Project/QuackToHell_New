@@ -110,6 +110,7 @@ namespace Court
         //초기화 함수
         public void Initialize()
         {
+            if (!IsServer) return;
             VoteDataList.Clear();
         }
     }

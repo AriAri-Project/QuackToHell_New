@@ -133,7 +133,7 @@ public class GameManager : NetworkBehaviour
             PlayerModel localPlayer = PlayerHelperManager.Instance.GetPlayerModelByClientId(localClientId);
             localPlayer.ToggleReady();
             //쿨타임 zero로 시작
-            if (localPlayer.GetPlayerJob()==PlayerJob.Farmer)
+            if (localPlayer.GetPlayerCurrentJob()==PlayerJob.Farmer)
             {
                 FarmerStrategy farmerStrategy = localPlayer.GetComponent<FarmerStrategy>();
                 farmerStrategy.SetCooltimeZero();
@@ -240,7 +240,7 @@ public class GameManager : NetworkBehaviour
         showRole.SetActive(true);
         //2-1. 역할공개 text 세팅하기
         //로컬플레이어 역할에 따라 텍스트 세팅
-        PlayerJob myJob = PlayerHelperManager.Instance.GetPlayerModelByClientId(NetworkManager.Singleton.LocalClientId).GetPlayerJob();
+        PlayerJob myJob = PlayerHelperManager.Instance.GetPlayerModelByClientId(NetworkManager.Singleton.LocalClientId).GetPlayerCurrentJob();
         TextMeshProUGUI showRoleText = this.showRoleText;
         switch(myJob){
             case PlayerJob.Farmer:
@@ -269,7 +269,7 @@ public class GameManager : NetworkBehaviour
         {
             foreach(PlayerModel player in allPlayers)
             {
-                if (player.GetPlayerJob() != PlayerJob.Farmer)
+                if (player.GetPlayerCurrentJob() != PlayerJob.Farmer)
                 {
                     targetPlayers.Remove(player);    
                 }
@@ -371,7 +371,7 @@ public class GameManager : NetworkBehaviour
         PlayerModel[] playerModels= PlayerHelperManager.Instance.GetAllPlayers<PlayerModel>();
         foreach (var playerModel in playerModels)
         {
-            if (playerModel.GetPlayerJob() != PlayerJob.Animal)
+            if (playerModel.GetPlayerCurrentJob() != PlayerJob.Animal)
             {
                 continue;
             }
@@ -408,6 +408,7 @@ public class GameManager : NetworkBehaviour
 
         // 1) 전체 플레이어 수집
         PlayerModel[] players = PlayerHelperManager.Instance.GetAllPlayers<PlayerModel>();
+        Debug.Log($"All Player Count: {players.Length}");
         if (players == null || players.Length == 0) return false;
 
         // 2) 생존자 분류
@@ -433,7 +434,8 @@ public class GameManager : NetworkBehaviour
             {
                 // 직업이 더 늘어나면 여기서 시민/농장주 진영으로 분류 규칙 추가
                 // 일단 "시민측"으로 취급하고 싶으면 aliveFarmers에 넣는 방식도 가능
-                aliveFarmers.Add(p);
+                // ↑ ?? alive Animals아닐까요. 바꿀게요(유진)
+                aliveAnimals.Add(p);
             }
         }
 
@@ -659,19 +661,22 @@ public class GameManager : NetworkBehaviour
         PlayerStatusData status = p.PlayerStatusData.Value;
 
         // Ghost인데 초기 직업이 설정돼 있으면 → 초기 직업 기준
-        if (status.job == PlayerJob.Ghost && status.initialJob != PlayerJob.None)
+        if (status.currentJob == PlayerJob.Ghost && status.initialJob != PlayerJob.None)
         {
+            Debug.Log($"{p.ClientId}의 직업은 {status.initialJob}");
             return status.initialJob;
         }
 
         // Ghost인데 초기 직업이 None이면 → 시민 진영(Animal)으로 취급
-        if (status.job == PlayerJob.Ghost && status.initialJob == PlayerJob.None)
+        if (status.currentJob == PlayerJob.Ghost && status.initialJob == PlayerJob.None)
         {
+            Debug.Log($"{p.ClientId}의 직업은 Animal");
             return PlayerJob.Animal;
         }
 
         // 그 외엔 현재 job 그대로
-        return status.job;
+        Debug.Log($"{p.ClientId}의 직업은 {status.currentJob}");
+        return status.currentJob;
     }
     
     // ② 결과 화면 표시용 직업 문자열
@@ -682,13 +687,13 @@ public class GameManager : NetworkBehaviour
         PlayerStatusData status = p.PlayerStatusData.Value;
 
         // Ghost라도 초기 직업이 있으면 → 초기 직업 이름으로 표시
-        if (status.job == PlayerJob.Ghost && status.initialJob != PlayerJob.None)
+        if (status.currentJob == PlayerJob.Ghost && status.initialJob != PlayerJob.None)
         {
             return status.initialJob.ToString();
         }
 
         // 그 외에는 현재 job 이름 그대로
-        return status.job.ToString();
+        return status.currentJob.ToString();
     }
     
     private static GameResultPayload BuildPayload(
@@ -783,6 +788,9 @@ public class GameManager : NetworkBehaviour
         
         if (Court.VoteModel.Instance != null)
             Court.VoteModel.Instance.Initialize();
+        
+        if (DeckManager.Instance != null)
+            DeckManager.Instance.Initialize();
 
         PlayerModel[] players = PlayerHelperManager.Instance.GetAllPlayers<PlayerModel>();
         if (players == null) return;
@@ -804,8 +812,6 @@ public class GameManager : NetworkBehaviour
     private void GameRestartClientRpc()
     {
         Debug.Log("클라상태초기화");
-        if (DeckManager.Instance != null)
-            DeckManager.Instance.Initialize();
 
         if (TrialManager.Instance != null)
             TrialManager.Instance.Initialize();

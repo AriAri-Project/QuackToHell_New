@@ -1430,6 +1430,9 @@ public class DeckManager : NetworkBehaviour
     //초기화 함수
     public void Initialize()
     {
+        if (!IsServer) return;
+        
+        
         for (int i = 0; i < _allCardsOnGameData.Count; i++)
         {
             CardItemData card = _allCardsOnGameData[i];

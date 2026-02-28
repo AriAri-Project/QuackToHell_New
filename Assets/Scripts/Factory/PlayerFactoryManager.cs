@@ -64,7 +64,7 @@ public class PlayerFactoryManager : NetworkBehaviour
         PlayerStatusData myPlayerStateData = playerModel.PlayerStatusData.Value;
         string baseNickname = myPlayerStateData.Nickname.Split('_')[0];
         myPlayerStateData.Nickname = $"{baseNickname}_{rpcParams.Receive.SenderClientId}";        
-        myPlayerStateData.job = PlayerJob.None;
+        myPlayerStateData.currentJob = PlayerJob.None;
         myPlayerStateData.moveSpeed = GameConstants.Player.DefaultMoveSpeed;
         myPlayerStateData.gold = GameConstants.Player.DefaultGold;
         myPlayerStateData.IsReady = false;

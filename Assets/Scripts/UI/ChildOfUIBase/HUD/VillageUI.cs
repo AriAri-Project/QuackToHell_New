@@ -26,7 +26,7 @@ private void Start()
         Bind<Image>(typeof(Images));
         GameObject Image_Role_gameObject = Get<Image>((int)Images.Role_Image).gameObject;
         if (PlayerHelperManager.Instance.GetPlayerModelByClientId(NetworkManager.Singleton.LocalClientId)
-                .GetPlayerJob() == PlayerJob.Animal)
+                .GetPlayerCurrentJob() == PlayerJob.Animal)
         {
             Image_Role_gameObject.GetComponent<Image>().sprite = Resources.Load<Sprite>("UI/Art/Duck");    
         }

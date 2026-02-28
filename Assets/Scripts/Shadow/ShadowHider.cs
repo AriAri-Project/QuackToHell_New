@@ -47,7 +47,7 @@ public class ShadowHider : NetworkBehaviour
             return;
         }
         //죽은애는 다 보이게
-        if (playerModel.GetPlayerJob() == PlayerJob.Ghost)
+        if (playerModel.GetPlayerCurrentJob() == PlayerJob.Ghost)
         {
             return;
         }

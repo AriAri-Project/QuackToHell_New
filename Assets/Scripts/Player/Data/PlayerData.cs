@@ -55,7 +55,7 @@ public struct PlayerStatusData : INetworkSerializable
 
     public PlayerJob initialJob;
     public string nickname;
-    public PlayerJob job;
+    public PlayerJob currentJob;
     public int credibility;
     public int spellpower;
     public int gold;
@@ -83,7 +83,7 @@ public struct PlayerStatusData : INetworkSerializable
             nickname = "";
         serializer.SerializeValue(ref initialJob);
         serializer.SerializeValue(ref nickname);
-        serializer.SerializeValue(ref job);
+        serializer.SerializeValue(ref currentJob);
         serializer.SerializeValue(ref credibility);
         serializer.SerializeValue(ref spellpower);
         serializer.SerializeValue(ref gold);

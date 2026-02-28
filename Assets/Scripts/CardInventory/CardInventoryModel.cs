@@ -253,6 +253,7 @@ public class CardInventoryModel : NetworkBehaviour
     //초기화 함수
     public void Initialize()
     {
+        if (!IsServer) return;
         ownedCards.Clear();
     }
 }

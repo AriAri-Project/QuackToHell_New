@@ -265,11 +265,14 @@ public class SabotageNetworkManager : NetworkBehaviour
     //초기화 함수
     public void Initialize()
     {
-        forcedActive = false;
-        if (forcedRoutine != null)
+        if (IsServer)
         {
-            StopCoroutine(forcedRoutine);
-            forcedRoutine = null;
+            forcedActive = false;
+            if (forcedRoutine != null)
+            {
+                StopCoroutine(forcedRoutine);
+                forcedRoutine = null;
+            }
         }
     }
 }

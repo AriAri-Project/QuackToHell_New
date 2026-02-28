@@ -46,7 +46,7 @@ public class RoleController : MonoBehaviour
         // 초기 역할 설정
         if (_playerPresenter != null)
         {
-            PlayerJob currentJob = _playerModel.GetPlayerJob();
+            PlayerJob currentJob = _playerModel.GetPlayerCurrentJob();
             ChangeRole(currentJob);
         }
         else

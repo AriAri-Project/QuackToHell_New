@@ -209,9 +209,9 @@ public class FarmerStrategy : NetworkBehaviour, IRoleStrategy
                 result = false;
             }
         }
-        if (targetPlayerModel.GetPlayerJob() != PlayerJob.Animal)
+        if (targetPlayerModel.GetPlayerCurrentJob() != PlayerJob.Animal)
         {
-            Debug.Log($"[Kill 실패] 타겟이 동물이 아닙니다. TargetJob: {targetPlayerModel.GetPlayerJob()}, TargetNetworkObjectId: {targetNetworkObjectId}, RequesterClientId: {requesterClientId}");
+            Debug.Log($"[Kill 실패] 타겟이 동물이 아닙니다. TargetJob: {targetPlayerModel.GetPlayerCurrentJob()}, TargetNetworkObjectId: {targetNetworkObjectId}, RequesterClientId: {requesterClientId}");
             result = false;
         }
         else if (targetPlayerModel.GetPlayerAliveState() != PlayerLivingState.Alive)

@@ -407,7 +407,7 @@ public class PlayerPresenter : NetworkBehaviour
             targetObjectId =  interactionObj.GetComponent<NetworkObject>().NetworkObjectId;
         }
 
-        if (targetObjTag == GameTags.Vent && playerModel.GetPlayerJob()==PlayerJob.Farmer )
+        if (targetObjTag == GameTags.Vent && playerModel.GetPlayerCurrentJob()==PlayerJob.Farmer )
         {
             playerView.SetIgnorePlayerMoveInputServerRpc(true);
         }
@@ -436,7 +436,7 @@ public class PlayerPresenter : NetworkBehaviour
     private void HandleSavotageInput()
     {
         if (playerModel.GetPlayerAliveState() == PlayerLivingState.Dead) return;
-        if (playerModel.GetPlayerJob() != PlayerJob.Farmer) return;
+        if (playerModel.GetPlayerCurrentJob() != PlayerJob.Farmer) return;
         if (farmerStrategy.CanSavotage == false) return;
         UIManager.Instance.ShowPopupUI<SabotagePopup>();
     }
@@ -452,9 +452,9 @@ public class PlayerPresenter : NetworkBehaviour
         }
         
         // 역할 변경 감지
-        if (previousValue.job != newValue.job)
+        if (previousValue.currentJob != newValue.currentJob)
         {
-            roleController?.ChangeRole(newValue.job);
+            roleController?.ChangeRole(newValue.currentJob);
         }
     }
     

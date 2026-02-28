@@ -163,7 +163,7 @@ public class PlayerModel : NetworkBehaviour
             RaycastHit2D hit = Physics2D.Raycast(rayOrigin, Vector2.down, finalRayLength, wallLayerMask);
             Debug.DrawRay(rayOrigin, Vector2.down * finalRayLength, hit.collider != null ? Color.red : Color.green);
 
-            if (hit.collider != null && _playerStatusData.Value.job!=PlayerJob.Ghost)
+            if (hit.collider != null && _playerStatusData.Value.currentJob!=PlayerJob.Ghost)
             {
                 moveAmount.y = 0; 
             }
@@ -177,7 +177,7 @@ public class PlayerModel : NetworkBehaviour
             RaycastHit2D hit = Physics2D.Raycast(rayOrigin, Vector2.up, finalRayLength, wallLayerMask);
             Debug.DrawRay(rayOrigin, Vector2.up * finalRayLength, hit.collider != null ? Color.red : Color.green);
 
-            if (hit.collider != null&& _playerStatusData.Value.job!=PlayerJob.Ghost)
+            if (hit.collider != null&& _playerStatusData.Value.currentJob!=PlayerJob.Ghost)
             {
                 moveAmount.y = 0;
             }
@@ -196,7 +196,7 @@ public class PlayerModel : NetworkBehaviour
             RaycastHit2D hit = Physics2D.Raycast(rayOrigin, Vector2.left, finalRayLength, wallLayerMask);
             Debug.DrawRay(rayOrigin, Vector2.left * finalRayLength, hit.collider != null ? Color.red : Color.green);
 
-            if (hit.collider != null&& _playerStatusData.Value.job!=PlayerJob.Ghost)
+            if (hit.collider != null&& _playerStatusData.Value.currentJob!=PlayerJob.Ghost)
             {
                 moveAmount.x = 0;
             }
@@ -210,7 +210,7 @@ public class PlayerModel : NetworkBehaviour
             RaycastHit2D hit = Physics2D.Raycast(rayOrigin, Vector2.right, finalRayLength, wallLayerMask);
             Debug.DrawRay(rayOrigin, Vector2.right * finalRayLength, hit.collider != null ? Color.red : Color.green);
 
-            if (hit.collider != null&& _playerStatusData.Value.job!=PlayerJob.Ghost)
+            if (hit.collider != null&& _playerStatusData.Value.currentJob!=PlayerJob.Ghost)
             {
                 moveAmount.x = 0;
             }
@@ -481,7 +481,7 @@ public class PlayerModel : NetworkBehaviour
         {
             newStatusData.initialJob = newRole;
         }
-        newStatusData.job = newRole;
+        newStatusData.currentJob = newRole;
         PlayerStatusData.Value = newStatusData;
     }
     #endregion
@@ -560,9 +560,9 @@ public class PlayerModel : NetworkBehaviour
     /// <summary>
     /// 플레이어 역할 조회
     /// </summary>
-    public PlayerJob GetPlayerJob()
+    public PlayerJob GetPlayerCurrentJob()
     {
-        return PlayerStatusData.Value.job;
+        return PlayerStatusData.Value.currentJob;
     }
     
     public void ToggleReady(){
@@ -651,7 +651,7 @@ public class PlayerModel : NetworkBehaviour
         // 서버에서 속도 변경 (NetworkVariable로 동기화됨)
         temp.moveSpeed = _playerStatusData.Value.moveSpeed * GameConstants.Player.GhostSpeedMultiplier; // 유령 속도로 설정
         // 서버에서 job변경
-        temp.job =  PlayerJob.Ghost;
+        temp.currentJob =  PlayerJob.Ghost;
         _playerStatusData.Value = temp;
         // 서버에서 상태 변경
         PlayerStateData newState = new PlayerStateData
@@ -671,8 +671,9 @@ public class PlayerModel : NetworkBehaviour
     //초기화 함수
     public void Initialize()
     {
+        if (!IsServer) return;
         PlayerStatusData statusTemp =  _playerStatusData.Value;
-        statusTemp.job = PlayerJob.None;
+        statusTemp.currentJob = PlayerJob.None;
         statusTemp.initialJob = PlayerJob.None;
         statusTemp.gold = GameConstants.Player.DefaultGold;
         statusTemp.IsReady = false;

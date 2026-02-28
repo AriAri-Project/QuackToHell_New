@@ -58,7 +58,7 @@ namespace Court
             //역할 이미지 초기화
             GameObject Image_Role_gameObject = Get<Image>((int)Images.Player_Role_Icon).gameObject;
             if (PlayerHelperManager.Instance.GetPlayerModelByClientId(NetworkManager.Singleton.LocalClientId)
-                    .GetPlayerJob() == PlayerJob.Animal)
+                    .GetPlayerCurrentJob() == PlayerJob.Animal)
             {
                 Image_Role_gameObject.GetComponent<Image>().sprite = Resources.Load<Sprite>("UI/Art/Duck");    
             }

@@ -96,7 +96,7 @@ public class SkillButtonUI : UIHUD
         }
 
         playerModel = PlayerHelperManager.Instance.GetPlayerModelByClientId(NetworkManager.Singleton.LocalClientId);
-        playerJob = playerModel.GetPlayerJob();
+        playerJob = playerModel.GetPlayerCurrentJob();
         playerPresenter = playerModel.GetComponent<PlayerPresenter>();
         
         SetUpButtons();
@@ -221,7 +221,7 @@ public class SkillButtonUI : UIHUD
     {
         if (targetObject.CompareTag(GameTags.PlayerCorpse))
         {   
-            if(playerModel.GetPlayerJob()==PlayerJob.Ghost){
+            if(playerModel.GetPlayerCurrentJob()==PlayerJob.Ghost){
                 return;
             }
             EnableButton(Buttons.Button_Report);
@@ -238,7 +238,7 @@ public class SkillButtonUI : UIHUD
 
             SetInteractionButtonImageByObject(GameTags.Vent);
 
-            PlayerJob playerJob = playerModel.GetPlayerJob(); // 현재 역할 확인
+            PlayerJob playerJob = playerModel.GetPlayerCurrentJob(); // 현재 역할 확인
                 
             if(playerJob == PlayerJob.Animal)
             {
@@ -322,7 +322,7 @@ public class SkillButtonUI : UIHUD
     public void SetInteractionButtonImageByObject(string objectTag ){
         //현재 플레이어 역할을 확인하고 적절한 이미지로 변경
         //Resources/Sprites/InteractionButtons/ 에서 이미지를 찾아서 변경
-        PlayerJob playerJob = PlayerHelperManager.Instance.GetPlayerModelByClientId(NetworkManager.Singleton.LocalClientId).GetPlayerJob();
+        PlayerJob playerJob = PlayerHelperManager.Instance.GetPlayerModelByClientId(NetworkManager.Singleton.LocalClientId).GetPlayerCurrentJob();
         string spritePath = GetSpritePathByTag(objectTag);
         if(spritePath.Contains("Vent")){
             if(playerJob == PlayerJob.Farmer){
@@ -360,7 +360,7 @@ public class SkillButtonUI : UIHUD
         var model = PlayerHelperManager.Instance
             .GetPlayerModelByClientId(NetworkManager.Singleton.LocalClientId);
 
-        PlayerJob currentJob = model.GetPlayerJob();
+        PlayerJob currentJob = model.GetPlayerCurrentJob();
 
         PlayerStatusData status = model.GetPlayerStatusData();
         PlayerJob initialJob = status.initialJob;   

@@ -137,7 +137,7 @@ public class PlayerView : NetworkBehaviour
                     PlayerModel detectedPlayerModel = detectedObject.GetComponent<PlayerModel>();
                     if (detectedPlayerModel == null) return;
     
-                    if (detectedPlayerModel.GetPlayerJob() != PlayerJob.Animal || 
+                    if (detectedPlayerModel.GetPlayerCurrentJob() != PlayerJob.Animal || 
                         detectedPlayerModel.GetPlayerAliveState() != PlayerLivingState.Alive)
                     {
                         return; // Animal이 아니거나 죽은 플레이어는 추가하지 않음
@@ -237,14 +237,14 @@ public class PlayerView : NetworkBehaviour
             if (playerModel == null) continue;
         
             // Animal이고 Alive인 플레이어만 고려
-            if (playerModel.GetPlayerJob() != PlayerJob.Animal || 
+            if (playerModel.GetPlayerCurrentJob() != PlayerJob.Animal || 
                 playerModel.GetPlayerAliveState() != PlayerLivingState.Alive)
             {
                 continue;
             }
             
             // Farmer인 경우: 벽에 가려진 플레이어는 제외
-            if (myModel != null && myModel.GetPlayerJob() == PlayerJob.Farmer && myShadowHider != null)
+            if (myModel != null && myModel.GetPlayerCurrentJob() == PlayerJob.Farmer && myShadowHider != null)
             {
                 if (myShadowHider.IsTargetHiddenByShadow(player))
                 {
@@ -280,7 +280,7 @@ public class PlayerView : NetworkBehaviour
         
             if (p == player || 
                 model.GetPlayerAliveState() != PlayerLivingState.Alive ||
-                model.GetPlayerJob() != PlayerJob.Animal)
+                model.GetPlayerCurrentJob() != PlayerJob.Animal)
             {
                 overlappingAliveAnimalPlayers.RemoveAt(i);
             }
@@ -708,7 +708,11 @@ public class PlayerView : NetworkBehaviour
     public void Initialize()
     {
         Debug.Log("캐시 초기화함!");
-        ignoreMoveInput.Value = false;
+        if (IsServer)
+        {
+            ignoreMoveInput.Value = false;
+        }
+        
 
         interactObjCache = null;
         targetCorpseCache = null;

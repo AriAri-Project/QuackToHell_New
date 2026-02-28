@@ -267,7 +267,7 @@ public class TrialManager : NetworkBehaviour
 
         if (model == null) return false;
 
-        return model.GetPlayerJob() == PlayerJob.Farmer;
+        return model.GetPlayerCurrentJob() == PlayerJob.Farmer;
     }
 
     private int CountAliveMafia()
@@ -282,7 +282,7 @@ public class TrialManager : NetworkBehaviour
             if (model == null) continue;
 
             if (model.GetPlayerAliveState() == PlayerLivingState.Alive &&
-                model.GetPlayerJob() == PlayerJob.Farmer)
+                model.GetPlayerCurrentJob() == PlayerJob.Farmer)
             {
                 count++;
             }
@@ -302,7 +302,7 @@ public class TrialManager : NetworkBehaviour
             if (model == null) continue;
 
             if (model.GetPlayerAliveState() == PlayerLivingState.Alive &&
-                model.GetPlayerJob() == PlayerJob.Animal)
+                model.GetPlayerCurrentJob() == PlayerJob.Animal)
             {
                 count++;
             }
