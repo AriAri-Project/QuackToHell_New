@@ -630,7 +630,12 @@ public class PlayerModel : NetworkBehaviour
         };
         ChangeToGhostStateClientRpc(clientRpcParams);
 
-        GameManager.Instance.CheckLastPlayerAliveAndEndGame();
+        if (IsServer && GameManager.Instance != null)
+        {
+            Debug.Log($"[Death] {OwnerClientId} died -> TryEndGameServer()");
+            GameManager.Instance.TryEndGameServer();
+        }
+
     }
     
     /// <summary>
