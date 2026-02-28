@@ -525,15 +525,13 @@ public class GameManager : NetworkBehaviour
         if (!IsServer) return false;
         if (_gameEnded) return false;
 
-        // 1) 전체 플레이어 수집 (TryEndGameServer랑 통일)
+        // 1) 전체 플레이어 수집
         PlayerModel[] players = PlayerHelperManager.Instance.GetAllPlayers<PlayerModel>();
         if (players == null || players.Length == 0) return false;
 
         // 2) 생존자 찾기
         PlayerModel lastAlive = null;
         int aliveCount = 0;
-
-        Debug.Log($"[LastCheck] aliveCount = {aliveCount}");
 
         foreach (var p in players)
         {
@@ -545,30 +543,39 @@ public class GameManager : NetworkBehaviour
             }
         }
 
+        Debug.Log($"[LastCheck] aliveCount = {aliveCount}");
+
         // 3) 1명 이하일 때 종료 처리
         if (aliveCount <= 1)
         {
             _gameEnded = true;
 
-            // lastAlive가 null일 수도 있음(전원 사망 같은 케이스). 그럼 winners 빈 리스트로 처리
-            var winners = new List<PlayerModel>();
-            if (lastAlive != null) winners.Add(lastAlive);
-
-            // 승리 타입은 "마지막 생존자 기준"으로 간단히 정함
+            // 승리 진영 결정: lastAlive가 있으면 그 진영 ALL
+            PlayerJob winningJob = PlayerJob.Animal;
             EWinType winType = EWinType.Citizens;
             string reason = "최후의 생존자";
 
             if (lastAlive != null)
             {
-                var job = GetFactionJob(lastAlive);
-                if (job == PlayerJob.Farmer) winType = EWinType.Mafia;
-                else if (job == PlayerJob.Animal) winType = EWinType.Citizens;
-                else winType = EWinType.Citizens; // Ghost 등은 일단 시민으로
+                winningJob = GetFactionJob(lastAlive);
+
+                if (winningJob == PlayerJob.Farmer) winType = EWinType.Mafia;
+                else winType = EWinType.Citizens;
             }
             else
             {
                 reason = "생존자 없음";
-                winType = EWinType.Citizens; // 임시
+                winningJob = PlayerJob.Animal;  // 전원 사망 시 규칙(임시, 사용X)
+                winType = EWinType.Citizens;
+            }
+
+            // winners: 진영 기준으로 전원 모으기
+            var winners = new List<PlayerModel>();
+            foreach (var p in players)
+            {
+                if (p == null) continue;
+                if (GetFactionJob(p) == winningJob)
+                    winners.Add(p);
             }
 
             var payload = BuildPayload(
@@ -576,7 +583,7 @@ public class GameManager : NetworkBehaviour
                 winReason: reason,
                 winners: winners,
                 losers: players,
-                winnerFilter: (pm) => pm != null && lastAlive != null && pm == lastAlive
+                winnerFilter: (pm) => pm != null && GetFactionJob(pm) == winningJob
             );
 
             BroadcastResult(payload);
