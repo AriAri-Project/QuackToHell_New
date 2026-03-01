@@ -100,7 +100,7 @@ public class ShadowHider : NetworkBehaviour
             else//벽에 안 부딪힘 = 타겟플레이어가 보여져야 함
             {
                 playerFarmerStrategy = target.GetComponent<FarmerStrategy>();
-                //벤트에 있는지도 확인
+                //(타겟이 farmer라면)벤트에 있는지도 확인
                 if (playerFarmerStrategy.enabled)
                 {
                     if (playerFarmerStrategy.IsVentEntered==false)
@@ -111,6 +111,11 @@ public class ShadowHider : NetworkBehaviour
                     {
                         target?.GetComponent<PlayerView>()?.SetPlayerVisibility(false); 
                     }
+                }
+                //타겟이 animal라면
+                else
+                {
+                    target?.GetComponent<PlayerView>()?.SetPlayerVisibility(true);
                 }
             }
         }

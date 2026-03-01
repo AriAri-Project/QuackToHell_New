@@ -15,6 +15,7 @@ public class ChatTestMessageItem : MonoBehaviour
     [SerializeField] private Image playerIcon;
     [SerializeField] private Image backgroundImage;
 
+   
     /// <summary>
     /// 채팅 UI 데이터를 받아서 모든 UI 업데이트
     /// </summary>
@@ -45,6 +46,6 @@ public class ChatTestMessageItem : MonoBehaviour
             playerIcon.sprite = data.playerIcon;
         }
 
-        backgroundImage.color = data.isOwnMessage ? Color.yellow : Color.gray;
+        backgroundImage.color = data.isOwnMessage ? Color.gray : Color.gray;
     }
 }

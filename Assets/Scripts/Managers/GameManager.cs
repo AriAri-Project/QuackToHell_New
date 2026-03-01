@@ -146,6 +146,12 @@ public class GameManager : NetworkBehaviour
             {
                 TrialManager.Instance.Initialize();
             }
+            //모든 플레이어 visible처리
+            var players= PlayerHelperManager.Instance.GetAllPlayers<PlayerView>();
+            foreach (var value in players)
+            {
+                value.SetPlayerVisibility(true);
+            }
         }
     }
 
